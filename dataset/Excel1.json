@@ -1,0 +1,19 @@
+{
+	"name": "Excel1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureFileStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet 1",
+			"location": {
+				"type": "AzureFileStorageLocation"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}
