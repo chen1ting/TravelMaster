@@ -19,7 +19,7 @@
 						"type": "ExcelSource",
 						"storeSettings": {
 							"type": "AzureFileStorageReadSettings",
-							"recursive": true,
+							"recursive": false,
 							"wildcardFileName": "*",
 							"enablePartitionDiscovery": false
 						}
