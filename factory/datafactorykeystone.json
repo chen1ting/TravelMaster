@@ -1,0 +1,9 @@
+{
+	"name": "datafactorykeystone",
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "76563744-ac1e-48eb-9244-8acd28858db9",
+		"tenantId": "15ce9348-be2a-462b-8fc0-e1765a9b204a"
+	}
+}
