@@ -5,11 +5,17 @@
 		"factoryName": {
 			"value": "datafactorykeystone"
 		},
+		"AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
 		"AzureFileStorage1_connectionString": {
 			"value": ""
 		},
-		"AzureBlobStorage1_connectionString": {
+		"AzureDatabricks1_accessToken": {
 			"value": ""
+		},
+		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
+			"value": "0819-010628-v0fq91sj"
 		},
 		"containerUri": {
 			"value": ""
