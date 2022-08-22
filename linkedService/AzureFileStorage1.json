@@ -7,7 +7,7 @@
 		"typeProperties": {
 			"connectionString": "DefaultEndpointsProtocol=https;AccountName=databricks1datafactory;EndpointSuffix=core.windows.net;",
 			"fileShare": "azurefileshare",
-			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDQxNzI1REQwLTcxN0MtNEIwRC1CNTlELUY1MTBCNTNBMTlGMV85MzNlMmMwNi1mMmE2LTQxMmUtYjJkYi0xYzA5ZjE4ZWRlY2YiDQp9"
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDQxNzI1REQwLTcxN0MtNEIwRC1CNTlELUY1MTBCNTNBMTlGMV9jNGIyZjc2Ni01NmExLTRkN2QtYjc0OC1jMTdmNmYwNmI0NDEiDQp9"
 		}
 	}
 }
