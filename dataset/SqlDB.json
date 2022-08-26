@@ -1,0 +1,248 @@
+{
+	"name": "SqlDB",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "outputSql",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Position_Scenario_Date_Adjusted",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "FundShortName",
+				"type": "varchar"
+			},
+			{
+				"name": "Hierarchy3",
+				"type": "varchar"
+			},
+			{
+				"name": "Instrument_Subtype",
+				"type": "varchar"
+			},
+			{
+				"name": "BB_Yellow_Key",
+				"type": "varchar"
+			},
+			{
+				"name": "Description",
+				"type": "varchar"
+			},
+			{
+				"name": "Keystone_Broad_Sector",
+				"type": "varchar"
+			},
+			{
+				"name": "Keystone_Custom_Sector",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC_Sector",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC_Industry_Group",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC_Industry",
+				"type": "varchar"
+			},
+			{
+				"name": "Exchange",
+				"type": "varchar"
+			},
+			{
+				"name": "Risk_Country",
+				"type": "varchar"
+			},
+			{
+				"name": "Country_of_Domicile",
+				"type": "varchar"
+			},
+			{
+				"name": "Country_Region",
+				"type": "varchar"
+			},
+			{
+				"name": "Exchange_Country_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Exchange_Country_Region",
+				"type": "varchar"
+			},
+			{
+				"name": "Notional_Quantity",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Market_Price",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Position_Instrument_Market_Price",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "LongShort_Position",
+				"type": "varchar"
+			},
+			{
+				"name": "NMV_excl_Cash_FX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "GMV_excl_Cash_FX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "PBD_NMV_excl_CashnFX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "PBD_GMV_excl_CashnFX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Daily_PnL",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "AUM",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Market_Capitalization_milUSD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Market_Cap",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Daily_PnL_ptg_NAV",
+				"type": "varchar"
+			},
+			{
+				"name": "NMV_ptg_NAV",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "GMV_ptg_NAV",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_Adj_MV_MSCICN",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_Adj_MV_MSCI_ex_Japan",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_Adj_MV_MSCI_Asia",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_Adj_MV_SPX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_MSCICN",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_MSCI_ex_Japan",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Beta_MSCI_Asia",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "BetaSPX",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Position_Age_From_Last_Trade_Date",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Position_Age_From_First_Trade_Date",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Custodian",
+				"type": "varchar"
+			},
+			{
+				"name": "Holding_Scenario",
+				"type": "varchar"
+			},
+			{
+				"name": "ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "WTD_ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "MTD_ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "QTD_ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "YTD_ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "one_Year_ptg_Price_Change",
+				"type": "float",
+				"precision": 15
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Enfusion"
+		}
+	}
+}

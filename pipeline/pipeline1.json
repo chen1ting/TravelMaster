@@ -48,13 +48,13 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "Excel1",
+						"referenceName": "InputExcel",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "testCSV",
+						"referenceName": "CSV",
 						"type": "DatasetReference"
 					}
 				]
