@@ -14,6 +14,9 @@
 		"AzureFileStorage1_connectionString": {
 			"value": ""
 		},
+		"outputSql_connectionString": {
+			"value": ""
+		},
 		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
 			"value": "0819-010628-v0fq91sj"
 		},
