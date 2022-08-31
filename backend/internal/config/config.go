@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -11,11 +12,13 @@ type Config struct {
 	DBUser string `mapstructure:"db_user"`
 	DBPass string `mapstructure:"db_pass"`
 	DBName string `mapstructure:"db_name"`
+	DBPort string `mapstructure:"db_port"`
+
+	SessionRedisHost string `mapstructure:"session_redis_host"`
+	SessionRedisPort string `mapstructure:"session_redis_port"`
 }
 
-var Conf Config
-
-func InitConfig() {// hardcoded to read from same dir :(, probably can read in from env if we have time to refactor
+func NewConfig() Config { // hardcoded to read from same dir :(, probably can read in from env if we have time to refactor
 	configName := "config_prod"
 	if os.Getenv("APP_ENV") == "development" {
 		configName = "config_dev.yml"
@@ -34,7 +37,10 @@ func InitConfig() {// hardcoded to read from same dir :(, probably can read in f
 			panic(fmt.Sprintf("unexpected err, reading config file: %v", err))
 		}
 	}
-	if err := viper.Unmarshal(&Conf); err != nil {
+	var conf Config
+	if err := viper.Unmarshal(&conf); err != nil {
 		panic(err)
 	}
+
+	return conf
 }
