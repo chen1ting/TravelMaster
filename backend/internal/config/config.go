@@ -28,7 +28,7 @@ func InitConfig() {// hardcoded to read from same dir :(, probably can read in f
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println(fmt.Sprintf("config file %s not found", configName))
+			panic(fmt.Sprintf("config file %s not found", configName))
 		} else {
 			// Config file was found but another error was produced
 			panic(fmt.Sprintf("unexpected err, reading config file: %v", err))
