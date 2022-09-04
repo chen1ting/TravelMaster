@@ -7,7 +7,7 @@ ENV APP_ENV $APP_ENV
 
 WORKDIR /app
 
-COPY .. ./
+COPY . .
 RUN go mod download
 
 RUN cd cmd/TravelMaster && go build -o /app/travel_master && cd /app

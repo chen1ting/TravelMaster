@@ -9,19 +9,26 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: some_db
+      POSTGRES_DB: travelmaster
     ports:
       - "5432:5432"
+
+  sessionRedis:
+    image: redis
+    restart: always
+    ports:
+      - '6379:6379'
   #    volumes:
   #      - :/var/lib/postgresql/data
-  web:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-      args:
-        - APP_ENV=development
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    restart: on-failure
+
+#  web:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#      args:
+#        - APP_ENV=development
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - db
+#    restart: on-failure
