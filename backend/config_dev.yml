@@ -1,4 +1,8 @@
-db_host: "db:5432"
+db_host: "localhost"
 db_user: "postgres"
 db_pass: "password"
-db_name: "some_db"
+db_name: "travelmaster"
+db_port: 5432
+
+session_redis_host: "localhost"
+session_redis_port: 6379
