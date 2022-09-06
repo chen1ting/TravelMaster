@@ -74,7 +74,7 @@ const Header = (props) => {
                   }
                 />
               </MenuButton>
-              <MenuList>
+              <MenuList justify = "center">
                 <MenuItem>Log In</MenuItem>
                 <MenuItem>Sign Up</MenuItem>
               </MenuList>
