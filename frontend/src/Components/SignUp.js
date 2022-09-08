@@ -56,7 +56,7 @@ const SignUp = () => {
                         placeholder="Re-enter Password"
                         onChange={(e) => setPassword(e.target.value)}
                     ></Input>
-                    <Button w={'40%'} m={4} type="submit" onClick={onSubmit} bg = "blue.75">
+                    <Button w={'40%'} m={4} colorScheme={"teal"} type="submit" onClick={onSubmit} bg = "blue.75">
                         Create Account
                     </Button>
                 </Flex>

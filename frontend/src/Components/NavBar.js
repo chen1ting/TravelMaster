@@ -76,7 +76,7 @@ const Header = (props) => {
               </MenuButton>
               <MenuList justify = "center">
                 <MenuItem>Log In</MenuItem>
-                <MenuItem>Sign Up</MenuItem>
+                <MenuItem to="/SignUp">Sign Up</MenuItem>
               </MenuList>
             </Menu>
           </Flex>
