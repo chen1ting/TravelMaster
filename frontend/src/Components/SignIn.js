@@ -20,7 +20,7 @@ const SignIn = () => {
         direction = "column"
         align = "center"
         >
-          <FormLabel m={4}>Sign In</FormLabel>
+          <FormLabel w = "40%" align = "center" m={4}>Sign In</FormLabel>
           <Input
             m={4}
             w = "40%"
@@ -35,11 +35,10 @@ const SignIn = () => {
             placeholder="password"
             onChange={(e) => setPassword(e.target.value)}
           ></Input>
-          <Button w={'40%'} m={4} type="submit" onClick={onSubmit} bg = "blue.75">
+          <Button w={'40%'} m={4} type="submit" onClick={onSubmit} bg = "blue.100">
           Log In
           </Button>
         </Flex>
-        
       </FormControl>
     </Box>
   );
