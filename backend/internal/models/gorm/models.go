@@ -19,9 +19,16 @@ type Activity struct {
 	ID          int64   `gorm:"primaryKey;column:id"`
 	Title       string  `gorm:"column:title"`
 	Rating      float32 `gorm:"column:rating"`
+	Paid        bool    `gorm:"column:paid"`
+	Category    string  `gorm:"column:category"`
 	Description string  `gorm:"column:description"`
 	Image       string  `gorm:"column:image"`
 	OpeningTime int64   `gorm:"column:opening_time"`
 	ClosingTime int64   `gorm:"column:closing_time"`
 	CreatedAt   time.Time
+}
+
+type Itinerary struct {
+	ID     int64 `gorm:"primaryKey;column:id"`
+	UserID int64 ``
 }
