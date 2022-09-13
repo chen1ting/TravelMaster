@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
 import {
@@ -16,6 +17,10 @@ import {
 } from '@chakra-ui/react';
 
 const fields_width = '52.5%';
+=======
+import { useState } from 'react';
+import { FormControl, FormLabel, Button, Input, Box, Flex } from '@chakra-ui/react';
+>>>>>>> Stashed changes
 
 const SignIn = () => {
     const [username, setUsername] = useState('');
