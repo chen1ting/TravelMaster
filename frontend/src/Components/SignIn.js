@@ -34,12 +34,12 @@ const SignIn = () => {
                             `}
             gridTemplateRows={'45fr 55fr'}
             gridTemplateColumns={'3fr 2fr'}
-            h='600px'
+            h='650px'
             // gap='1'
             // color='blackAlpha.700'
             fontWeight='bold'
         >
-            <GridItem pl='2' bg='blackAlpha.300' area={'left_top'}>
+            <GridItem pl='2' bg='blue.50' area={'left_top'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
                     <h1>
@@ -57,7 +57,7 @@ const SignIn = () => {
             <GridItem pl='2' bg='white' area={'left_bottom'}>
 
             </GridItem>
-            <GridItem pl='2' bg='cornflowerblue' area={'right'}>
+            <GridItem pl='2' bg='blue.200' area={'right'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
                     <FormControl b={'1px'} id="signin">

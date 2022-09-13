@@ -20,14 +20,14 @@ const Header = (props) => {
     const toggleMenu = () => setShow(!show);
     return (
         <Flex
-            mb={4}
+            // mb={4}
             p={2}
             as="nav"
             align="center"
             justify="space-between"
             wrap="wrap"
             w="100%"
-            bg="blue.100"
+            bg="cornflowerblue"
         >
             <Flex
                 wrap="wrap"
