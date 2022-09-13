@@ -8,10 +8,7 @@ import {
     Box,
     Flex,
     Grid,
-    GridItem,
-    Wrap,
-    WrapItem,
-    Center
+    GridItem
 } from '@chakra-ui/react';
 
 const fields_width = '52.5%';
