@@ -37,37 +37,39 @@ const Header = (props) => {
               </Text>
           </Box>
 
-          <Flex>
-              <MenuItem to="/">Create an Itinerary</MenuItem>
-              <MenuItem to="/itineraries">Itineraries</MenuItem>
-              <MenuItem to="/bookings">Bookings</MenuItem>
-              <Flex 
-                alignItems={'center'}
-              >
-                  <Menu>
-                      <MenuButton
-                          as={Button}
-                          rounded={'full'}
-                          variant={'link'}
-                          cursor={'pointer'}
-                          minW={0}>
-                          <Avatar
-                              size={'sm'}
-                              src={
-                                  'https://www.cleanpng.com/png-person-silhouette-download-human-vector-1709279/://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
-                              }
-                          />
-                      </MenuButton>
-                      <MenuList 
-                        justify="center"
-                        direction="column"
-                      >
-                          <MenuItem>Log In</MenuItem>
-                          <MenuItem to="/SignUp">Sign Up</MenuItem>
-                      </MenuList>
-                  </Menu>
-              </Flex>
-          </Flex>
+            <Box
+                display={{base: show ? 'block' : 'none', md: 'block'}}
+                flexBasis={{base: '100%', md: 'auto'}}
+            >
+                <Flex
+                >
+                    <MenuItem to="/discover">Discover</MenuItem>
+                    <MenuItem to="/createitinery">Create an Itinerary</MenuItem>
+                    <MenuItem to="/itineraries">Itineraries</MenuItem>
+                    <MenuItem to="/bookings">Bookings</MenuItem>
+                    <Flex alignItems={'center'}>
+                        <Menu>
+                            <MenuButton
+                                as={Button}
+                                rounded={'full'}
+                                variant={'link'}
+                                cursor={'pointer'}
+                                minW={0}>
+                                <Avatar
+                                    size={'sm'}
+                                    src={
+                                        'https://www.cleanpng.com/png-person-silhouette-download-human-vector-1709279/://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
+                                    }
+                                />
+                            </MenuButton>
+                            <MenuList justify="center">
+                                <MenuItem>Profile</MenuItem>
+                                <MenuItem>Log Out</MenuItem>
+                            </MenuList>
+                        </Menu>
+                    </Flex>
+                </Flex>
+            </Box>
         </Flex>
     );
 };
