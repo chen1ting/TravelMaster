@@ -1,7 +1,7 @@
 import { useState } from 'react';
 //import { useAuth } from '../lib/auth';
 import { FormControl, FormLabel, Button, Input, Box, Flex } from '@chakra-ui/react';
-
+const fields_width = '52.5%';
 const SignUp = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -56,8 +56,9 @@ const SignUp = () => {
                         placeholder="Re-enter Password"
                         onChange={(e) => setPassword(e.target.value)}
                     ></Input>
-                    <Button w={'40%'} m={4} colorScheme={"teal"} type="submit" onClick={onSubmit} bg = "blue.75">
-                        Create Account
+                    <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
+                        <font size={5} color={'white'}>Create Account</font>
+
                     </Button>
                 </Flex>
 

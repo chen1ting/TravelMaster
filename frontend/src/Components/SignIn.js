@@ -9,6 +9,7 @@ import {
     Flex,
     Grid,
     GridItem,
+    Link,
     Wrap,
     WrapItem,
     Center
@@ -25,6 +26,7 @@ const SignIn = () => {
     function onSubmit(e) {
         e.preventDefault();
         //signIn({ username, password });
+
     }
 
     return (
@@ -90,6 +92,10 @@ const SignIn = () => {
                             <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
                                 <font size={5} color={'white'}>Log In</font>
                             </Button>
+                            <Button as="a" href= "SignUp" w={fields_width} m={20} type="submit" bg="teal.50">
+                                <font size={3} color={'teal'}>Don't have an account? Sign Up Here</font>
+                            </Button>
+
                         </Flex>
                     </FormControl>
                 </Box>
