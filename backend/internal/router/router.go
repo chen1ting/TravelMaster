@@ -8,5 +8,6 @@ import (
 func InitRouting(r *gin.Engine, service *service.Service) {
 	r.GET("/ping", service.Ping)
 	r.POST("/signup", service.SignupView)
+	r.POST("/login", service.LoginView)
 	r.POST("/logout", service.LogoutView)
 }
