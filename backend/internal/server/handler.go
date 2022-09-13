@@ -71,7 +71,6 @@ func (s *Server) addNewUserSession(ctx context.Context, userId string, sessionTo
 			return err
 		}
 	}
-
 	if _, err := s.SessionRedis.Set(ctx, userId, sessionToken, duration).Result(); err != nil {
 		return err
 	}
@@ -80,4 +79,20 @@ func (s *Server) addNewUserSession(ctx context.Context, userId string, sessionTo
 	}
 
 	return nil
+}
+
+func (s *Server) Logout(ctx context.Context, req *models.LogoutReq) error {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		return err
+	}
+
+	if _, err := s.SessionRedis.Del(ctx, userId).Result(); err != nil {
+		return err
+	}
+	if _, err := s.SessionRedis.Del(ctx, req.SessionToken).Result(); err != nil {
+		return err
+	}
+
+	return err
 }
