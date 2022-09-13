@@ -56,7 +56,8 @@ const Header = (props) => {
             >
                 <Flex
                 >
-                    <MenuItem to="/">Create an Itinerary</MenuItem>
+                    <MenuItem to="/discover">Discover</MenuItem>
+                    <MenuItem to="/createitinery">Create an Itinerary</MenuItem>
                     <MenuItem to="/itineraries">Itineraries</MenuItem>
                     <MenuItem to="/bookings">Bookings</MenuItem>
                     <Flex alignItems={'center'}>
@@ -75,8 +76,8 @@ const Header = (props) => {
                                 />
                             </MenuButton>
                             <MenuList justify="center">
-                                <MenuItem>Log In</MenuItem>
-                                <MenuItem to="/SignUp">Sign Up</MenuItem>
+                                <MenuItem>Profile</MenuItem>
+                                <MenuItem>Log Out</MenuItem>
                             </MenuList>
                         </Menu>
                     </Flex>

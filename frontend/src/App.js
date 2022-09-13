@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import SignIn from './Components/SignIn';
 import SignUp from "./Components/SignUp";
+import Discover from "./Components/Discover";
 
 
 function App() {
@@ -18,7 +19,11 @@ function App() {
                 <NavBar/>
                 <Routes>
                     <Route
-                        path="SignUp"
+                        path="discover"
+                        element={<Discover/>}
+                    />
+                    <Route
+                        path="signup"
                         element={<SignUp/>}
                     />
                     <Route
