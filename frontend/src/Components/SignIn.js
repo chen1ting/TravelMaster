@@ -36,7 +36,7 @@ const SignIn = () => {
                             `}
             gridTemplateRows={'45fr 55fr'}
             gridTemplateColumns={'3fr 2fr'}
-            h='650px'
+            h='100vh'
             // gap='1'
             // color='blackAlpha.700'
             fontWeight='bold'
