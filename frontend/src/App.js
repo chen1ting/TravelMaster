@@ -10,6 +10,7 @@ import {
 import SignIn from './Components/SignIn';
 import SignUp from "./Components/SignUp";
 import Discover from "./Components/Discover";
+import Reviews from "./Components/Reviews";
 
 
 function App() {
@@ -21,6 +22,10 @@ function App() {
                     <Route
                         path="discover"
                         element={<Discover/>}
+                    />
+                    <Route
+                        path="reviews"
+                        element={<Reviews/>}
                     />
                     <Route
                         path="signup"
