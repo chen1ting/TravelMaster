@@ -1,73 +1,58 @@
 import {
-    Box,
+    Box, Button,
     Grid,
     GridItem,
     Input,
-    InputGroup,
-    InputLeftElement,
-    InputRightElement,
     SimpleGrid,
     Text
 } from "@chakra-ui/react";
 import {useState} from "react";
 import ActivityCard from '../Components/ActivityCard'
-import {PhoneIcon, Search2Icon} from "@chakra-ui/icons";
 
 const Discover = () => {
     const [searchInput] = useState('');
 
     function onSubmit(e) {
         e.preventDefault();
-        //signIn({ username, password });
     }
 
     return (
         <Grid
-            templateAreas={`"row_1"
-                            "row_2"
-                            "row_3"
+            templateAreas={`"title"
+                            "search"
+                            "results"
+                            "load_more"
                             `}
             gridTemplateRows={'10fr 10fr 80fr'}
-            // gridTemplateColumns={'3fr 2fr'}
             h='100vh'
             gap='2'
-            // color='blackAlpha.700'
             fontWeight='bold'
+            bgColor={'blue.50'}
         >
-            <GridItem area={"row_1"}>
+            <GridItem area={"title"}>
                 <Box position={'relative'} top={'50%'} left={'7.5%'} transform={'translate(-50%,-50%)'}
-                     textAlign={"left"} width='fit-content'>
+                     textAlign={"left"} width='fit-content' mt={'1%'}>
                     <Text fontSize='4xl'>Discover</Text>
                 </Box>
             </GridItem>
-            <GridItem area={'row_2'}>
+            <GridItem area={'search'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    {/*<InputGroup>*/}
-                    {/*    <InputLeftElement*/}
-                    {/*        children={<Search2Icon color='black'/>}*/}
-                    {/*    />*/}
-                    {/*    <Input*/}
-                    {/*        m={4}*/}
-                    {/*        w={'50%'}*/}
-                    {/*        bgColor={'whitesmoke'}*/}
-                    {/*        variant='outline'*/}
-                    {/*        placeholder='Search for events and activities!'*/}
-                    {/*        onChange={(e) => searchInput(e.target.value)}*/}
-                    {/*    />*/}
-                    {/*</InputGroup>*/}
                     <Input
                         m={4}
                         w={'50%'}
+                        size='lg'
                         bgColor={'whitesmoke'}
+                        borderColor={'blackAlpha.700'}
                         variant='outline'
+                        focusBorderColor='lime'
                         placeholder='Search for events and activities!'
                         onChange={(e) => searchInput(e.target.value)}
                     />
                 </Box>
             </GridItem>
-            <GridItem area={"row_3"} bgColor={'blue.50'}>
-                <SimpleGrid minChildWidth='300px' spacing='30px' ml={'5%'} mr={'5%'}>
+            <GridItem area={"results"} bgColor={'white'}>
+                <SimpleGrid minChildWidth='300px' spacing='30px' mt={'1%'} ml={'5%'} mr={'5%'}>
                     <ActivityCard></ActivityCard>
                     <ActivityCard></ActivityCard>
                     <ActivityCard></ActivityCard>
@@ -83,6 +68,25 @@ const Discover = () => {
                     <ActivityCard></ActivityCard>
                     <ActivityCard></ActivityCard>
                 </SimpleGrid>
+            </GridItem>
+            <GridItem area={'load_more'} bgColor={'white'}>
+                <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
+                     textAlign={"center"} mb={'5%'} height={"fit-content"}>
+                    <Button colorScheme='teal' variant='solid'>
+                        View More Results
+                    </Button>
+                    {/*On click loading more results*/}
+                    <Button
+                        isLoading
+                        loadingText='Loading...'
+                        colorScheme='teal'
+                        variant='outline'
+                    >
+                        {/*All results loaded*/}
+                        View More Results
+                    </Button>
+                    <Text fontSize='4xl'>There are no more results to load</Text>
+                </Box>
             </GridItem>
         </Grid>
     );
