@@ -21,6 +21,7 @@ type Server struct {
 
 type ServerInf interface {
 	Signup(ctx context.Context, req *models.SignupReq) (*models.SignupResp, error)
+	Login(ctx context.Context, req *models.LoginReq) (*models.LoginResp, error)
 }
 
 var _ ServerInf = (*Server)(nil)
@@ -35,6 +36,9 @@ func NewServer() *Server {
 	}
 
 	if err := db.AutoMigrate(&gormModel.User{}); err != nil {
+		panic(err)
+	}
+	if err := db.AutoMigrate(&gormModel.Activity{}); err != nil {
 		panic(err)
 	}
 
