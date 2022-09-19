@@ -21,6 +21,7 @@ import (
 var (
 	ErrBadRequest        = errors.New("bad request")
 	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrInvalidLogin      = errors.New("invalid login")
 )
 
 func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.SignupResp, error) {
@@ -32,11 +33,11 @@ func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.Sig
 	user := gormModel.User{
 		Username:  req.Username,
 		Email:     req.Email,
+		Password:  req.HashedPassword,
 		Interests: req.Interests,
 	}
 
-	result := s.Database.Model(&user).Create(&user)
-	if result.Error != nil {
+	if result := s.Database.Model(&user).Create(&user); result.Error != nil {
 		// https://github.com/go-gorm/gorm/issues/4135
 		var perr *pgconn.PgError
 		if errors.As(result.Error, &perr) && perr.Code == "23505" {
@@ -60,6 +61,36 @@ func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.Sig
 	}, nil
 }
 
+func (s *Server) Login(ctx context.Context, req *models.LoginReq) (*models.LoginResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// query user by username in DB
+	var user gormModel.User
+	if result := s.Database.Where("Username = ?", req.Username).First(&user); result.Error != nil {
+		return nil, ErrInvalidLogin
+	}
+
+	// check whether hashed_password matches
+	if user.Password != req.HashedPassword {
+		return nil, ErrInvalidLogin
+	}
+
+	// create user session
+	sessionToken := uuid.New().String()
+	if err := s.addNewUserSession(ctx, strconv.Itoa(int(user.ID)), sessionToken, 24*time.Hour); err != nil {
+		return nil, err
+	}
+
+	return &models.LoginResp{
+		UserId:       user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
+		SessionToken: sessionToken,
+	}, nil
+}
+
 func (s *Server) addNewUserSession(ctx context.Context, userId string, sessionToken string, duration time.Duration) error {
 	// delete previous session token if any
 	prevToken, err := s.SessionRedis.Get(ctx, userId).Result()
@@ -71,7 +102,6 @@ func (s *Server) addNewUserSession(ctx context.Context, userId string, sessionTo
 			return err
 		}
 	}
-
 	if _, err := s.SessionRedis.Set(ctx, userId, sessionToken, duration).Result(); err != nil {
 		return err
 	}
@@ -80,4 +110,20 @@ func (s *Server) addNewUserSession(ctx context.Context, userId string, sessionTo
 	}
 
 	return nil
+}
+
+func (s *Server) Logout(ctx context.Context, req *models.LogoutReq) error {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		return err
+	}
+
+	if _, err := s.SessionRedis.Del(ctx, userId).Result(); err != nil {
+		return err
+	}
+	if _, err := s.SessionRedis.Del(ctx, req.SessionToken).Result(); err != nil {
+		return err
+	}
+
+	return err
 }
