@@ -1,7 +1,7 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
 import {
-    FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem
+    FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Text
 } from '@chakra-ui/react';
 
 const fields_width = '52.5%';
@@ -33,20 +33,12 @@ const SignIn = () => {
             <GridItem pl='2' bg='blue.50' area={'left_top'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    <h1>
-                        <font size={6}>
-                            Welcome to TravelMaster
-                        </font>
-                    </h1>
-                    <h2>
-                        <font size={5}>
-                            Generate new itineraries at your fingertips.
-                        </font>
-                    </h2>
+                    <Text fontSize='4xl'>Welcome to TravelMaster</Text>
+                    <Text fontSize='2xl'>Generate new itineraries at your fingertips.</Text>
                 </Box>
             </GridItem>
             <GridItem pl='2' bg='white' area={'left_bottom'}>
-
+                {/*{To fill}*/}
             </GridItem>
             <GridItem pl='2' bg='blue.200' area={'right'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
@@ -67,7 +59,7 @@ const SignIn = () => {
                                 w={fields_width}
                                 bgColor={'whitesmoke'}
                                 type="text"
-                                placeholder="username"
+                                placeholder="Username"
                                 onChange={(e) => setUsername(e.target.value)}
                             ></Input>
                             <Input
@@ -75,7 +67,7 @@ const SignIn = () => {
                                 w={fields_width}
                                 bgColor={'whitesmoke'}
                                 type="password"
-                                placeholder="password"
+                                placeholder="Password"
                                 onChange={(e) => setPassword(e.target.value)}
                             ></Input>
                             <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
