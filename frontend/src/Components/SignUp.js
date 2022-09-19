@@ -1,7 +1,7 @@
 import { useState } from 'react';
 //import { useAuth } from '../lib/auth';
 import { FormControl, FormLabel, Button, Input, Box, Flex } from '@chakra-ui/react';
-
+const fields_width = '45%';
 const SignUp = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -23,41 +23,42 @@ const SignUp = () => {
                     <FormLabel m={4}>Sign Up</FormLabel>
                     <Input
                         m={4}
-                        w = "40%"
+                        w = {fields_width}
                         type="text"
                         placeholder="Name"
                         onChange={(e) => setUsername(e.target.value)}
                     ></Input>
                     <Input
                         m={4}
-                        w = "40%"
+                        w = {fields_width}
                         type="text"
                         placeholder="Username"
                         onChange={(e) => setUsername(e.target.value)}
                     ></Input>
                     <Input
                         m={4}
-                        w = "40%"
+                        w = {fields_width}
                         type="text"
                         placeholder="Email Address"
                         onChange={(e) => setUsername(e.target.value)}
                     ></Input>
                     <Input
                         m={4}
-                        w = "40%"
+                        w = {fields_width}
                         type="password"
                         placeholder="Password"
                         onChange={(e) => setPassword(e.target.value)}
                     ></Input>
                     <Input
                         m={4}
-                        w = "40%"
+                        w = {fields_width}
                         type="password"
                         placeholder="Re-enter Password"
                         onChange={(e) => setPassword(e.target.value)}
                     ></Input>
-                    <Button w={'40%'} m={4} colorScheme={"teal"} type="submit" onClick={onSubmit} bg = "blue.75">
-                        Create Account
+                    <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal" _hover={{bg: "blackAlpha.400"}}>
+                        <font size={5} color={'white'}>Create Account</font>
+
                     </Button>
                 </Flex>
 
