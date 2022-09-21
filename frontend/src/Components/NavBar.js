@@ -45,7 +45,7 @@ const Header = (props) => {
                 <Flex
                 >
                     <MenuItem to="/discover">Discover</MenuItem>
-                    <MenuItem to="/createitinery">Create an Itinerary</MenuItem>
+                    <MenuItem to="/createitinerary">Create an Itinerary</MenuItem>
                     <MenuItem to="/itineraries">Itineraries</MenuItem>
                     <MenuItem to="/bookings">Bookings</MenuItem>
                     <Flex alignItems={'center'}>

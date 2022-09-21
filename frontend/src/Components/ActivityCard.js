@@ -1,4 +1,4 @@
-import {Badge, Box, Image} from "@chakra-ui/react";
+import {Badge, Box, Image, Link} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
 
 const ActivityCard = () => {
@@ -40,7 +40,7 @@ const ActivityCard = () => {
                 lineHeight='tight'
                 noOfLines={1}
             >
-                {property.title}
+                <Link href="ActivityDescription">{property.title}</Link>
             </Box>
 
             <Box>
@@ -57,8 +57,9 @@ const ActivityCard = () => {
                         key={i}
                         color={i < property.rating ? 'teal.500' : 'gray.300'}
                     />))}
-                <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                    {property.reviewCount} reviews
+                <Box as='span' ml='2' color='gray.600' fontSize='sm' href="reviews">
+                     
+                    <Link href="Reviews">{property.reviewCount} reviews</Link>
                 </Box>
             </Box>
         </Box>
