@@ -1,16 +1,15 @@
-
 import { useState } from 'react';
 import { Flex, Box, Text, useColorModeValue, Link, Menu, MenuButton, Button, Avatar, MenuList} from '@chakra-ui/react';
+
 
 const MenuItem = ({ children, to = '/'}) => {
   return (
     <Link 
-      px = "2"
+      px = "1"
       py = "1"
       rounded = "md"
       _hover = {{
-        bg: useColorModeValue('blue.100', 'blue.700'),
-        fontWeight: "bold",
+        bg: useColorModeValue('blue.300', 'blue.400'),
       }}
       href={to}>
       {children}
@@ -73,6 +72,7 @@ const Header = (props) => {
             </Box>
         </Flex>
     );
+
 
 
 };
