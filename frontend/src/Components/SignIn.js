@@ -36,6 +36,7 @@ const SignIn = () => {
                     <Text fontSize='4xl'>Welcome to TravelMaster</Text>
                     <Text fontSize='2xl'>Generate new itineraries at your fingertips.</Text>
                 </Box>
+                
             </GridItem>
             <GridItem pl='2' bg='white' area={'left_bottom'}>
                 {/*{To fill}*/}
@@ -82,6 +83,7 @@ const SignIn = () => {
                 </Box>
             </GridItem>
         </Grid>
+        
     );
 };
 
