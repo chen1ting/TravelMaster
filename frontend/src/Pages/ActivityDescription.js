@@ -38,6 +38,7 @@ const ActivityDescription = () =>{
             <h1>
                 <font size={6}>
                     Activity Description
+                    {ActivityCard.title}
                 </font>
             </h1>
             </GridItem>
