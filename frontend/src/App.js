@@ -11,6 +11,7 @@ import SignIn from './Components/SignIn';
 import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
 import Reviews from "./Components/Reviews";
+import ActivityDescription from './Pages/ActivityDescription';
 
 
 function App() {
@@ -30,6 +31,10 @@ function App() {
                     <Route
                         path="signup"
                         element={<SignUp/>}
+                    />
+                    <Route
+                        path="activitydescription"
+                        element={<ActivityDescription/>}
                     />
                     <Route
                         path=""
