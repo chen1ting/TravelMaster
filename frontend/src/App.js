@@ -12,6 +12,7 @@ import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
+import Profile from "./Pages/Profile";
 
 
 function App() {
@@ -35,6 +36,10 @@ function App() {
                     <Route
                         path="activitydescription"
                         element={<ActivityDescription/>}
+                    />
+                    <Route
+                        path="profile"
+                        element={<Profile/>}
                     />
                     <Route
                         path=""
