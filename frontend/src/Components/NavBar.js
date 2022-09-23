@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {Flex, Box, Text, useColorModeValue, Link, Menu, MenuButton, Button, Avatar, MenuList} from '@chakra-ui/react';
 
 const paddingSpace = '20px'
+const textPadSpace = '7px'
 
 const MenuItem = ({ children, to = '/'}) => {
     return (
@@ -19,7 +20,6 @@ const MenuItem = ({ children, to = '/'}) => {
 };
 
 const MenuTextAlign = inputString => {
-    const textPadSpace = '7px'
     return (
         <Box position={'relative'}
              top={'50%'}
@@ -91,9 +91,17 @@ const Header = (props) => {
                                     }
                                 />
                             </MenuButton>
-                            <MenuList justify="center">
-                                <MenuItem to="/profile">Profile</MenuItem>
-                                <MenuItem>Log Out</MenuItem>
+                            <MenuList>
+                                <Box position={'relative'}
+                                     top={'50%'}
+                                     left={'50%'}
+                                     transform={'translate(-50%,0)'}
+                                     textAlign={"left"}
+                                     width='fit-content'
+                                >
+                                    <MenuItem to="/profile">Profile</MenuItem>
+                                    <MenuItem>Log Out</MenuItem>
+                                </Box>
                             </MenuList>
                         </Menu>
                     </Flex>

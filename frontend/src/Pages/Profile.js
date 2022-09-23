@@ -8,7 +8,7 @@ const Profile = () => {
         <Grid
             templateAreas={`'icon username username'
                             'about about tabs'`}
-            gridTemplateRows={'15% 90%'}
+            gridTemplateRows={'15% 85%'}
             gridTemplateColumns={'10% 10% 80%'}
             h='100vh'
             mt={'1%'}
