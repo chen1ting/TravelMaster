@@ -10,7 +10,7 @@ import {
 import SignIn from './Components/SignIn';
 import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
-import Reviews from "./Components/Reviews";
+import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
 
 
