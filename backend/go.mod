@@ -3,6 +3,7 @@ module github.com/chen1ting/TravelMaster
 go 1.16
 
 require (
+	github.com/gin-contrib/cors v1.4.0 // indirect
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v9 v9.0.0-beta.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect

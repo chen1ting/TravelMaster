@@ -4,7 +4,7 @@ type SignupReq struct {
 	Username       string   `json:"username"`
 	HashedPassword string   `json:"hashed_password"`
 	Email          string   `json:"email"`
-	Interests      []string `json:"interests"`
+	// Interests      []string `json:"interests"` update later, not as part of initial sign up req
 }
 
 type SignupResp struct {
