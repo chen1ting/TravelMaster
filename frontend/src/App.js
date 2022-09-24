@@ -13,6 +13,7 @@ import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
 import CreateEvent from './Pages/CreateEvent';
+import Test from './Pages/Test';
 
 
 function App() {
@@ -40,6 +41,10 @@ function App() {
                     <Route
                         path="createevent"
                         element={<CreateEvent/>}
+                    />
+                    <Route
+                        path="test"
+                        element={<Test/>}
                     />
                     <Route
                         path=""
