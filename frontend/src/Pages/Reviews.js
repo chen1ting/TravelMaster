@@ -3,6 +3,7 @@ import {useState} from 'react';
 import {
     FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
 } from '@chakra-ui/react';
+import {StarIcon} from "@chakra-ui/icons";
 
 const fields_width = '52.5%';
 let attractionName;
@@ -11,6 +12,7 @@ let showFree;
 showFree = "Free"
 let attrationDescription;
 attrationDescription = "Have you met the Emperor Penguin?"
+const rating = 4
 
 const reviewList = [
     { name: "John", age: 24 },
@@ -95,10 +97,20 @@ const Reviews = () => {
                     </HStack>
                     <Box p={5}>
                     <Stack align="center">
+                    <Box display='flex' mt='2' alignItems='center'>
+                        {Array(5)
+                            .fill('')
+                            .map((_, i) => (
+                            <StarIcon
+                                key={i}
+                                color={i < rating ? 'teal.500' : 'gray.300'}
+                            />
+                            ))}
                         <Badge variant="solid" colorScheme="green" 
                         rounded="full" px={2}>
                         23 September 2022
                         </Badge>
+                    </Box>
                     </Stack>
                     <Stack align="center">
                         <Text as="h2" fontWeight="normal" my={2} >
@@ -135,10 +147,20 @@ const Reviews = () => {
                     </HStack>
                     <Box p={5}>
                     <Stack align="center">
+                    <Box display='flex' mt='2' alignItems='center'>
+                        {Array(5)
+                            .fill('')
+                            .map((_, i) => (
+                            <StarIcon
+                                key={i}
+                                color={i < rating ? 'teal.500' : 'gray.300'}
+                            />
+                            ))}
                         <Badge variant="solid" colorScheme="green" 
                         rounded="full" px={2}>
                         11 September 2022
                         </Badge>
+                    </Box>
                     </Stack>
                     <Stack align="center">
                         <Text as="h2" fontWeight="normal" my={2} >
@@ -164,10 +186,20 @@ const Reviews = () => {
                     </HStack>
                     <Box p={5}>
                     <Stack align="center">
+                    <Box display='flex' mt='2' alignItems='center'>
+                        {Array(5)
+                            .fill('')
+                            .map((_, i) => (
+                            <StarIcon
+                                key={i}
+                                color={i < rating ? 'teal.500' : 'gray.300'}
+                            />
+                            ))}
                         <Badge variant="solid" colorScheme="green" 
                         rounded="full" px={2}>
-                        30 August 2022
+                        23 August 2022
                         </Badge>
+                    </Box>
                     </Stack>
                     <Stack align="center">
                         <Text as="h2" fontWeight="normal" my={2} >
@@ -191,7 +223,7 @@ const Reviews = () => {
                     </HStack>
                 </Box>
             </div>
-
+            <Box h={20}/>
         </GridItem>
     </Grid>);
 };

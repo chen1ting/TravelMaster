@@ -57,11 +57,11 @@ const CreateEvent = () => {
 
 
 
-            <GridItem pl='2' bg='white' area={'left_bottom'}>
+            <GridItem pl='2' bg='blue.100' area={'left_bottom'}>
                 <VStack
-                    divider={<StackDivider borderColor='gray.200' />}
                     spacing={4}
-                    align='stretch'>
+                    align='center'>
+                    <Spacer/>
                     <AspectRatio width="64" ratio={1}>
                         <Box
                             borderColor="gray.300"
@@ -137,20 +137,13 @@ const CreateEvent = () => {
 
 
 
-            <GridItem pl='2' bg='blue.200' area={'right'}>
-                <Grid
-                    templateAreas={`"top"
-                            "bottom"
-                            `}
-                    gridTemplateRows={'50fr 50fr'}
-                    h='100vh'
-                    // gap='1'
-                    // color='blackAlpha.700'
-                    fontWeight='bold'
-                >
-                    <GridItem pl='2' bg='blue.200' area={'top'}>
-                        <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
-                             textAlign={"left"}>
+            <GridItem pl='2' bg='white' area={'right'}>
+                <VStack
+                    divider={<StackDivider borderColor='gray.200' />}
+                    spacing={10}
+                    align="normal"
+                    >       
+                            <Spacer/>
                             <Flex
                                 wrap="wrap"
                                 direction="column"
@@ -194,13 +187,6 @@ const CreateEvent = () => {
                                 </Stack>
                                 <Spacer/>
                             </Flex>
-                        </Box>
-                    </GridItem>
-
-
-                    <GridItem pl='2' bg='blue.300' area={'bottom'}>
-                        <Box position={"relative"} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
-                             textAlign={"left"}>
                             <Flex
                                 wrap="wrap"
                                 direction="column"
@@ -253,16 +239,8 @@ const CreateEvent = () => {
                                     </HStack>
                                 </Stack>
                             </Flex>
-                        </Box>
-                    </GridItem>
-
-                    {/* <GridItem pl='2' bg='blue.200' area={'bottom_right'}>
-                        <Input
-                        size="md"
-                        type="time"
-                        />
-                    </GridItem> */}
-                </Grid>
+                            <Spacer/>
+                </VStack>
             </GridItem>
         </Grid>
 
