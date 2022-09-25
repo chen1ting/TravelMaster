@@ -14,6 +14,7 @@ const MenuItem = ({ children, to = '/'}) => {
                 bg: useColorModeValue('blue.300', 'blue.400'),
                 fontWeight: "bold",
             }}
+            // change href to navigate
             href={to}>
             {children}
         </Link>
