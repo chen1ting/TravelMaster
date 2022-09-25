@@ -1,6 +1,7 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
 import {
+
     FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
 } from '@chakra-ui/react';
 import {StarIcon} from "@chakra-ui/icons";
@@ -11,6 +12,7 @@ let attractionName;
 attractionName = "Penguin Feeding Show"
 let showFree;
 showFree = "Free"
+
 let attrationDescription;
 attrationDescription = "Have you met the Emperor Penguin?"
 let rating;
@@ -18,6 +20,7 @@ rating = 4
 
 const Reviews = () => {
     //const { signIn } = useAuth();
+
     return (<Grid
         templateAreas={`"left_top right"
                             "left_bottom right"
@@ -35,6 +38,7 @@ const Reviews = () => {
                     Reviews
                 </font>
             </h1>
+
 
             <div className="app">
                 <Box w="fit-content" rounded="20px" 
@@ -159,6 +163,7 @@ const Reviews = () => {
                 </Box>
             </div>
             <Box h={20}/>
+
         </GridItem>
     </Grid>);
 };
