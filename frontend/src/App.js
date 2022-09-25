@@ -12,6 +12,7 @@ import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
+import CreateEvent from './Pages/CreateEvent';
 
 
 function App() {
@@ -35,6 +36,10 @@ function App() {
                     <Route
                         path="activitydescription"
                         element={<ActivityDescription/>}
+                    />
+                    <Route
+                        path="createevent"
+                        element={<CreateEvent/>}
                     />
                     <Route
                         path=""
