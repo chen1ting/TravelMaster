@@ -1,11 +1,22 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
 import {
-
-    FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
+    FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem
 } from '@chakra-ui/react';
-import {StarIcon} from "@chakra-ui/icons";
-import ReviewCard from "../Components/ReviewCard";
+
+import {
+    MDBCard,
+    MDBCardImage,
+    MDBCardBody,
+    MDBCardTitle,
+    MDBCardText,
+    MDBRow,
+    MDBCol,
+    MDBCardHeader,
+    MDBCardFooter,
+    MDBBtn
+} from 'mdb-react-ui-kit';
+
 
 const fields_width = '52.5%';
 let attractionName;
@@ -13,13 +24,27 @@ attractionName = "Penguin Feeding Show"
 let showFree;
 showFree = "Free"
 
-let attrationDescription;
-attrationDescription = "Have you met the Emperor Penguin?"
-let rating;
-rating = 4
+const reviewList = [
+    { name: "John", age: 24 },
+    { name: "Linda", age: 19 },
+    { name: "Josh", age: 33 }
+];
+const reviewCount = 3;
+const renderReviews = () => {
+    const result = [];
+    for (let i = 0; i < reviewCount; i++) {
+        <MDBCard>
+            <MDBCardBody>Hello</MDBCardBody>
+        </MDBCard>
+    }
+
+    return <ul>{result}</ul>;
+};
 
 const Reviews = () => {
+
     //const { signIn } = useAuth();
+
 
     return (<Grid
         templateAreas={`"left_top right"
@@ -39,130 +64,116 @@ const Reviews = () => {
                 </font>
             </h1>
 
-
-            <div className="app">
-                <Box w="fit-content" rounded="20px" 
-                    overflow="hidden" bg={"blue.500"} mt={10}>
-                    <Image src="https://mdbootstrap.com/img/new/standard/city/041.webp"
-                        alt="Card Image" boxSize="400px">
-                    </Image>
-                    <Box p={5}>
-                    <Stack align="center">
-                        <Badge variant="solid" colorScheme="green" 
-                        rounded="full" px={2}>
-                        {showFree}
-                        
-                        </Badge>
-                    </Stack>
-                    <Stack align="center">
-                        <Text as="h2" fontWeight="normal" my={2} >
+            <MDBCard>
+                <MDBCardImage src='https://mdbootstrap.com/img/new/standard/nature/182.webp' alt='...' position='top' />
+                <MDBCardBody>
+                    <MDBCardText>
                         {attractionName}
-                        </Text>
-                        <Text fontWeight="light">
-                        {attrationDescription}
-                        </Text>
-                    </Stack>
-                    </Box>
-                </Box>
-            </div>
+                    </MDBCardText>
+                    <MDBCardText>
+                        {showFree}
+                    </MDBCardText>
+                </MDBCardBody>
+            </MDBCard>
         </GridItem>
+
+
 
         <GridItem pl='2' bg='white' area={'left_bottom'}>
-            
+            <MDBCard alignment='center'>
+                <MDBCardHeader>Featured</MDBCardHeader>
+                <MDBCardBody>
+                    <MDBCardTitle>Special title treatment</MDBCardTitle>
+                    <MDBCardText>With supporting text below as a natural lead-in to additional content.</MDBCardText>
+                    <MDBBtn href='#'>Button</MDBBtn>
+                </MDBCardBody>
+                <MDBCardFooter className='text-muted'>2 days ago</MDBCardFooter>
+            </MDBCard>
         </GridItem>
 
+
+
+
         <GridItem pl='2' bg='white' area={'right'}>
-            <ReviewCard /> name
-            <div className="app">
-                <Box w="container.md" rounded="20px" 
-                    overflow="hidden" bg={"gray.200"} mt={10}>
-                    <HStack spacing='20px'>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/043.webp"
-                            alt="Card Image" boxSize="80px">
-                        </Image>
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Tom
-                        </Text>
-                    </HStack>
-                    <Box p={5}>
-                    <Stack align="center">
-                    <Box display='flex' mt='2' alignItems='center'>
-                        {Array(5)
-                            .fill('')
-                            .map((_, i) => (
-                            <StarIcon
-                                key={i}
-                                color={i < rating ? 'teal.500' : 'gray.300'}
-                            />
-                            ))}
-                        <Badge variant="solid" colorScheme="green" 
-                        rounded="full" px={2}>
-                        11 September 2022
-                        </Badge>
-                    </Box>
-                    </Stack>
-                    <Stack align="center">
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Annual Pass Visitor
-                        </Text>
-                        <Text fontWeight="light">
-                        Penguins seem unhappy
-                        </Text>
-                    </Stack>
-                    </Box>
-                </Box>
-            </div>
-            <div className="app">
-                <Box w="container.md" rounded="20px" 
-                    overflow="hidden" bg={"gray.200"} mt={10}>
-                    <HStack spacing='20px'>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/044.webp"
-                            alt="Card Image" boxSize="80px">
-                        </Image>
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Bob
-                        </Text>
-                    </HStack>
-                    <Box p={5}>
-                    <Stack align="center">
-                    <Box display='flex' mt='2' alignItems='center'>
-                        {Array(5)
-                            .fill('')
-                            .map((_, i) => (
-                            <StarIcon
-                                key={i}
-                                color={i < rating ? 'teal.500' : 'gray.300'}
-                            />
-                            ))}
-                        <Badge variant="solid" colorScheme="green" 
-                        rounded="full" px={2}>
-                        23 August 2022
-                        </Badge>
-                    </Box>
-                    </Stack>
-                    <Stack align="center">
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Foreign Tourist
-                        </Text>
-                        <Text fontWeight="light">
-                        I have never seen penguins before in my life
-                        </Text>
-                    </Stack>
-                    </Box>
-                    <HStack spacing='10px'>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/048.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/049.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/050.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                    </HStack>
-                </Box>
-            </div>
-            <Box h={20}/>
+            <MDBRow className='row-cols-1 row-cols-md-3 g-4'>
+                <MDBCol>
+                    <MDBCard alignment='center'>
+                        <MDBCardHeader>Featured</MDBCardHeader>
+                        <MDBCardImage
+                            src='https://mdbootstrap.com/img/new/standard/city/041.webp'
+                            width={250} height={250}
+                            alt='...'
+                            position='top'
+                        />
+                        <MDBCardBody>
+                            <MDBCardTitle>Card title</MDBCardTitle>
+                            <MDBCardText>
+                                This is a longer card with supporting text below as a natural lead-in to additional content.
+                                This content is a little bit longer.
+                            </MDBCardText>
+                        </MDBCardBody>
+                        <MDBCardFooter className='text-muted'>2 days ago</MDBCardFooter>
+                    </MDBCard>
+                </MDBCol>
+                <MDBCol>
+                    <MDBCard alignment='center'>
+                        <MDBCardHeader>Featured</MDBCardHeader>
+                        <MDBCardImage
+                            src='https://mdbootstrap.com/img/new/standard/city/042.webp'
+                            width={250} height={250}
+                            alt='...'
+                            position='top'
+                        />
+                        <MDBCardBody>
+                            <MDBCardTitle>Card title</MDBCardTitle>
+                            <MDBCardText>
+                                This is a longer card with supporting text below as a natural lead-in to additional content.
+                                This content is a little bit longer.
+                            </MDBCardText>
+                        </MDBCardBody>
+                        <MDBCardFooter className='text-muted'>2 days ago</MDBCardFooter>
+                    </MDBCard>
+                </MDBCol>
+                <MDBCol>
+                    <MDBCard alignment='center'>
+                        <MDBCardHeader>Featured</MDBCardHeader>
+                        <MDBCardImage
+                            src='https://mdbootstrap.com/img/new/standard/city/043.webp'
+                            width={250} height={250}
+                            alt='...'
+                            position='top'
+                        />
+                        <MDBCardBody>
+                            <MDBCardTitle>Card title</MDBCardTitle>
+                            <MDBCardText>
+                                This is a longer card with supporting text below as a natural lead-in to additional content.
+                                This content is a little bit longer.
+                            </MDBCardText>
+                        </MDBCardBody>
+                        <MDBCardFooter className='text-muted'>2 days ago</MDBCardFooter>
+                    </MDBCard>
+                </MDBCol>
+                <MDBCol>
+                    <MDBCard alignment='center'>
+                        <MDBCardHeader>Featured</MDBCardHeader>
+                        <MDBCardImage
+                            src='https://mdbootstrap.com/img/new/standard/city/044.webp'
+                            width={250} height={250}
+                            alt='...'
+                            position='top'
+                        />
+                        <MDBCardBody>
+                            <MDBCardTitle>Card title</MDBCardTitle>
+                            <MDBCardText>
+                                This is a longer card with supporting text below as a natural lead-in to additional content.
+                                This content is a little bit longer.
+                            </MDBCardText>
+                        </MDBCardBody>
+                        <MDBCardFooter className='text-muted'>2 days ago</MDBCardFooter>
+                    </MDBCard>
+                </MDBCol>
+            </MDBRow>
+
 
         </GridItem>
     </Grid>);
