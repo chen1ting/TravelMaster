@@ -4,7 +4,6 @@ import {
     FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
 } from '@chakra-ui/react';
 import {StarIcon} from "@chakra-ui/icons";
-import reviewCard from "../Components/ReviewCard";
 import ReviewCard from "../Components/ReviewCard";
 
 const fields_width = '52.5%';
@@ -14,24 +13,11 @@ let showFree;
 showFree = "Free"
 let attrationDescription;
 attrationDescription = "Have you met the Emperor Penguin?"
-const rating = 4
-
-const reviewList = [
-    { name: "John", age: 24 },
-    { name: "Linda", age: 19 },
-    { name: "Josh", age: 33 }
-];
-const reviewCount = 3;
-
-for (let i = 0; i < reviewCount; i++) {
-
-}
+let rating;
+rating = 4
 
 const Reviews = () => {
-
     //const { signIn } = useAuth();
-
-
     return (<Grid
         templateAreas={`"left_top right"
                             "left_bottom right"
@@ -83,7 +69,6 @@ const Reviews = () => {
 
         <GridItem pl='2' bg='white' area={'right'}>
             <ReviewCard></ReviewCard>
-
 
             <div className="app">
                 <Box w="container.md" rounded="20px" 

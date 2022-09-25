@@ -1,12 +1,13 @@
 import {Badge, Box, HStack, Image, Stack, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
-const ReviewCard = () => {
-    const name= "Felix"
-    const rating = 4
-    const profileImg = "https://mdbootstrap.com/img/new/standard/city/042.webp"
-    const uploadImg1 = "https://mdbootstrap.com/img/new/standard/city/045.webp"
-    const uploadImg2 = "https://mdbootstrap.com/img/new/standard/city/046.webp"
-    const uploadImg3 = "https://mdbootstrap.com/img/new/standard/city/047.webp"
+let name= "Felix"
+let date= "23 September 2022"
+let rating = 4
+let profileImg = "https://mdbootstrap.com/img/new/standard/city/042.webp"
+let uploadImg1 = "https://mdbootstrap.com/img/new/standard/city/045.webp"
+let uploadImg2 = "https://mdbootstrap.com/img/new/standard/city/046.webp"
+let uploadImg3 = "https://mdbootstrap.com/img/new/standard/city/047.webp"
+let ReviewCard = () => {
     return (
         <div className="app">
             <Box w="container.md" rounded="20px"
@@ -32,7 +33,7 @@ const ReviewCard = () => {
                                 ))}
                             <Badge variant="solid" colorScheme="green"
                                    rounded="full" px={2}>
-                                23 September 2022
+                                {date}
                             </Badge>
                         </Box>
                     </Stack>
