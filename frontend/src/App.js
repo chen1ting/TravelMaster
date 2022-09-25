@@ -14,7 +14,7 @@ import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
 import Profile from "./Pages/Profile";
-
+import CreateEvent from './Pages/CreateEvent';
 function App() {
     return (
         <ChakraProvider>
@@ -28,6 +28,8 @@ function App() {
                     <Route path="activitydescription" element={<ActivityDescription/>}/>
                     <Route path="profile" element={<Profile/>}/>
                     <Route path="" element={<SignIn/>}/>
+                    <Route path="createevent" element={<CreateEvent/>}
+                    />
                 </Routes>
             </Router>
         </ChakraProvider>
