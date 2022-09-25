@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {Box, Grid, GridItem, Text} from "@chakra-ui/react";
 import "./customDatePickerWidth.css"
+import {Box, Grid, GridItem, Text} from "@chakra-ui/react";
 // import 'react-datepicker/dist/react-datepicker-cssmodules.css';
 
 const DatesSelector = () => {
