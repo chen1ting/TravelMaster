@@ -34,6 +34,7 @@ func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.Sig
 		Username:  req.Username,
 		Email:     req.Email,
 		Password:  req.HashedPassword,
+		Interests: req.Interests,
 	}
 
 	if result := s.Database.Model(&user).Create(&user); result.Error != nil {

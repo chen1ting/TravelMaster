@@ -2,7 +2,9 @@ import {useState} from 'react';
 import {Flex, Box, Text, useColorModeValue, Link, Menu, MenuButton, Button, Avatar, MenuList} from '@chakra-ui/react';
 
 const paddingSpace = '20px'
+
 const textPadSpace = '7px'
+
 
 const MenuItem = ({ children, to = '/'}) => {
     return (
@@ -12,9 +14,11 @@ const MenuItem = ({ children, to = '/'}) => {
             rounded = "md"
             _hover = {{
                 bg: useColorModeValue('blue.300', 'blue.400'),
+
                 fontWeight: "bold",
             }}
             // change href to navigate
+
             href={to}>
             {children}
         </Link>
@@ -22,6 +26,7 @@ const MenuItem = ({ children, to = '/'}) => {
 };
 
 const MenuTextAlign = inputString => {
+
     return (
         <Box position={'relative'}
              top={'50%'}
@@ -45,11 +50,13 @@ const Header = (props) => {
             // mb={4}
             p={2}
             as="nav"
+
             alignItems="center"
             justify="space-between"
             w="100%"
             bg="cornflowerblue"
             h="6vh"
+
         >
             <Box w="200px" p="-1" paddingLeft={paddingSpace}>
                 <Text as="i" fontSize="5xl" fontWeight="bold">
@@ -62,7 +69,9 @@ const Header = (props) => {
                 flexBasis={{base: '100%', md: 'auto'}}
                 paddingRight={paddingSpace}
             >
+
                 <Flex fontSize={'xl'} px="10"
+
                 >
                     <MenuItem to="/discover">
                         {MenuTextAlign("Discover")}
@@ -76,7 +85,9 @@ const Header = (props) => {
                     <MenuItem to="/bookings">
                         {MenuTextAlign("Bookings")}
                     </MenuItem>
+
                     <Flex alignItems={'center'} px="3">
+
                         <Menu>
                             <MenuButton
                                 as={Button}
@@ -94,6 +105,7 @@ const Header = (props) => {
                                 />
                             </MenuButton>
                             <MenuList justify="center">
+
                                 <Box position={'relative'}
                                      top={'50%'}
                                      left={'50%'}
@@ -104,6 +116,7 @@ const Header = (props) => {
                                     <MenuItem to="/profile">Profile</MenuItem>
                                     <MenuItem>Log Out</MenuItem>
                                 </Box>
+
                             </MenuList>
                         </Menu>
                     </Flex>

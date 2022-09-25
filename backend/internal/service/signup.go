@@ -9,7 +9,7 @@ import (
 
 func (s *Service) SignupView(c *gin.Context) {
 	signupReq := &models.SignupReq{}
-	if err := c.ShouldBindJSON(&signupReq); err != nil {
+	if err := c.ShouldBindJSON(signupReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
