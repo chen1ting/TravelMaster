@@ -68,8 +68,7 @@ const Reviews = () => {
         </GridItem>
 
         <GridItem pl='2' bg='white' area={'right'}>
-            <ReviewCard></ReviewCard>
-
+            <ReviewCard /> name
             <div className="app">
                 <Box w="container.md" rounded="20px" 
                     overflow="hidden" bg={"gray.200"} mt={10}>

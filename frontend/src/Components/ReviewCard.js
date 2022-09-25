@@ -7,7 +7,8 @@ let profileImg = "https://mdbootstrap.com/img/new/standard/city/042.webp"
 let uploadImg1 = "https://mdbootstrap.com/img/new/standard/city/045.webp"
 let uploadImg2 = "https://mdbootstrap.com/img/new/standard/city/046.webp"
 let uploadImg3 = "https://mdbootstrap.com/img/new/standard/city/047.webp"
-let ReviewCard = () => {
+let ReviewCard = ({}) => {
+
     return (
         <div className="app">
             <Box w="container.md" rounded="20px"
