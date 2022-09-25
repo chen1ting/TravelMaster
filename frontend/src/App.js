@@ -19,6 +19,7 @@ import ActivityDescription from './Pages/ActivityDescription';
 
 import CreateEvent from './Pages/CreateEvent';
 import Profile from "./Pages/Profile";
+import Welcome from "./Pages/Welcome";
 
 
 function App() {
