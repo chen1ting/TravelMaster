@@ -14,8 +14,6 @@ import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
 import Profile from "./Pages/Profile";
-import Welcome from "./Pages/Welcome";
-
 
 function App() {
     return (
