@@ -27,6 +27,20 @@ const CreateEvent = () => {
     const [addressevent, setAddressEvent] = useState('');
     const [descriptionevent, setDescriptionEvent] = useState('');
     const [eventname, setEventName] = useState('');
+    const [sundayopenhr, setSundayOpenHr] = useState('');
+    const [sundayClosehr, setSundayCloseHr] = useState('');
+    const [mondayopenhr, setMondayOpenHr] = useState('');
+    const [mondayClosehr, setMondayCloseHr] = useState('');
+    const [tuesdayopenhr, setTuesdayOpenHr] = useState('');
+    const [tuesdayClosehr, setTuesdayCloseHr] = useState('');
+    const [wednesdayopenhr, setWednesdayOpenHr] = useState('');
+    const [wednesdayClosehr, setWednesdayCloseHr] = useState('');
+    const [thursdayopenhr, setThursdayOpenHr] = useState('');
+    const [thursdayClosehr, setThursdayCloseHr] = useState('');
+    const [fridayopenhr, setFridayOpenHr] = useState('');
+    const [fridayClosehr, setFridayCloseHr] = useState('');
+    const [saturdayopenhr, setSaturdayOpenHr] = useState('');
+    const [saturdayClosehr, setSaturdayCloseHr] = useState('');
 
     //const { signIn } = useAuth();
 
@@ -197,49 +211,53 @@ const CreateEvent = () => {
                                     <Text fontSize='3xl'>Event Hours</Text>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl' size="2000">Sunday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setSundayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setSundayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Monday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setMondayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setMondayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Tuesday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setTuesdayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setTuesdayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Wednesday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setWednesdayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setWednesdayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Thursday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setThursdayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setThursdayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Friday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setFridayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setFridayCloseHr(e.target.value)}/>
                                     </HStack>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl'>Saturday</Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setSaturdayOpenHr(e.target.value)}/>
                                         <Text fontSize='1xl'> to </Text>
-                                        <Input size="md" type="time"/>
+                                        <Input size="md" type="time" onChange={(e) => setSaturdayCloseHr(e.target.value)}/>
                                     </HStack>
                                 </Stack>
                             </Flex>
+                    <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
+                        <font size={5} color={'white'}>Create Event</font>
+                    </Button>
                             <Spacer/>
+
                 </VStack>
             </GridItem>
         </Grid>

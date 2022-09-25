@@ -4,6 +4,8 @@ import {
     FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
 } from '@chakra-ui/react';
 import {StarIcon} from "@chakra-ui/icons";
+import reviewCard from "../Components/ReviewCard";
+import ReviewCard from "../Components/ReviewCard";
 
 const fields_width = '52.5%';
 let attractionName;
@@ -20,14 +22,10 @@ const reviewList = [
     { name: "Josh", age: 33 }
 ];
 const reviewCount = 3;
-const renderReviews = () => {
-    const result = [];
-    for (let i = 0; i < reviewCount; i++) {
-        
-    }
 
-    return <ul>{result}</ul>;
-};
+for (let i = 0; i < reviewCount; i++) {
+
+}
 
 const Reviews = () => {
 
@@ -84,56 +82,9 @@ const Reviews = () => {
         </GridItem>
 
         <GridItem pl='2' bg='white' area={'right'}>
-            <div className="app">
-                <Box w="container.md" rounded="20px" 
-                    overflow="hidden" bg={"gray.200"} mt={10}>
-                    <HStack spacing='20px'>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/042.webp"
-                            alt="Card Image" boxSize="80px">
-                        </Image>
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Felix
-                        </Text>
-                    </HStack>
-                    <Box p={5}>
-                    <Stack align="center">
-                    <Box display='flex' mt='2' alignItems='center'>
-                        {Array(5)
-                            .fill('')
-                            .map((_, i) => (
-                            <StarIcon
-                                key={i}
-                                color={i < rating ? 'teal.500' : 'gray.300'}
-                            />
-                            ))}
-                        <Badge variant="solid" colorScheme="green" 
-                        rounded="full" px={2}>
-                        23 September 2022
-                        </Badge>
-                    </Box>
-                    </Stack>
-                    <Stack align="center">
-                        <Text as="h2" fontWeight="normal" my={2} >
-                        Day ticket holder
-                        </Text>
-                        <Text fontWeight="light">
-                        Brilliant Penguins
-                        </Text>
-                    </Stack>
-                    </Box>
-                    <HStack spacing='10px'>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/045.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/046.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                        <Image src="https://mdbootstrap.com/img/new/standard/city/047.webp"
-                            alt="Card Image" boxSize="200px">
-                        </Image>
-                    </HStack>
-                </Box>
-            </div>
+            <ReviewCard></ReviewCard>
+
+
             <div className="app">
                 <Box w="container.md" rounded="20px" 
                     overflow="hidden" bg={"gray.200"} mt={10}>
