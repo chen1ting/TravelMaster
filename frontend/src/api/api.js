@@ -24,16 +24,25 @@ const sendSignupReq = async (user, pass, email) => {
 };
 
 // returns a boolean indicating if a token is still valid for the session
-// TODO: implement this
-const validateToken = (tokenStr) => {
+const validateToken = async (tokenStr) => {
   if (tokenStr === "" || tokenStr === null) {
     return false;
   }
 
-  // TODO: call the backend /validate_token with the token
-  // and parse resp
+  const rawResponse = await fetch(ENDPOINT + "/validate-token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: tokenStr,
+    }),
+  });
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return false;
+  }
+  const content = await rawResponse.json();
 
-  return true;
+  return content.valid;
 };
 
 export { sendSignupReq, validateToken };
