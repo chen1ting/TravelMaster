@@ -78,7 +78,7 @@ func (s *Server) Login(ctx context.Context, req *models.LoginReq) (*models.Login
 
 	// create user session
 	sessionToken := uuid.New().String()
-	if err := s.addNewUserSession(ctx, strconv.Itoa(int(user.ID)), sessionToken, 24*time.Hour); err != nil {
+	if err := s.addNewUserSession(ctx, strconv.FormatInt(user.ID, 10), sessionToken, 24*time.Hour); err != nil {
 		return nil, err
 	}
 
@@ -125,4 +125,25 @@ func (s *Server) Logout(ctx context.Context, req *models.LogoutReq) error {
 	}
 
 	return err
+}
+
+func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq) (*models.ValidateTokenResp, error) {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return &models.ValidateTokenResp{
+				Valid: false,
+				UserId: -1,
+			}, nil
+		}
+		return nil, err
+	}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &models.ValidateTokenResp{
+		Valid: true,
+		UserId: uid,
+	}, nil
 }
