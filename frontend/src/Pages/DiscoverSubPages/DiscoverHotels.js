@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "./DiscoverHotels.css"
+import "./DatePickerWidth.css"
 
 const DiscoverHotels = () => {
     const [dateRange, setDateRange] = useState([null, null]);
