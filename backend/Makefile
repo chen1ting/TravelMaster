@@ -1,5 +1,5 @@
 run:
 	docker-compose up -d --build
 
-run-dev:
+local:
 	APP_ENV=development go run cmd/TravelMaster/main.go
