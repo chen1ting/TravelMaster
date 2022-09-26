@@ -1,50 +1,34 @@
-import React, { useState } from "react";
-import DatePicker from "react-datepicker";
+import React, {useState} from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import "./customDatePickerWidth.css"
-import {Box, Grid, GridItem, Text} from "@chakra-ui/react";
-// import 'react-datepicker/dist/react-datepicker-cssmodules.css';
-
-const DatesSelector = () => {
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
-    return (
-        <DatePicker
-            selectsRange={true}
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update) => {
-                setDateRange(update);
-            }}
-            monthsShown={3}
-            isClearable={true}
-            showMonthDropdown
-            showYearDropdown
-            dropdownMode="select"
-            dateFormat="dd MMM yyyy"
-        />
-    );
-};
+import {Box, Button, Center, Grid, GridItem} from "@chakra-ui/react";
+import Calendar from "react-calendar";
+import 'react-calendar/dist/Calendar.css';
 
 
 const Itineraries = () => {
+    const mark = ['22-09-2022', '03-12-2022', '05-12-2022'];
+    const [value, onChange] = useState(new Date());
+
     return (
-        <Grid
-            templateAreas={`"datepicker"
-                            "content"`}
-            gridTemplateRows={'15% 85%'}
-            h={'74.5vh'}
-        >
-            <GridItem area={'datepicker'}>
-                <Text>Select Date</Text>
-                <Box className={"customDatePickerWidth"} padding={'1px'} bgColor={"black"}>
-                    <DatesSelector></DatesSelector>
-                </Box>
-            </GridItem>
-            <GridItem area={'content'} bgColor={'blue.50'}>
-                test
-            </GridItem>
-        </Grid>
+        <Box>
+            <Box mb={3}>
+                <Center>
+                    <Calendar
+                        onChange={onChange}
+                        value={value}
+                        minDate={new Date(2010, 1, 1)}
+                        showDoubleView={true}
+                        minDetail={'year'}
+                    />
+                </Center>
+            </Box>
+            <Box bgColor={'blue.50'}>
+                <Button>
+                    Create New Itinerary
+                </Button>
+            </Box>
+        </Box>
     )
 }
 

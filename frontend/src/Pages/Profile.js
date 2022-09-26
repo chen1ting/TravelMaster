@@ -9,11 +9,10 @@ const Profile = () => {
             templateAreas={`'icon username username'
                             'about about tabs'`}
             gridTemplateRows={'15% 85%'}
-            gridTemplateColumns={'10% 10% 80%'}
+            gridTemplateColumns={'10% 8% 82%'}
             h='100vh'
-            mt={'1%'}
-            ml={'3%'}
-            mr={'3%'}
+            ml={'2%'}
+            mr={'2%'}
         >
             <GridItem area={'icon'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
@@ -40,7 +39,7 @@ const Profile = () => {
             </GridItem>
             <GridItem area={'tabs'}>
                 <Tabs isFitted variant='enclosed'>
-                    <TabList mb='1em'>
+                    <TabList>
                         <Tab _selected={{ color: 'white', bg: 'orange.500' }}>Activity Feed</Tab>
                         <Tab _selected={{ color: 'white', bg: 'green.400' }}>Itineraries</Tab>
                         <Tab _selected={{ color: 'white', bg: 'blue.400' }}>Bookings</Tab>
