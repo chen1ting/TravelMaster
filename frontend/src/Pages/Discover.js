@@ -29,7 +29,7 @@ const Discover = () => {
             bgColor={'blue.50'}
         >
             <GridItem area={"title"}>
-                <Box position={'relative'} top={'30%'} left={'7.5%'} transform={'translate(-50%,-50%)'}
+                <Box position={'relative'} top={'23%'} left={'7.5%'} transform={'translate(-50%,-50%)'}
                      textAlign={"left"} width='fit-content' mt={'1%'}>
                     <Text fontSize='4xl'>Discover</Text>
                 </Box>
