@@ -13,8 +13,13 @@ const Welcome = () => {
   }, [navigate]);
   const user = window.sessionStorage.getItem("username");
   const session_token = window.sessionStorage.getItem("session_token");
-  const [startDateTime, setStartDateTime] = useState(new Date());
-  const [endDateTime, setEndDateTime] = useState(new Date());
+  const now = new Date();
+  const [startDateTime, setStartDateTime] = useState(
+    new Date(now.getFullYear(), now.getMonth(), now.getDay(), 15)
+  );
+  const [endDateTime, setEndDateTime] = useState(
+    new Date(now.getFullYear(), now.getMonth(), now.getDay() + 3, 18)
+  );
   const [cats, setCats] = useState(new Set());
 
   const [notifMsg, setNotifMsg] = useState("");
@@ -39,7 +44,7 @@ const Welcome = () => {
     setNotifMsg("Success! Your itinerary is generated.");
     setIsError(false);
     await new Promise((resolve) => setTimeout(resolve, 1250)); // 1 sec
-    navigate(`/itinerary/${content.itinerary_id}`);
+    navigate(`/itinerary/${content.id}`);
   };
 
   const catsList = [

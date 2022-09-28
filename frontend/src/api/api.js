@@ -83,7 +83,7 @@ const sendGenerateItineraryReq = async (
     return null;
   }
   const content = await rawResponse.json();
-  return content;
+  return content.itinerary;
 };
 
 export { sendSignupReq, validateToken, sendLoginReq, sendGenerateItineraryReq };
