@@ -62,4 +62,28 @@ const sendLoginReq = async (user, pass) => {
   return content;
 };
 
-export { sendSignupReq, validateToken, sendLoginReq };
+const sendGenerateItineraryReq = async (
+  session_token,
+  startDateTime,
+  endDateTime,
+  cats
+) => {
+  const rawResponse = await fetch(ENDPOINT + "/generate-itinerary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+      start_time: Math.floor(startDateTime.getTime() / 1000),
+      end_time: Math.floor(endDateTime.getTime() / 1000),
+      preferred_categories: [...cats],
+    }),
+  });
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+  const content = await rawResponse.json();
+  return content;
+};
+
+export { sendSignupReq, validateToken, sendLoginReq, sendGenerateItineraryReq };
