@@ -67,7 +67,7 @@ const Header = (props) => {
                     <MenuItem to="/discover">
                         {MenuTextAlign("Discover")}
                     </MenuItem>
-                    <MenuItem to="/createitinery">
+                    <MenuItem to="/createitineary">
                         {MenuTextAlign("Create an Itinerary")}
                     </MenuItem>
                     <MenuItem to="/itineraries">

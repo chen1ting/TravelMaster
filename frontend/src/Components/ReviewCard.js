@@ -7,6 +7,8 @@ let profileImg = "https://mdbootstrap.com/img/new/standard/city/042.webp"
 let uploadImg1 = "https://mdbootstrap.com/img/new/standard/city/045.webp"
 let uploadImg2 = "https://mdbootstrap.com/img/new/standard/city/046.webp"
 let uploadImg3 = "https://mdbootstrap.com/img/new/standard/city/047.webp"
+let reviewTitle = "Day ticket holder"
+let reviewBody = "Brilliant Penguins"
 let ReviewCard = ({}) => {
 
     return (
@@ -40,10 +42,10 @@ let ReviewCard = ({}) => {
                     </Stack>
                     <Stack align="center">
                         <Text as="h2" fontWeight="normal" my={2}>
-                            Day ticket holder
+                            {reviewTitle}
                         </Text>
                         <Text fontWeight="light">
-                            Brilliant Penguins
+                            {reviewBody}
                         </Text>
                     </Stack>
                 </Box>

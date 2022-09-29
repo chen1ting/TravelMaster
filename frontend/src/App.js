@@ -15,6 +15,8 @@ import Reviews from "./Pages/Reviews";
 import ActivityDescription from './Pages/ActivityDescription';
 import Profile from "./Pages/Profile";
 import CreateEvent from './Pages/CreateEvent';
+import CreateItineary from './Pages/CreateItineary';
+import CreateReviews from './Pages/CreateReviews';
 function App() {
     return (
         <ChakraProvider>
@@ -28,8 +30,10 @@ function App() {
                     <Route path="activitydescription" element={<ActivityDescription/>}/>
                     <Route path="profile" element={<Profile/>}/>
                     <Route path="" element={<SignIn/>}/>
-                    <Route path="createevent" element={<CreateEvent/>}
-                    />
+                    <Route path="createevent" element={<CreateEvent/>}/>
+                    <Route path="createitineary" element={<CreateItineary/>}/>
+                    <Route path="createreviews" element={<CreateReviews/>}/>
+
                 </Routes>
             </Router>
         </ChakraProvider>
