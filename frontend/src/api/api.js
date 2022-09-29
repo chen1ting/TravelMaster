@@ -86,4 +86,117 @@ const sendGenerateItineraryReq = async (
   return content.itinerary;
 };
 
-export { sendSignupReq, validateToken, sendLoginReq, sendGenerateItineraryReq };
+const getItinerary = async (
+  id,
+  session_token,
+  setIsLoading,
+  setNotifMsg,
+  setTimeBins,
+  setItineraryMap,
+  setStartDate,
+  setEndDate
+) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-itinerary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: id,
+      session_token: session_token,
+    }),
+  });
+
+  if (rawResponse.status === 401) {
+    setNotifMsg("You do not have permission to view this itinerary!");
+  } else if (rawResponse.status === 404) {
+    setNotifMsg("Unfortunately, the page you are looking for does not exist.");
+  }
+
+  setIsLoading(false);
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  const itinerary = content.itinerary;
+  if (itinerary.number_of_segments === 0) {
+    setNotifMsg("Failed to generate an itinerary :(");
+    return null;
+  }
+
+  // TODO: some heavylifting work here
+  // create as many 30 minute time bins as required
+  // 1. Get the first epoch, determine its date (X).
+  // 2. Get the last epoch, determine its date (Y).
+  // 3. Then, start from 00:00 of X till 2400 of Y,
+  // An expectation is as many time bins as required to easily build out the GUI.
+  // Thus, we will additionally need to set date X and date Y in the state to facilitate the above.
+  // Note: We should be able to do a one pass operation on the itinerary segments by calculating
+  // the relative offset from the start date 00:00 to get the bucket index.
+  // Also, we will need to maintain an auxilary hashmap to retrieve an activity summary by its id.
+
+  // step 1:
+  const firstDate = new Date(itinerary.segments[0].start_time * 1000);
+  const startDate = new Date(
+    firstDate.getFullYear(),
+    firstDate.getMonth(),
+    firstDate.getDate(),
+    0,
+    0,
+    0
+  );
+  setStartDate(startDate);
+
+  // step 2:
+  const lastDate = new Date(
+    itinerary.segments[itinerary.segments.length - 1].end_time * 1000
+  );
+  const endDate = new Date( // end date is inclusive
+    lastDate.getFullYear(),
+    lastDate.getMonth(),
+    lastDate.getDate(),
+    0,
+    0,
+    0
+  );
+  setEndDate(endDate);
+
+  // step 3:
+  const buckets =
+    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 30 * 60)) +
+    48; // 48 extra buckets for the last day which is inclusive
+
+  // fill up the buckets
+  const timeBins = [];
+  for (let i = 0; i < buckets; i++) {
+    timeBins.push(null);
+  }
+
+  // map each activity to its indexes in time bins
+  const itineraryMap = new Map();
+
+  for (let i = 0; i < itinerary.segments.length; i++) {
+    const seg = itinerary.segments[i];
+    let idx = (seg.start_time - startDate.getTime() / 1000) / (30 * 60);
+    for (let cur = seg.start_time; cur < seg.end_time; cur += 30 * 60) {
+      timeBins[idx] = seg.activity_summary;
+      itineraryMap[seg.activity_summary.id] = (
+        itineraryMap[seg.activity_summary.id] || []
+      ).concat(idx);
+      ++idx;
+    }
+  }
+
+  setTimeBins(timeBins);
+  setItineraryMap(itineraryMap);
+
+  return content;
+};
+
+export {
+  sendSignupReq,
+  validateToken,
+  sendLoginReq,
+  sendGenerateItineraryReq,
+  getItinerary,
+};

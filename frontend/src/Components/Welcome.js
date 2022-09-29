@@ -44,7 +44,7 @@ const Welcome = () => {
     setNotifMsg("Success! Your itinerary is generated.");
     setIsError(false);
     await new Promise((resolve) => setTimeout(resolve, 1250)); // 1 sec
-    navigate(`/itinerary/${content.id}`);
+    navigate(`/edit-itinerary/${content.id}`);
   };
 
   const catsList = [
