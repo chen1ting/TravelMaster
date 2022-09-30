@@ -5,20 +5,26 @@ import {
 } from '@chakra-ui/react';
 import {StarIcon} from "@chakra-ui/icons";
 import ReviewCard from "../Components/ReviewCard";
+
 import { useNavigate } from "react-router-dom";
+
 
 const fields_width = '52.5%';
 let attractionName;
 attractionName = "Penguin Feeding Show"
 let showFree;
 showFree = "Free"
+
 let attractionDescription;
 attractionDescription = "Have you met the Emperor Penguin?"
+
 let rating;
 rating = 4
 
 const Reviews = () => {
+
     const navigate = useNavigate();
+
     //const { signIn } = useAuth();
     return (<Grid
         templateAreas={`"left_top right"
@@ -57,7 +63,9 @@ const Reviews = () => {
                         {attractionName}
                         </Text>
                         <Text fontWeight="light">
+
                         {attractionDescription}
+
                         </Text>
                     </Stack>
                     </Box>
@@ -66,6 +74,7 @@ const Reviews = () => {
         </GridItem>
 
         <GridItem pl='2' bg='white' area={'left_bottom'}>
+
             <Button
                 as="a"
                 onClick={() => {
@@ -79,6 +88,7 @@ const Reviews = () => {
                     Add Reviews
                 </font>
             </Button>
+
         </GridItem>
 
         <GridItem pl='2' bg='white' area={'right'}>

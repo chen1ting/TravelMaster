@@ -1,45 +1,45 @@
 import {useState} from 'react';
-import {Flex, Box, Text, useColorModeValue, Link, Menu, MenuButton, Button, Avatar, MenuList} from '@chakra-ui/react';
+import {
+    Flex,
+    Box,
+    Text,
+    useColorModeValue,
+    Menu,
+    MenuButton,
+    Button,
+    Avatar,
+    MenuList,
+    MenuItem,
+} from '@chakra-ui/react';
+import {useNavigate} from "react-router-dom";
 
 const paddingSpace = '20px'
-const textPadSpace = '7px'
 
-const MenuItem = ({ children, to = '/'}) => {
+const NavButton = (displayString, navigateString) => {
+    const navigate = useNavigate();
     return (
-        <Link
-            px = "1"
-            py = "1"
-            rounded = "md"
-            _hover = {{
-                bg: useColorModeValue('blue.300', 'blue.400'),
+        <MenuButton
+            px="2"
+            py="1"
+            rounded='md'
+            onClick={() => {
+                navigate(navigateString);
+            }}
+            _hover={{
+                bg: useColorModeValue('blue.200', 'blue.400'),
                 fontWeight: "bold",
             }}
-            // change href to navigate
-            href={to}>
-            {children}
-        </Link>
-    );
-};
-
-const MenuTextAlign = inputString => {
-    return (
-        <Box position={'relative'}
-             top={'50%'}
-             left={'50%'}
-             transform={'translate(-50%,-50%)'}
-             textAlign={"left"}
-             width='fit-content'
-             paddingLeft={textPadSpace}
-             paddingRight={textPadSpace}
+            m={2}
         >
-            {inputString}
-        </Box>
+            {displayString}
+        </MenuButton>
     )
 }
 
-const Header = (props) => {
+const Header = () => {
+    const navigate = useNavigate();
+    const [show] = useState(false);
 
-    const [show, setShow] = useState(false);
     return (
         <Flex
             // mb={4}
@@ -62,20 +62,18 @@ const Header = (props) => {
                 flexBasis={{base: '100%', md: 'auto'}}
                 paddingRight={paddingSpace}
             >
-                <Flex fontSize={'xl'} px="10"
-                >
-                    <MenuItem to="/discover">
-                        {MenuTextAlign("Discover")}
-                    </MenuItem>
-                    <MenuItem to="/createitineary">
-                        {MenuTextAlign("Create an Itinerary")}
-                    </MenuItem>
-                    <MenuItem to="/itineraries">
-                        {MenuTextAlign("Itineraries")}
-                    </MenuItem>
-                    <MenuItem to="/bookings">
-                        {MenuTextAlign("Bookings")}
-                    </MenuItem>
+
+                <Flex fontSize={'xl'} px="10">
+                    {/* Navbar buttons */}
+                    <Menu>
+                        {NavButton('Discover', '/discover')}
+                        {NavButton('Create an Itinerary', '/createitinery')}
+                        {NavButton('Itineraries', '/itineraries')}
+                        {NavButton('Bookings', '/bookings')}
+                    </Menu>
+
+                    {/* User Icon (Profile) */}
+
                     <Flex alignItems={'center'} px="3">
                         <Menu>
                             <MenuButton
@@ -86,6 +84,7 @@ const Header = (props) => {
                                 minW={0}
                                 paddingLeft={'14px'}
                             >
+                                {/* Replace src with user image url, with the default as current image*/}
                                 <Avatar
                                     size={'md'}
                                     src={
@@ -94,16 +93,34 @@ const Header = (props) => {
                                 />
                             </MenuButton>
                             <MenuList justify="center">
-                                <Box position={'relative'}
-                                     top={'50%'}
-                                     left={'50%'}
-                                     transform={'translate(-50%,0)'}
-                                     textAlign={"left"}
-                                     width='fit-content'
+                                <MenuItem
+                                    onClick={() => {
+                                        navigate('/profile');
+                                    }}
+                                    px="2"
+                                    py="1"
+                                    rounded='md'
+                                    _hover={{
+                                        bg: useColorModeValue('blue.200', 'blue.400'),
+                                        fontWeight: "bold",
+                                    }}
                                 >
-                                    <MenuItem to="/profile">Profile</MenuItem>
-                                    <MenuItem>Log Out</MenuItem>
-                                </Box>
+                                    Profile
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        navigate('/');
+                                    }}
+                                    px="2"
+                                    py="1"
+                                    rounded='md'
+                                    _hover={{
+                                        bg: useColorModeValue('blue.200', 'blue.400'),
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    Log Out
+                                </MenuItem>
                             </MenuList>
                         </Menu>
                     </Flex>

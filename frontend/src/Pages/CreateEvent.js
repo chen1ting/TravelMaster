@@ -28,6 +28,7 @@ const CreateEvent = () => {
     const [descriptionevent, setDescriptionEvent] = useState('');
     const [eventname, setEventName] = useState('');
     const [sundayopenhr, setSundayOpenHr] = useState('');
+
     const [sundayclosehr, setSundayCloseHr] = useState('');
     const [mondayopenhr, setMondayOpenHr] = useState('');
     const [mondayclosehr, setMondayCloseHr] = useState('');
@@ -41,6 +42,7 @@ const CreateEvent = () => {
     const [fridayclosehr, setFridayCloseHr] = useState('');
     const [saturdayopenhr, setSaturdayOpenHr] = useState('');
     const [saturdayclosehr, setSaturdayCloseHr] = useState('');
+
 
     //const { signIn } = useAuth();
 
@@ -66,6 +68,7 @@ const CreateEvent = () => {
                      textAlign={"center"}>
                     <Text fontSize='2xl'>Events</Text>
                 </Box>
+
             </GridItem>
 
             <GridItem pl='2' bg='blue.100' area={'left_bottom'}>
