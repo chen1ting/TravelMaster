@@ -58,7 +58,7 @@ const Header = (props) => {
             h="6vh"
 
         >
-            <Box w="200px" p="-1" paddingLeft={paddingSpace}>
+            <Box w="200px" p="6" paddingLeft={paddingSpace}>
                 <Text as="i" fontSize="5xl" fontWeight="bold">
                     TM
                 </Text>
