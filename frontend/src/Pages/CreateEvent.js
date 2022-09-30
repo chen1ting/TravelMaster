@@ -28,19 +28,21 @@ const CreateEvent = () => {
     const [descriptionevent, setDescriptionEvent] = useState('');
     const [eventname, setEventName] = useState('');
     const [sundayopenhr, setSundayOpenHr] = useState('');
-    const [sundayClosehr, setSundayCloseHr] = useState('');
+
+    const [sundayclosehr, setSundayCloseHr] = useState('');
     const [mondayopenhr, setMondayOpenHr] = useState('');
-    const [mondayClosehr, setMondayCloseHr] = useState('');
+    const [mondayclosehr, setMondayCloseHr] = useState('');
     const [tuesdayopenhr, setTuesdayOpenHr] = useState('');
-    const [tuesdayClosehr, setTuesdayCloseHr] = useState('');
+    const [tuesdayclosehr, setTuesdayCloseHr] = useState('');
     const [wednesdayopenhr, setWednesdayOpenHr] = useState('');
-    const [wednesdayClosehr, setWednesdayCloseHr] = useState('');
+    const [wednesdayclosehr, setWednesdayCloseHr] = useState('');
     const [thursdayopenhr, setThursdayOpenHr] = useState('');
-    const [thursdayClosehr, setThursdayCloseHr] = useState('');
+    const [thursdayclosehr, setThursdayCloseHr] = useState('');
     const [fridayopenhr, setFridayOpenHr] = useState('');
-    const [fridayClosehr, setFridayCloseHr] = useState('');
+    const [fridayclosehr, setFridayCloseHr] = useState('');
     const [saturdayopenhr, setSaturdayOpenHr] = useState('');
-    const [saturdayClosehr, setSaturdayCloseHr] = useState('');
+    const [saturdayclosehr, setSaturdayCloseHr] = useState('');
+
 
     //const { signIn } = useAuth();
 
@@ -68,8 +70,6 @@ const CreateEvent = () => {
                 </Box>
 
             </GridItem>
-
-
 
             <GridItem pl='2' bg='blue.100' area={'left_bottom'}>
                 <VStack
