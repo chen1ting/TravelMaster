@@ -62,6 +62,7 @@ const Header = () => {
                 flexBasis={{base: '100%', md: 'auto'}}
                 paddingRight={paddingSpace}
             >
+
                 <Flex fontSize={'xl'} px="10">
                     {/* Navbar buttons */}
                     <Menu>
@@ -72,6 +73,7 @@ const Header = () => {
                     </Menu>
 
                     {/* User Icon (Profile) */}
+
                     <Flex alignItems={'center'} px="3">
                         <Menu>
                             <MenuButton
