@@ -94,7 +94,11 @@ const getItinerary = async (
   setTimeBins,
   setItineraryMap,
   setStartDate,
-  setEndDate
+  setEndDate,
+  setItineraryResp,
+  setCurDate,
+  setTimeBinsCopy,
+  setItineraryMapCopy
 ) => {
   const rawResponse = await fetch(ENDPOINT + "/get-itinerary", {
     method: "POST",
@@ -111,7 +115,6 @@ const getItinerary = async (
     setNotifMsg("Unfortunately, the page you are looking for does not exist.");
   }
 
-  setIsLoading(false);
   if (rawResponse.status !== 200) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
     return null;
@@ -123,6 +126,7 @@ const getItinerary = async (
     setNotifMsg("Failed to generate an itinerary :(");
     return null;
   }
+  setItineraryResp(itinerary);
 
   // TODO: some heavylifting work here
   // create as many 30 minute time bins as required
@@ -146,6 +150,7 @@ const getItinerary = async (
     0
   );
   setStartDate(startDate);
+  setCurDate(startDate);
 
   // step 2:
   const lastDate = new Date(
@@ -163,8 +168,8 @@ const getItinerary = async (
 
   // step 3:
   const buckets =
-    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 30 * 60)) +
-    48; // 48 extra buckets for the last day which is inclusive
+    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)) +
+    24; // 24 extra buckets for the last day which is inclusive
 
   // fill up the buckets
   const timeBins = [];
@@ -177,8 +182,8 @@ const getItinerary = async (
 
   for (let i = 0; i < itinerary.segments.length; i++) {
     const seg = itinerary.segments[i];
-    let idx = (seg.start_time - startDate.getTime() / 1000) / (30 * 60);
-    for (let cur = seg.start_time; cur < seg.end_time; cur += 30 * 60) {
+    let idx = (seg.start_time - startDate.getTime() / 1000) / (60 * 60);
+    for (let cur = seg.start_time; cur < seg.end_time; cur += 60 * 60) {
       timeBins[idx] = seg.activity_summary;
       itineraryMap[seg.activity_summary.id] = (
         itineraryMap[seg.activity_summary.id] || []
@@ -186,11 +191,42 @@ const getItinerary = async (
       ++idx;
     }
   }
-
+  console.log(timeBins);
   setTimeBins(timeBins);
   setItineraryMap(itineraryMap);
-
+  setTimeBinsCopy([...timeBins]);
+  setItineraryMapCopy(new Map(itineraryMap));
+  setIsLoading(false);
   return content;
+};
+
+const getActivitiesByFilter = async (
+  searchText,
+  pageNum,
+  pageSize,
+  times,
+  session_token,
+  setActivities
+) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-activities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      search_text: searchText,
+      page_num: pageNum,
+      page_size: pageSize,
+      Times: times,
+      session_token: session_token,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  setActivities(content.activities);
 };
 
 export {
@@ -199,4 +235,5 @@ export {
   sendLoginReq,
   sendGenerateItineraryReq,
   getItinerary,
+  getActivitiesByFilter,
 };

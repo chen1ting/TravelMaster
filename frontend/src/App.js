@@ -17,7 +17,7 @@ import Profile from "./Pages/Profile";
 import Itineraries from "./Components/ProfileSubPages/Itineraries";
 import Bookings from "./Components/ProfileSubPages/Bookings";
 import CreateEvent from "./Pages/CreateEvent";
-import EditItinerary from "./Components/EditItinerary";
+import Itinerary from "./Components/Itinerary";
 
 function App() {
   return (
@@ -34,7 +34,7 @@ function App() {
           <Route path="createevent" element={<CreateEvent />} />
           <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />
-          <Route path="edit-itinerary/:id" element={<EditItinerary />} />
+          <Route path="edit-itinerary/:id" element={<Itinerary />} />
           <Route path="" element={<SignIn />} />
         </Routes>
       </Router>

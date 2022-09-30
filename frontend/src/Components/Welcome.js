@@ -98,10 +98,10 @@ const Welcome = () => {
         w="100%"
         display="flex"
         justifyContent="center"
-        itemsAlign="center"
+        alignItems="center"
         py="5"
       >
-        <Box display="flex" justifyContent="center" itemsAlign="center">
+        <Box display="flex" justifyContent="center" alignItems="center">
           <Text whiteSpace="nowrap" fontSize="3xl">
             You would be in Singapore from
           </Text>
@@ -161,7 +161,7 @@ const Welcome = () => {
           padding="5"
           maxW="500px"
           justifyContent="center"
-          itemsAlign="center"
+          alignItems="center"
           columnGap="7"
           rowGap="6"
         >
