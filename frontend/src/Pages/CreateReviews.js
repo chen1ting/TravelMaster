@@ -1,5 +1,6 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
+
 import {
     FormControl, FormLabel, Button, Flex, Grid, GridItem,
     AspectRatio,
@@ -24,7 +25,7 @@ const fields_width = '52.5%';
 
 const CreateReview = () => {
     const [rating, setRating] = useState('');
-    const [uploadImg1, setuploadImg1] = useState('');
+    const [uploadImg1, setUploadImg1] = useState('');
     const [uploadImg2, setUploadImg2] = useState('');
     const [uploadImg3, setUploadImg3] = useState('');
     const [reviewTitle, setReviewTitle] = useState('');
@@ -176,6 +177,203 @@ const CreateReview = () => {
                         </Stack>
 
                     </Flex>
+
+                    <Flex
+                        wrap="wrap"
+                        direction="column"
+                        align="start"
+                    >
+                        <Stack spacing={8}>
+                            <h1>Upload Image</h1>
+                            <HStack spacing='24px'>
+                                <AspectRatio width="64" ratio={1}>
+                                    <Box
+                                        borderColor="gray.300"
+                                        borderStyle="dashed"
+                                        borderWidth="2px"
+                                        rounded="md"
+                                        shadow="sm"
+                                        role="group"
+                                        transition="all 150ms ease-in-out"
+                                        _hover={{
+                                            shadow: "md"
+                                        }}
+                                        as={motion.div}
+                                        initial="rest"
+                                        animate="rest"
+                                        whileHover="hover"
+                                        textAlign={"center"}
+                                    >
+                                        <Box position="relative" height="100%" width="100%">
+                                            <Box
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                height="100%"
+                                                width="100%"
+                                                display="flex"
+                                                flexDirection="column"
+                                            >
+                                                <Stack
+                                                    height="100%"
+                                                    width="100%"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justify="center"
+                                                    spacing="4"
+                                                >
+                                                    <Box height="16" width="12" position="relative">
+
+                                                    </Box>
+                                                    <Stack p="8" textAlign="center" spacing="1">
+                                                        <Heading fontSize="lg" color="gray.700" fontWeight="bold">
+                                                            Drop images here
+                                                        </Heading>
+                                                        <Text fontWeight="light">or click to upload</Text>
+                                                    </Stack>
+                                                </Stack>
+                                            </Box>
+                                            <Input
+                                                type="file"
+                                                height="100%"
+                                                width="100%"
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                opacity="0"
+                                                aria-hidden="true"
+                                                accept="image/*"
+                                            />
+                                        </Box>
+                                    </Box>
+                                </AspectRatio>
+                                <AspectRatio width="64" ratio={1}>
+                                    <Box
+                                        borderColor="gray.300"
+                                        borderStyle="dashed"
+                                        borderWidth="2px"
+                                        rounded="md"
+                                        shadow="sm"
+                                        role="group"
+                                        transition="all 150ms ease-in-out"
+                                        _hover={{
+                                            shadow: "md"
+                                        }}
+                                        as={motion.div}
+                                        initial="rest"
+                                        animate="rest"
+                                        whileHover="hover"
+                                        textAlign={"center"}
+                                    >
+                                        <Box position="relative" height="100%" width="100%">
+                                            <Box
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                height="100%"
+                                                width="100%"
+                                                display="flex"
+                                                flexDirection="column"
+                                            >
+                                                <Stack
+                                                    height="100%"
+                                                    width="100%"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justify="center"
+                                                    spacing="4"
+                                                >
+                                                    <Box height="16" width="12" position="relative">
+
+                                                    </Box>
+                                                    <Stack p="8" textAlign="center" spacing="1">
+                                                        <Heading fontSize="lg" color="gray.700" fontWeight="bold">
+                                                            Drop images here
+                                                        </Heading>
+                                                        <Text fontWeight="light">or click to upload</Text>
+                                                    </Stack>
+                                                </Stack>
+                                            </Box>
+                                            <Input
+                                                type="file"
+                                                height="100%"
+                                                width="100%"
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                opacity="0"
+                                                aria-hidden="true"
+                                                accept="image/*"
+                                            />
+                                        </Box>
+                                    </Box>
+                                </AspectRatio>
+                                <AspectRatio width="64" ratio={1}>
+                                    <Box
+                                        borderColor="gray.300"
+                                        borderStyle="dashed"
+                                        borderWidth="2px"
+                                        rounded="md"
+                                        shadow="sm"
+                                        role="group"
+                                        transition="all 150ms ease-in-out"
+                                        _hover={{
+                                            shadow: "md"
+                                        }}
+                                        as={motion.div}
+                                        initial="rest"
+                                        animate="rest"
+                                        whileHover="hover"
+                                        textAlign={"center"}
+                                    >
+                                        <Box position="relative" height="100%" width="100%">
+                                            <Box
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                height="100%"
+                                                width="100%"
+                                                display="flex"
+                                                flexDirection="column"
+                                            >
+                                                <Stack
+                                                    height="100%"
+                                                    width="100%"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justify="center"
+                                                    spacing="4"
+                                                >
+                                                    <Box height="16" width="12" position="relative">
+
+                                                    </Box>
+                                                    <Stack p="8" textAlign="center" spacing="1">
+                                                        <Heading fontSize="lg" color="gray.700" fontWeight="bold">
+                                                            Drop images here
+                                                        </Heading>
+                                                        <Text fontWeight="light">or click to upload</Text>
+                                                    </Stack>
+                                                </Stack>
+                                            </Box>
+                                            <Input
+                                                type="file"
+                                                height="100%"
+                                                width="100%"
+                                                position="absolute"
+                                                top="0"
+                                                left="0"
+                                                opacity="0"
+                                                aria-hidden="true"
+                                                accept="image/*"
+                                            />
+                                        </Box>
+                                    </Box>
+                                </AspectRatio>
+                            </HStack>
+                        </Stack>
+
+                    </Flex>
+
                     <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
                         <font size={5} color={'white'}>Publish Review</font>
                     </Button>

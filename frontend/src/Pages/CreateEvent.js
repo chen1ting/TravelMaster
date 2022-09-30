@@ -66,10 +66,7 @@ const CreateEvent = () => {
                      textAlign={"center"}>
                     <Text fontSize='2xl'>Events</Text>
                 </Box>
-
             </GridItem>
-
-
 
             <GridItem pl='2' bg='blue.100' area={'left_bottom'}>
                 <VStack
