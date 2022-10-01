@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 	"gorm.io/gorm"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -26,6 +30,8 @@ var (
 	ErrActivityAlreadyExists = errors.New("an activity with the same title already exists")
 	ErrNullTitle             = errors.New("title cannot be empty")
 	ErrInvalidActivityID     = errors.New("activity id doesn't exist")
+	ErrInvalidCreateUser     = errors.New("user id doesn't exists")
+	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail          = errors.New("search failed")
 	ErrParsingResultFail     = errors.New("cannot parse result")
 )
@@ -73,7 +79,7 @@ func (s *Server) Login(ctx context.Context, req *models.LoginReq) (*models.Login
 
 	// query user by username in DB
 	var user gormModel.User
-	if result := s.Database.Where("Username = ?", req.Username).First(&user); result.Error != nil {
+	if result := s.Database.Where("username = ?", req.Username).First(&user); result.Error != nil {
 		return nil, ErrInvalidLogin
 	}
 
@@ -154,35 +160,97 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 	}, nil
 }
 
-func (s *Server) CreateActivity(req *models.CreateActivityReq) (*models.CreateActivityResp, error) {
-	if req == nil {
+func getValidTime(hhmm int) int {
+	hour := hhmm / 100
+	min := hhmm % 100
+	if 0 <= hour && hour < 24 && 0 <= min && min < 60 {
+		return hhmm
+	}
+	return -1
+}
+
+func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
+	var opening []int32
+	opening = append(opening, int32(getValidTime(createForm.MonOpeningTime)),
+		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
+		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.FriOpeningTime)),
+		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunOpeningTime)),
+		int32(getValidTime(createForm.MonClosingTime)), int32(getValidTime(createForm.TueClosingTime)),
+		int32(getValidTime(createForm.WedClosingTime)), int32(getValidTime(createForm.ThurClosingTime)),
+		int32(getValidTime(createForm.FriClosingTime)), int32(getValidTime(createForm.SatClosingTime)),
+		int32(getValidTime(createForm.SunClosingTime)))
+	return opening
+}
+
+func packUpdateOpeningTimes(updateReq *models.UpdateActivityReq) []int32 {
+	var opening []int32
+	opening = append(opening, int32(getValidTime(updateReq.MonOpeningTime)),
+		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
+		int32(getValidTime(updateReq.ThurOpeningTime)), int32(getValidTime(updateReq.FriOpeningTime)),
+		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunOpeningTime)),
+		int32(getValidTime(updateReq.MonClosingTime)), int32(getValidTime(updateReq.TueClosingTime)),
+		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
+		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)),
+		int32(getValidTime(updateReq.SunClosingTime)))
+	return opening
+}
+
+func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
+	if form == nil {
 		return nil, ErrBadRequest
+	}
+
+	var user gormModel.User
+	if result := s.Database.First(&user, form.UserID); result.Error != nil {
+		return nil, ErrInvalidCreateUser
+	}
+
+	if form.Title == "" {
+		fmt.Println("create_activity err: ", ErrNullTitle) // TODO: write to log instead
+		return nil, ErrNullTitle
+	}
+
+	var activitySearch gormModel.Activity
+	if result := s.Database.Where("Title = ?", form.Title).First(&activitySearch); result.RowsAffected > 0 {
+		fmt.Println("create_activity err: ", ErrActivityAlreadyExists) // TODO: write to log instead
+		return nil, ErrActivityAlreadyExists
+	}
+
+	//  TODO: this file path should be in global variable or config?
+	cwd, _ := os.Getwd()
+	if _, err := os.Stat("assets"); errors.Is(err, os.ErrNotExist) {
+		mkdirErr := os.Mkdir("assets", os.ModePerm) // you might want different file access, this suffice for this example
+		if mkdirErr != nil {
+			fmt.Println(mkdirErr) // TODO: log
+		} else {
+			fmt.Printf("Created %s at %s\n", "assets", cwd)
+		}
+	}
+
+	uniqueImgName := uuid.NewString() + form.Image.Filename
+	fPath := filepath.Join(cwd, "assets", uniqueImgName)
+	_, err := os.Create(fPath)
+	if err != nil {
+		return nil, err
+	}
+	saveErr := c.SaveUploadedFile(form.Image, fPath)
+	if saveErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": saveErr.Error()})
+		return nil, saveErr
 	}
 
 	// add activity to database
 	activity := gormModel.Activity{
-		Title:       req.Title,
-		Rating:      req.Rating,
-		Paid:        req.Paid,
-		Category:    req.Category,
-		Description: req.Description,
-		Longitude:   req.Longitude,
-		Latitude:    req.Latitude,
-
-		MonOpeningTime:  req.MonOpeningTime,
-		MonClosingTime:  req.MonClosingTime,
-		TueOpeningTime:  req.TueOpeningTime,
-		TueClosingTime:  req.TueClosingTime,
-		WedOpeningTime:  req.WedOpeningTime,
-		WedClosingTime:  req.WedClosingTime,
-		ThurOpeningTime: req.ThurOpeningTime,
-		ThurClosingTime: req.ThurClosingTime,
-		FriOpeningTime:  req.FriOpeningTime,
-		FriClosingTime:  req.FriClosingTime,
-		SatOpeningTime:  req.SatOpeningTime,
-		SatClosingTime:  req.SatClosingTime,
-		SunOpeningTime:  req.SunOpeningTime,
-		SunClosingTime:  req.SunClosingTime,
+		UserID:        form.UserID,
+		Title:         form.Title,
+		AverageRating: form.Rating,
+		Paid:          form.Paid,
+		Category:      form.Category,
+		Description:   form.Description,
+		Longitude:     form.Longitude,
+		Latitude:      form.Latitude,
+		OpeningTimes:  packCreateOpeningTimes(form),
+		ImageURL:      "/assets/" + uniqueImgName,
 
 		// system settings
 		InactiveCount: 0,
@@ -201,6 +269,10 @@ func (s *Server) CreateActivity(req *models.CreateActivityReq) (*models.CreateAc
 			return nil, ErrNullTitle
 		}
 		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
+		err := os.Remove(uniqueImgName)
+		if err != nil {
+			fmt.Println("create_activity error deleting image file: ", err) // TODO: write to log instead
+		}
 		return nil, result.Error
 	}
 
@@ -225,7 +297,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
-		Rating:      activity.Rating,
+		Rating:      activity.AverageRating,
 		Paid:        activity.Paid,
 		Category:    activity.Category,
 		Description: activity.Description,
@@ -233,20 +305,20 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		Latitude:    activity.Latitude,
 		ImageURL:    activity.ImageURL,
 
-		MonOpeningTime:  activity.MonOpeningTime,
-		MonClosingTime:  activity.MonClosingTime,
-		TueOpeningTime:  activity.TueOpeningTime,
-		TueClosingTime:  activity.TueClosingTime,
-		WedOpeningTime:  activity.WedOpeningTime,
-		WedClosingTime:  activity.WedClosingTime,
-		ThurOpeningTime: activity.ThurOpeningTime,
-		ThurClosingTime: activity.ThurClosingTime,
-		FriOpeningTime:  activity.FriOpeningTime,
-		FriClosingTime:  activity.FriClosingTime,
-		SatOpeningTime:  activity.SatOpeningTime,
-		SatClosingTime:  activity.SatClosingTime,
-		SunOpeningTime:  activity.SunOpeningTime,
-		SunClosingTime:  activity.SunClosingTime,
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
 
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
@@ -302,10 +374,6 @@ func (s *Server) UpdateActivity(req *models.UpdateActivityReq) (*models.UpdateAc
 		return nil, ErrBadRequest
 	}
 
-	if req.Title == "" {
-		return nil, ErrNullTitle
-	}
-
 	// find the activity in database
 	var activity gormModel.Activity
 
@@ -314,31 +382,24 @@ func (s *Server) UpdateActivity(req *models.UpdateActivityReq) (*models.UpdateAc
 		return nil, ErrInvalidActivityID
 	}
 
+	// see if the user id matches the activity's user id
+	if activity.UserID != req.UserID {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	if req.Title == "" {
+		return nil, ErrNullTitle
+	}
 	// update activity and save to database
 	activity.Title = req.Title
-	activity.Rating = req.Rating
+	activity.AverageRating = req.Rating
 	activity.Paid = req.Paid
 	activity.Category = req.Category
 	activity.Description = req.Description
 	activity.Longitude = req.Longitude
 	activity.Latitude = req.Latitude
 	// TODO: update image
-
-	activity.MonOpeningTime = req.MonOpeningTime
-	activity.MonClosingTime = req.MonClosingTime
-	activity.TueOpeningTime = req.TueOpeningTime
-	activity.TueClosingTime = req.TueClosingTime
-	activity.WedOpeningTime = req.WedOpeningTime
-	activity.WedClosingTime = req.WedClosingTime
-	activity.ThurOpeningTime = req.ThurOpeningTime
-	activity.ThurClosingTime = req.ThurClosingTime
-	activity.FriOpeningTime = req.FriOpeningTime
-	activity.FriClosingTime = req.FriClosingTime
-	activity.SatOpeningTime = req.SatOpeningTime
-	activity.SatClosingTime = req.SatClosingTime
-	activity.SunOpeningTime = req.SunOpeningTime
-	activity.SunClosingTime = req.SunClosingTime
-
+	activity.OpeningTimes = packUpdateOpeningTimes(req)
 	s.Database.Save(&activity)
 
 	if result := s.Database.Save(&activity); result.Error != nil {

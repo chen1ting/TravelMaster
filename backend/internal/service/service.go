@@ -1,11 +1,11 @@
 package service
 
 import (
-	"net/http"
-
 	"github.com/chen1ting/TravelMaster/internal/models"
 	"github.com/chen1ting/TravelMaster/internal/server"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"os"
 )
 
 type ServiceInf interface {
@@ -92,6 +92,38 @@ func (s *Service) ValidateToken(c *gin.Context) {
 	c.JSON(http.StatusOK, validateTokenResp)
 }
 
+func (s *Service) CreateActivity(c *gin.Context) {
+	createActivityForm := &models.CreateActivityForm{}
+	if err := c.ShouldBind(&createActivityForm); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createActivityResp, err := s.server.CreateActivity(createActivityForm, c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createActivityResp)
+}
+
+func (s *Service) GetImage(w http.ResponseWriter, c *gin.Context) {
+
+	fileBytes, err := os.ReadFile(c.Query("filename"))
+	if err != nil {
+		panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, err = w.Write(fileBytes)
+	if err != nil {
+		return
+	}
+	return
+}
+
+/*
 // CreateActivity endpoints for activities:
 func (s *Service) CreateActivity(c *gin.Context) {
 	createActivityReq := &models.CreateActivityReq{}
@@ -107,6 +139,7 @@ func (s *Service) CreateActivity(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, createActivityResp)
 }
+*/
 
 func (s *Service) GetActivity(c *gin.Context) {
 	getActivityReq := &models.GetActivityReq{}

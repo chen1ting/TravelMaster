@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/chen1ting/TravelMaster/internal/service"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,4 +20,5 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/search-activity", service.SearchActivity)
 	r.POST("/update-activity", service.UpdateActivity)
 	r.POST("/report-inactive-activity", service.ReportInactiveActivity)
+	r.Use(static.Serve("/assets", static.LocalFile("./assets", true)))
 }
