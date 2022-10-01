@@ -5,7 +5,6 @@ import (
 	"github.com/chen1ting/TravelMaster/internal/server"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"os"
 )
 
 type ServiceInf interface {
@@ -93,7 +92,7 @@ func (s *Service) ValidateToken(c *gin.Context) {
 }
 
 func (s *Service) CreateActivity(c *gin.Context) {
-	createActivityForm := &models.CreateActivityForm{}
+	createActivityForm := &models.ActivityInfoForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -107,39 +106,6 @@ func (s *Service) CreateActivity(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, createActivityResp)
 }
-
-func (s *Service) GetImage(w http.ResponseWriter, c *gin.Context) {
-
-	fileBytes, err := os.ReadFile(c.Query("filename"))
-	if err != nil {
-		panic(err)
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/octet-stream")
-	_, err = w.Write(fileBytes)
-	if err != nil {
-		return
-	}
-	return
-}
-
-/*
-// CreateActivity endpoints for activities:
-func (s *Service) CreateActivity(c *gin.Context) {
-	createActivityReq := &models.CreateActivityReq{}
-	if err := c.ShouldBindJSON(&createActivityReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	createActivityResp, err := s.server.CreateActivity(createActivityReq)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, createActivityResp)
-}
-*/
 
 func (s *Service) GetActivity(c *gin.Context) {
 	getActivityReq := &models.GetActivityReq{}
@@ -172,12 +138,12 @@ func (s *Service) SearchActivity(c *gin.Context) {
 }
 
 func (s *Service) UpdateActivity(c *gin.Context) {
-	updateActivityReq := &models.UpdateActivityReq{}
+	updateActivityReq := &models.UpdateActivityForm{}
 	if err := c.ShouldBindJSON(&updateActivityReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	updateActivityResp, err := s.server.UpdateActivity(updateActivityReq)
+	updateActivityResp, err := s.server.UpdateActivity(updateActivityReq, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

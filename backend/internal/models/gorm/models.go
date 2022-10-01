@@ -27,24 +27,6 @@ type Activity struct {
 	Latitude      float32        `gorm:"gorm:latitude; default:-90.1"`
 	ImageURL      string         `gorm:"column:image"`
 	OpeningTimes  pq.Int32Array  `gorm:"type:int[];column:opening_times"`
-	// 0:Mon Opening, 1: Tue Opening  2: Wed Opening ... 7: Mon Closing
-	// fields for opening & closing hours
-	/*
-		MonOpeningTime  int `gorm:"column:mon_opening_time; default:-1"`
-		MonClosingTime  int `gorm:"column:mon_closing_time; default:-1"`
-		TueOpeningTime  int `gorm:"column:tue_opening_time; default:-1"`
-		TueClosingTime  int `gorm:"column:tue_closing_time; default:-1"`
-		WedOpeningTime  int `gorm:"column:wed_opening_time; default:-1"`
-		WedClosingTime  int `gorm:"column:wed_closing_time; default:-1"`
-		ThurOpeningTime int `gorm:"column:thur_opening_time; default:-1"`
-		ThurClosingTime int `gorm:"column:thur_closing_time; default:-1"`
-		FriOpeningTime  int `gorm:"column:fri_opening_time; default:-1"`
-		FriClosingTime  int `gorm:"column:fri_closing_time; default:-1"`
-		SatOpeningTime  int `gorm:"column:sat_opening_time; default:-1"`
-		SatClosingTime  int `gorm:"column:sat_closing_time; default:-1"`
-		SunOpeningTime  int `gorm:"column:sun_opening_time; default:-1"`
-		SunClosingTime  int `gorm:"column:sun_closing_time; default:-1"`
-	*/
 
 	// System fields
 	InactiveCount int    `gorm:"column:inactive_count"`

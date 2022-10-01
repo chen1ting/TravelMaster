@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 	"gorm.io/gorm"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -169,7 +170,7 @@ func getValidTime(hhmm int) int {
 	return -1
 }
 
-func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
+func packCreateOpeningTimes(createForm *models.ActivityInfoForm) []int32 {
 	var opening []int32
 	opening = append(opening, int32(getValidTime(createForm.MonOpeningTime)),
 		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
@@ -182,7 +183,7 @@ func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
 	return opening
 }
 
-func packUpdateOpeningTimes(updateReq *models.UpdateActivityReq) []int32 {
+func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	var opening []int32
 	opening = append(opening, int32(getValidTime(updateReq.MonOpeningTime)),
 		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
@@ -195,7 +196,33 @@ func packUpdateOpeningTimes(updateReq *models.UpdateActivityReq) []int32 {
 	return opening
 }
 
-func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
+func SaveFile(image *multipart.FileHeader, c *gin.Context) (string, error) {
+
+	//  TODO: this file path should be in global variable or config?
+	cwd, _ := os.Getwd()
+	if _, err := os.Stat("assets"); errors.Is(err, os.ErrNotExist) {
+		mkdirErr := os.Mkdir("assets", os.ModePerm) // you might want different file access, this suffice for this example
+		if mkdirErr != nil {
+			fmt.Println(mkdirErr) // TODO: log
+		} else {
+			fmt.Printf("Created %s at %s\n", "assets", cwd)
+		}
+	}
+	uniqueImgName := uuid.NewString() + image.Filename
+	fPath := filepath.Join(cwd, "assets", uniqueImgName)
+	_, err := os.Create(fPath)
+	if err != nil {
+		return "", err
+	}
+	saveErr := c.SaveUploadedFile(image, fPath)
+	if saveErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": saveErr.Error()})
+		return "", saveErr
+	}
+	return uniqueImgName, nil
+}
+
+func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (*models.CreateActivityResp, error) {
 	if form == nil {
 		return nil, ErrBadRequest
 	}
@@ -216,27 +243,13 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		return nil, ErrActivityAlreadyExists
 	}
 
-	//  TODO: this file path should be in global variable or config?
-	cwd, _ := os.Getwd()
-	if _, err := os.Stat("assets"); errors.Is(err, os.ErrNotExist) {
-		mkdirErr := os.Mkdir("assets", os.ModePerm) // you might want different file access, this suffice for this example
-		if mkdirErr != nil {
-			fmt.Println(mkdirErr) // TODO: log
-		} else {
-			fmt.Printf("Created %s at %s\n", "assets", cwd)
+	ImgPath := ""
+	if form.Image != nil {
+		uniqueImgName, saveErr := SaveFile(form.Image, c)
+		if saveErr != nil {
+			return nil, saveErr
 		}
-	}
-
-	uniqueImgName := uuid.NewString() + form.Image.Filename
-	fPath := filepath.Join(cwd, "assets", uniqueImgName)
-	_, err := os.Create(fPath)
-	if err != nil {
-		return nil, err
-	}
-	saveErr := c.SaveUploadedFile(form.Image, fPath)
-	if saveErr != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": saveErr.Error()})
-		return nil, saveErr
+		ImgPath = "/assets/" + uniqueImgName
 	}
 
 	// add activity to database
@@ -250,7 +263,7 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		Longitude:     form.Longitude,
 		Latitude:      form.Latitude,
 		OpeningTimes:  packCreateOpeningTimes(form),
-		ImageURL:      "/assets/" + uniqueImgName,
+		ImageURL:      ImgPath,
 
 		// system settings
 		InactiveCount: 0,
@@ -260,16 +273,8 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 	}
 
 	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
-		// error code reference https://github.com/jackc/pgerrcode/blob/master/errcode.go
-		var perr *pgconn.PgError
-		if errors.As(result.Error, &perr) && perr.Code == "23505" {
-			return nil, ErrActivityAlreadyExists
-		}
-		if errors.As(result.Error, &perr) && perr.Code == "23502" {
-			return nil, ErrNullTitle
-		}
 		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
-		err := os.Remove(uniqueImgName)
+		err := os.Remove(ImgPath)
 		if err != nil {
 			fmt.Println("create_activity error deleting image file: ", err) // TODO: write to log instead
 		}
@@ -369,8 +374,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 	}, nil
 }
 
-func (s *Server) UpdateActivity(req *models.UpdateActivityReq) (*models.UpdateActivityResp, error) {
-	if req == nil {
+func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
+	if form == nil {
 		return nil, ErrBadRequest
 	}
 
@@ -378,28 +383,37 @@ func (s *Server) UpdateActivity(req *models.UpdateActivityReq) (*models.UpdateAc
 	var activity gormModel.Activity
 
 	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil {
 		return nil, ErrInvalidActivityID
 	}
 
 	// see if the user id matches the activity's user id
-	if activity.UserID != req.UserID {
+	if activity.UserID != form.UserID {
 		return nil, ErrInvalidUpdateUser
 	}
 
-	if req.Title == "" {
+	if form.Title == "" {
 		return nil, ErrNullTitle
 	}
+
+	ImgPath := activity.ImageURL
+	if form.Image != nil {
+		uniqueImgName, saveErr := SaveFile(form.Image, c)
+		if saveErr != nil {
+			return nil, saveErr
+		}
+		ImgPath = "/assets/" + uniqueImgName
+	}
 	// update activity and save to database
-	activity.Title = req.Title
-	activity.AverageRating = req.Rating
-	activity.Paid = req.Paid
-	activity.Category = req.Category
-	activity.Description = req.Description
-	activity.Longitude = req.Longitude
-	activity.Latitude = req.Latitude
-	// TODO: update image
-	activity.OpeningTimes = packUpdateOpeningTimes(req)
+	activity.Title = form.Title
+	activity.AverageRating = form.Rating
+	activity.Paid = form.Paid
+	activity.Category = form.Category
+	activity.Description = form.Description
+	activity.Longitude = form.Longitude
+	activity.Latitude = form.Latitude
+	activity.ImageURL = ImgPath
+	activity.OpeningTimes = packUpdateOpeningTimes(form)
 	s.Database.Save(&activity)
 
 	if result := s.Database.Save(&activity); result.Error != nil {

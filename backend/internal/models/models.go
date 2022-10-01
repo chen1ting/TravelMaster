@@ -47,7 +47,7 @@ type ValidateTokenResp struct {
 	UserId int64 `json:"user_id"`
 }
 
-type CreateActivityForm struct {
+type ActivityInfoForm struct {
 	// Assumption: user token is already validated
 	UserID      int64    `form:"user_id"`
 	Title       string   `form:"title"`
@@ -76,37 +76,6 @@ type CreateActivityForm struct {
 	SunOpeningTime  int `form:"sun_opening_time"`
 	SunClosingTime  int `form:"sun_closing_time"`
 }
-
-/*
-type CreateActivityReq struct {
-	// Assumption: user token is already validated
-	UserID      int64    `json:"user_id"`
-	Title       string   `json:"title"`
-	Rating      float32  `json:"rating_score"`
-	Paid        bool     `json:"paid"`
-	Category    []string `json:"category"`
-	Description string   `json:"description"`
-	Longitude   float32  `json:"longitude"`
-	Latitude    float32  `json:"latitude"`
-	// TODO::Need to have a field for image files also?
-
-	// fields for opening & closing hours
-	MonOpeningTime  int `json:"mon_opening_time"`
-	MonClosingTime  int `json:"mon_closing_time"`
-	TueOpeningTime  int `json:"tue_opening_time"`
-	TueClosingTime  int `json:"tue_closing_time"`
-	WedOpeningTime  int `json:"wed_opening_time"`
-	WedClosingTime  int `json:"wed_closing_time"`
-	ThurOpeningTime int `json:"thur_opening_time"`
-	ThurClosingTime int `json:"thur_closing_time"`
-	FriOpeningTime  int `json:"fri_opening_time"`
-	FriClosingTime  int `json:"fri_closing_time"`
-	SatOpeningTime  int `json:"sat_opening_time"`
-	SatClosingTime  int `json:"sat_closing_time"`
-	SunOpeningTime  int `json:"sun_opening_time"`
-	SunClosingTime  int `json:"sun_closing_time"`
-}
-*/
 
 type CreateActivityResp struct {
 	ActivityId int64     `json:"activity_id"`
@@ -162,34 +131,35 @@ type SearchActivityResp struct {
 	ResultNumber int64  `json:"result_no"`
 }
 
-type UpdateActivityReq struct {
+type UpdateActivityForm struct {
 	// Assumption: user token is already validated
-	UserID      int64    `json:"user_id"`
-	ActivityId  int64    `json:"activity_id"`
-	Title       string   `json:"title"`
-	Rating      float32  `json:"rating_score"`
-	Paid        bool     `json:"paid"`
-	Category    []string `json:"category"`
-	Description string   `json:"description"`
-	Longitude   float32  `json:"longitude"`
-	Latitude    float32  `json:"latitude"`
-	ImageURL    string   `json:"image_url"`
+	ActivityId  int64    `form:"activity_id"`
+	UserID      int64    `form:"user_id"`
+	Title       string   `form:"title"`
+	Rating      float32  `form:"rating_score"`
+	Paid        bool     `form:"paid"`
+	Category    []string `form:"category"`
+	Description string   `form:"description"`
+	Longitude   float32  `form:"longitude"`
+	Latitude    float32  `form:"latitude"`
+	// Assumption: one image file upload at once
+	Image *multipart.FileHeader `form:"image"`
 
 	// fields for opening & closing hours
-	MonOpeningTime  int `json:"mon_opening_time"`
-	MonClosingTime  int `json:"mon_closing_time"`
-	TueOpeningTime  int `json:"tue_opening_time"`
-	TueClosingTime  int `json:"tue_closing_time"`
-	WedOpeningTime  int `json:"wed_opening_time"`
-	WedClosingTime  int `json:"wed_closing_time"`
-	ThurOpeningTime int `json:"thur_opening_time"`
-	ThurClosingTime int `json:"thur_closing_time"`
-	FriOpeningTime  int `json:"fri_opening_time"`
-	FriClosingTime  int `json:"fri_closing_time"`
-	SatOpeningTime  int `json:"sat_opening_time"`
-	SatClosingTime  int `json:"sat_closing_time"`
-	SunOpeningTime  int `json:"sun_opening_time"`
-	SunClosingTime  int `json:"sun_closing_time"`
+	MonOpeningTime  int `form:"mon_opening_time"`
+	MonClosingTime  int `form:"mon_closing_time"`
+	TueOpeningTime  int `form:"tue_opening_time"`
+	TueClosingTime  int `form:"tue_closing_time"`
+	WedOpeningTime  int `form:"wed_opening_time"`
+	WedClosingTime  int `form:"wed_closing_time"`
+	ThurOpeningTime int `form:"thur_opening_time"`
+	ThurClosingTime int `form:"thur_closing_time"`
+	FriOpeningTime  int `form:"fri_opening_time"`
+	FriClosingTime  int `form:"fri_closing_time"`
+	SatOpeningTime  int `form:"sat_opening_time"`
+	SatClosingTime  int `form:"sat_closing_time"`
+	SunOpeningTime  int `form:"sun_opening_time"`
+	SunClosingTime  int `form:"sun_closing_time"`
 }
 
 type UpdateActivityResp struct {
