@@ -22,7 +22,7 @@ import { motion, useAnimation } from "framer-motion";
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
 
-const CreateItineary = () => {
+const CreateItinerary = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
     const [addressevent, setAddressEvent] = useState('');
     const [descriptionevent, setDescriptionEvent] = useState('');
@@ -218,4 +218,4 @@ const CreateItineary = () => {
     );
 };
 
-export default CreateItineary;
+export default CreateItinerary;
