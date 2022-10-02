@@ -1,7 +1,32 @@
-import {Box, Button, Grid, GridItem, Input, SimpleGrid, Text} from "@chakra-ui/react";
-import ActivityCard from "../../Components/ActivityCard";
+import {Center, Grid, GridItem, Input, SimpleGrid} from "@chakra-ui/react";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
+
+import ActivityCard from "../../Components/DiscoverComponents/ActivityCard";
+
+const ShowActivities = () => {
+    let activityDisplayList = []
+    for (let i = 0; i < 2; i++) {
+        {
+            activityDisplayList.push(
+                ActivityCard(0,'title 1', 3, false, 'cat1', 'https://bit.ly/2Z4KKcF')
+            )
+        }
+    }
+    for (let i = 5; i < 7; i++) {
+        {
+            activityDisplayList.push(
+                ActivityCard(1,'title 2', 4, true, 'cat4', 'https://bit.ly/2Z4KKcF')
+            )
+        }
+    }
+    return (
+        <SimpleGrid minChildWidth='300px' spacing='30px' mt={'1%'} ml={'5%'} mr={'5%'}>
+            {activityDisplayList}
+        </SimpleGrid>
+    )
+}
+
 
 const DiscoverActivities = () => {
     const [searchInput] = useState('');
@@ -14,12 +39,12 @@ const DiscoverActivities = () => {
         <Grid
             templateAreas={`"search"
                             "results"
-                            "load_more"
                             `}
-            gridTemplateRows={'10fr 80fr 10fr'}
-            h='100vh'
+            gridTemplateRows={'10fr 90fr'}
+            h='80vh'
         >
             <GridItem area={'search'}>
+
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
                     <Button
@@ -35,6 +60,9 @@ const DiscoverActivities = () => {
                             Create an event
                         </font>
                     </Button>
+
+                <Center>
+
                     <Input
                         m={4}
                         w={'50%'}
@@ -43,47 +71,13 @@ const DiscoverActivities = () => {
                         borderColor={'blackAlpha.700'}
                         variant='outline'
                         focusBorderColor='lime'
-                        placeholder='Search for events and activities!'
+                        placeholder='Search for activities!'
                         onChange={(e) => searchInput(e.target.value)}
                     />
-                </Box>
+                </Center>
             </GridItem>
             <GridItem area={"results"} bgColor={'white'}>
-                <SimpleGrid minChildWidth='300px' spacing='30px' mt={'1%'} ml={'5%'} mr={'5%'}>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                    <ActivityCard></ActivityCard>
-                </SimpleGrid>
-            </GridItem>
-            <GridItem area={'load_more'} bgColor={'white'}>
-                <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
-                     textAlign={"center"} mb={'5%'} height={"fit-content"}>
-                    <Button colorScheme='teal' variant='solid'>
-                        View More Results
-                    </Button>
-                    {/*On click loading more results*/}
-                    <Button
-                        isLoading
-                        loadingText='Loading...'
-                        colorScheme='teal'
-                        variant='outline'
-                    >
-                        {/*All results loaded*/}
-                        View More Results
-                    </Button>
-                    <Text fontSize='4xl'>There are no more results to load</Text>
-                </Box>
+                {ShowActivities()}
             </GridItem>
         </Grid>
     )
