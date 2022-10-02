@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -32,7 +33,6 @@ var (
 	ErrInvalidCreateUser     = errors.New("user id doesn't exists")
 	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail          = errors.New("searchName failed")
-	ErrParsingResultFail     = errors.New("cannot parse result")
 	ErrUnknownFileType       = errors.New("unknown file type uploaded")
 	ErrImageNoMatch          = errors.New("image not found in the list of the activity")
 	ErrImageNotFound         = errors.New("image not found on server, removed file name in the database")
@@ -69,11 +69,10 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 		Username:   form.Username,
 		Email:      form.Email,
 		Password:   form.HashedPassword,
-		Interests:  form.Interests,
 		AvatarName: uniqueImgName,
 	}
 
-	if result := s.Database.Model(&user).Create(&user); result.Error != nil {
+	if result := s.Database.Omit(clause.Associations).Create(&user); result.Error != nil { //s.Database.Model(&user).Create(&user)
 		err := os.Remove(fpath)
 		if err != nil { // TODO: write to log instead
 			fmt.Println("sign_up have error deleting avatar: ", err)
@@ -195,27 +194,28 @@ func getValidTime(hhmm int) int {
 
 func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
 	var opening []int32
-	opening = append(opening, int32(getValidTime(createForm.MonOpeningTime)),
-		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
-		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.FriOpeningTime)),
-		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunOpeningTime)),
-		int32(getValidTime(createForm.MonClosingTime)), int32(getValidTime(createForm.TueClosingTime)),
-		int32(getValidTime(createForm.WedClosingTime)), int32(getValidTime(createForm.ThurClosingTime)),
-		int32(getValidTime(createForm.FriClosingTime)), int32(getValidTime(createForm.SatClosingTime)),
-		int32(getValidTime(createForm.SunClosingTime)))
+	opening = append(opening,
+		int32(getValidTime(createForm.SunOpeningTime)), int32(getValidTime(createForm.SunClosingTime)),
+		int32(getValidTime(createForm.MonOpeningTime)), int32(getValidTime(createForm.MonClosingTime)),
+		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.TueClosingTime)),
+		int32(getValidTime(createForm.WedOpeningTime)), int32(getValidTime(createForm.WedClosingTime)),
+		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.ThurClosingTime)),
+		int32(getValidTime(createForm.FriOpeningTime)), int32(getValidTime(createForm.FriClosingTime)),
+		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SatClosingTime)))
 	return opening
 }
 
-func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
+// to use getDay function, use idx/2
+func packUpdateOpeningTimes(updateForm *models.UpdateActivityForm) []int32 {
 	var opening []int32
-	opening = append(opening, int32(getValidTime(updateReq.MonOpeningTime)),
-		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
-		int32(getValidTime(updateReq.ThurOpeningTime)), int32(getValidTime(updateReq.FriOpeningTime)),
-		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunOpeningTime)),
-		int32(getValidTime(updateReq.MonClosingTime)), int32(getValidTime(updateReq.TueClosingTime)),
-		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
-		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)),
-		int32(getValidTime(updateReq.SunClosingTime)))
+	opening = append(opening,
+		int32(getValidTime(updateForm.SunOpeningTime)), int32(getValidTime(updateForm.SunClosingTime)),
+		int32(getValidTime(updateForm.MonOpeningTime)), int32(getValidTime(updateForm.MonClosingTime)),
+		int32(getValidTime(updateForm.TueOpeningTime)), int32(getValidTime(updateForm.TueClosingTime)),
+		int32(getValidTime(updateForm.WedOpeningTime)), int32(getValidTime(updateForm.WedClosingTime)),
+		int32(getValidTime(updateForm.ThurOpeningTime)), int32(getValidTime(updateForm.ThurClosingTime)),
+		int32(getValidTime(updateForm.FriOpeningTime)), int32(getValidTime(updateForm.FriClosingTime)),
+		int32(getValidTime(updateForm.SatOpeningTime)), int32(getValidTime(updateForm.SatClosingTime)))
 	return opening
 }
 
@@ -319,22 +319,16 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 
 	// add activity to database
 	activity := gormModel.Activity{
-		UserID:        form.UserId,
-		Title:         form.Title,
-		AverageRating: form.Rating,
-		Paid:          form.Paid,
-		Category:      form.Category,
-		Description:   form.Description,
-		Longitude:     form.Longitude,
-		Latitude:      form.Latitude,
-		OpeningTimes:  packCreateOpeningTimes(form),
-		ImageNames:    imgNames,
-
-		// system settings
-		InactiveCount: 0,
-		InactiveFlag:  false,
-		ReviewCounts:  0,
-		ReviewIds:     "",
+		UserID:       form.UserId,
+		Title:        form.Title,
+		Paid:         form.Paid,
+		AuthorRating: form.Rating,
+		Category:     form.Category,
+		Description:  form.Description,
+		Longitude:    form.Longitude,
+		Latitude:     form.Latitude,
+		OpeningTimes: packCreateOpeningTimes(form),
+		ImageNames:   imgNames,
 	}
 
 	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
@@ -396,7 +390,7 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 
 	// update activity and save to database
 	activity.Title = form.Title
-	activity.AverageRating = form.Rating
+	activity.AuthorRating = form.Rating
 	activity.Paid = form.Paid
 	activity.Category = form.Category
 	activity.Description = form.Description
@@ -437,7 +431,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
-		Rating:      activity.AverageRating,
+		Rating:      activity.AuthorRating,
 		Paid:        activity.Paid,
 		Category:    activity.Category,
 		Description: activity.Description,

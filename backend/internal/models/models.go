@@ -2,6 +2,7 @@ package models
 
 import (
 	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
+	"github.com/lib/pq"
 	"mime/multipart"
 	"time"
 )
@@ -29,7 +30,6 @@ type SignupForm struct {
 	HashedPassword string                `form:"hashed_password"`
 	Email          string                `form:"email"`
 	Avatar         *multipart.FileHeader `form:"avatar"`
-	Interests      []string              `form:"interests"`
 }
 
 type SignupResp struct {
@@ -48,6 +48,49 @@ type ValidateTokenReq struct {
 type ValidateTokenResp struct {
 	Valid  bool  `json:"valid"`
 	UserId int64 `json:"user_id"`
+}
+
+// TODO: endpoint or update profile
+type UpdateProfileReq struct {
+	UserId    int64    `json:"user_id"`
+	AboutMe   string   `json:"about_me"`
+	Interests []string `json:"interests"`
+}
+
+type UpdateProfileResp struct {
+	UserId    int64     `json:"user_id"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// TODO: endpoint for getProfile
+type GetProfileReq struct {
+	UserId int64 `json:"user_id"`
+}
+
+type GetProfileResp struct {
+	ID         int64          `json:"primaryKey;column:id"`
+	Username   string         `json:"unique;column:username"`
+	Email      string         `json:"unique;column:email"`
+	Password   string         `json:"column:password"`
+	Interests  pq.StringArray `json:"type:text[];column:interests"`
+	AboutMe    string         `json:"column:about_me"`
+	AvatarName string         `json:"column:avatar_name"`
+	Activities []gormModel.Activity
+	Reviews    []gormModel.Review
+	CreatedAt  time.Time
+}
+
+// TODO: endpoint for updateAvatar
+type UpdateAvatarReq struct {
+	UserId int64                 `form:"user_id"`
+	Delete bool                  `form:"delete"`
+	Avatar *multipart.FileHeader `form:"avatar"`
+}
+
+type UpdateAvatarResp struct {
+	UserId            int64     `json:"user_id"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	NewAvatarFileName string    `json:"new_avtar_file_name"`
 }
 
 type CreateActivityForm struct {
@@ -192,4 +235,34 @@ type DeleteActivityImageReq struct {
 type DeleteActivityImageResp struct {
 	ActivityId int64     `json:"activity_id"`
 	DeletedAt  time.Time `json:"deleted_at"`
+}
+
+type CreateReviewReq struct {
+	ActivityId int64   `json:"activity_id"`
+	UserId     int64   `json:"user_id"`
+	Rating     float32 `json:"rating"`
+	Review     string  `json:"review"`
+}
+
+type CreateReviewResp struct {
+	ReviewId      int64     `json:"review_id"`
+	UpdatedAt     time.Time `json:"Updated_at"`
+	ReviewCounts  int       `json:"review_counts"`
+	AverageRating float32   `json:"average_rating"`
+}
+
+type UpdateReviewReq struct {
+	ReviewId   int     `json:"review_id"`
+	ActivityId int64   `json:"activity_id"`
+	UserId     int64   `json:"user_id"`
+	Delete     bool    `json:"delete"`
+	Review     string  `json:"review"`
+	Rating     float32 `json:"rating"`
+}
+
+type UpdateReviewResp struct {
+	ReviewId      int64     `json:"review_id"`
+	UpdatedAt     time.Time `json:"Updated_at"`
+	ReviewCounts  int       `json:"activity_review_counts"`
+	AverageRating float32   `json:"activity_average_rating"`
 }
