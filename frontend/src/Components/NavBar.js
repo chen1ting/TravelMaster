@@ -69,7 +69,7 @@ const Header = () => {
                         {NavButton('Discover', '/discover')}
                         {NavButton('Create an Itinerary', '/createitinerary')}
                         {NavButton('Itineraries', '/itineraries')}
-                        {NavButton('Bookings', '/bookings')}
+                        {/*{NavButton('Bookings', '/bookings')}*/}
                     </Menu>
 
                     {/* User Icon (Profile) */}
