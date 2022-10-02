@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { validSessionGuard } from "../common/common";
-import { getItinerary, getActivitiesByFilter } from "../api/api";
+import {
+  getItinerary,
+  getActivitiesByFilter,
+  saveItineraryChanges,
+} from "../api/api";
 import { useNavigate } from "react-router-dom";
 import StarRatings from "react-star-ratings";
 
@@ -41,6 +45,8 @@ const EditItinerary = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [notifMsg, setNotifMsg] = useState("");
+  const [notifMsg2, setNotifMsg2] = useState("");
+  const [isError, setIsError] = useState(false);
   const [timeBins, setTimeBins] = useState([]);
   const [itineraryMap, setItineraryMap] = useState(new Map());
 
@@ -75,8 +81,23 @@ const EditItinerary = () => {
   const getStartIdx = () =>
     (curDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
 
-  const saveItineraryChanges = () => {
-    console.log("TODO");
+  const saveChanges = async () => {
+    const saved = await saveItineraryChanges(
+      parseInt(id),
+      timeBins,
+      window.sessionStorage.getItem("session_token"),
+      startDate.getTime() / 1000
+    );
+    if (saved == null) {
+      setNotifMsg2("Something went wrong saving the new itinerary");
+      setIsError(true);
+    } else {
+      setNotifMsg2("Successfully saved itinerary");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    setNotifMsg2("");
+    setIsError(false);
   };
 
   return (
@@ -106,6 +127,16 @@ const EditItinerary = () => {
               .
             </Heading>
           </Box>
+          {notifMsg2 && (
+            <Box
+              px="5"
+              py="3"
+              bgColor={isError ? "orange.400" : "green.400"}
+              borderRadius="15px"
+            >
+              {notifMsg2}
+            </Box>
+          )}
 
           <Box
             w="70%"
@@ -118,7 +149,7 @@ const EditItinerary = () => {
             <Button
               colorScheme="yellow"
               variant="outline"
-              onClick={saveItineraryChanges}
+              onClick={saveChanges}
             >
               Save changes made
             </Button>
@@ -232,8 +263,8 @@ const EditItinerary = () => {
                   [
                     {
                       day: curDate.getDay(),
-                      start_time_offset: index - getStartIdx(),
-                      end_time_offset: index - getStartIdx() + 1,
+                      start_time_offset: index,
+                      end_time_offset: index + 1,
                     },
                   ]
                 )
@@ -304,7 +335,10 @@ const TimeCell = (
                   filter="auto"
                   brightness="90%"
                   objectFit="cover"
-                  src={activity.image_url}
+                  src={
+                    "http://localhost:8080/activity-images/" +
+                    activity.image_url
+                  }
                   alt={activity.name}
                   cursor="pointer"
                   _hover={{
@@ -366,7 +400,14 @@ const PopoverWrapper = ({
           <PopoverContent>
             {activity ? (
               <Box py="4" px="2">
-                <Image src={activity.image_url} alt={activity.name} mb="4" />
+                <Image
+                  src={
+                    "http://localhost:8080/activity-images/" +
+                    activity.image_url
+                  }
+                  alt={activity.name}
+                  mb="4"
+                />
                 <Heading size="md">{activity.name}</Heading>
                 <Box my="2" display="flex" alignItems="center" columnGap="2">
                   {activity.categories.map((cat) => (
@@ -473,7 +514,12 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
             _hover={{
               color: pageNum === 1 ? "gray" : "blue.300",
             }}
-            onClick={() => setPageNum((prev) => prev - 1)}
+            onClick={() => {
+              if (pageNum === 1) {
+                return;
+              }
+              setPageNum((prev) => prev - 1);
+            }}
           />
           <Text>{pageNum}</Text>
           <ArrowRightIcon
@@ -483,7 +529,12 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
             _hover={{
               color: activities.length < pageSize ? "gray" : "blue.300",
             }}
-            onClick={() => setPageNum((prev) => prev + 1)}
+            onClick={() => {
+              if (activities.length < pageSize) {
+                return;
+              }
+              setPageNum((prev) => prev + 1);
+            }}
           />
         </Box>
       )}
@@ -494,7 +545,7 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
               mt="4"
               h="150px"
               w="full"
-              src={act.image_url}
+              src={"http://localhost:8080/activity-images" + act.image_url}
               alt={act.name}
             />
 

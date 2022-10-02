@@ -129,7 +129,7 @@ const getItinerary = async (
   setItineraryResp(itinerary);
 
   // TODO: some heavylifting work here
-  // create as many 30 minute time bins as required
+  // create as many 1 hour time bins as required
   // 1. Get the first epoch, determine its date (X).
   // 2. Get the last epoch, determine its date (Y).
   // 3. Then, start from 00:00 of X till 2400 of Y,
@@ -140,7 +140,7 @@ const getItinerary = async (
   // Also, we will need to maintain an auxilary hashmap to retrieve an activity summary by its id.
 
   // step 1:
-  const firstDate = new Date(itinerary.segments[0].start_time * 1000);
+  const firstDate = new Date(itinerary.start_time * 1000);
   const startDate = new Date(
     firstDate.getFullYear(),
     firstDate.getMonth(),
@@ -153,9 +153,7 @@ const getItinerary = async (
   setCurDate(startDate);
 
   // step 2:
-  const lastDate = new Date(
-    itinerary.segments[itinerary.segments.length - 1].end_time * 1000
-  );
+  const lastDate = new Date(itinerary.end_time * 1000);
   const endDate = new Date( // end date is inclusive
     lastDate.getFullYear(),
     lastDate.getMonth(),
@@ -208,14 +206,14 @@ const getActivitiesByFilter = async (
   session_token,
   setActivities
 ) => {
-  const rawResponse = await fetch(ENDPOINT + "/get-activities", {
+  const rawResponse = await fetch(ENDPOINT + "/search-activity", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       search_text: searchText,
-      page_num: pageNum,
+      page_no: pageNum,
       page_size: pageSize,
-      Times: times,
+      times: times,
       session_token: session_token,
     }),
   });
@@ -229,6 +227,46 @@ const getActivitiesByFilter = async (
   setActivities(content.activities);
 };
 
+const saveItineraryChanges = async (id, timeBins, session_token, startTime) => {
+  const segments = [];
+  for (let i = 0; i < timeBins.length; i++) {
+    if (timeBins[i] == null) {
+      continue;
+    }
+    const act = timeBins[i];
+    const t = startTime + i * 60 * 60;
+    if (
+      segments.length > 0 &&
+      segments[segments.length - 1].activity_summary.id === act.id
+    ) {
+      segments[segments.length - 1].end_time = t + 60 * 60;
+    } else {
+      segments.push({
+        start_time: t,
+        end_time: t + 60 * 60,
+        activity_summary: act,
+      });
+    }
+  }
+  const rawResponse = await fetch(ENDPOINT + "/save-itinerary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: id,
+      segments: segments,
+      session_token: session_token,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  return content.id;
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -236,4 +274,5 @@ export {
   sendGenerateItineraryReq,
   getItinerary,
   getActivitiesByFilter,
+  saveItineraryChanges,
 };
