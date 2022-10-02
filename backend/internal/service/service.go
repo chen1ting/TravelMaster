@@ -92,7 +92,7 @@ func (s *Service) ValidateToken(c *gin.Context) {
 }
 
 func (s *Service) CreateActivity(c *gin.Context) {
-	createActivityForm := &models.ActivityInfoForm{}
+	createActivityForm := &models.CreateActivityForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -119,7 +119,7 @@ func (s *Service) UpdateActivity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, updateActivityResp)
+	c.JSON(http.StatusAccepted, updateActivityResp)
 }
 
 func (s *Service) GetActivity(c *gin.Context) {
@@ -134,7 +134,7 @@ func (s *Service) GetActivity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, getActivityResp)
+	c.JSON(http.StatusOK, getActivityResp)
 }
 
 func (s *Service) SearchActivity(c *gin.Context) {
@@ -149,7 +149,7 @@ func (s *Service) SearchActivity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, searchActivityResp)
+	c.JSON(http.StatusOK, searchActivityResp)
 }
 
 func (s *Service) ReportInactiveActivity(c *gin.Context) {
@@ -164,5 +164,20 @@ func (s *Service) ReportInactiveActivity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, inactivateActivityResp)
+	c.JSON(http.StatusAccepted, inactivateActivityResp)
+}
+
+func (s *Service) DeleteActivityImage(c *gin.Context) {
+	deleteActivityImageReq := &models.DeleteActivityImageReq{}
+	if err := c.ShouldBindJSON(&deleteActivityImageReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	deleteActivityImageResp, err := s.server.DeleteActivityImage(deleteActivityImageReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, deleteActivityImageResp)
 }

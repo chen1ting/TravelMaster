@@ -47,9 +47,9 @@ type ValidateTokenResp struct {
 	UserId int64 `json:"user_id"`
 }
 
-type ActivityInfoForm struct {
+type CreateActivityForm struct {
 	// Assumption: user token is already validated
-	UserID      int64    `form:"user_id"`
+	UserId      int64    `form:"user_id"`
 	Title       string   `form:"title"`
 	Rating      float32  `form:"rating_score"`
 	Paid        bool     `form:"paid"`
@@ -135,7 +135,7 @@ type SearchActivityResp struct {
 type UpdateActivityForm struct {
 	// Assumption: user token is already validated
 	ActivityId  int64    `form:"activity_id"`
-	UserID      int64    `form:"user_id"`
+	UserId      int64    `form:"user_id"`
 	Title       string   `form:"title"`
 	Rating      float32  `form:"rating_score"`
 	Paid        bool     `form:"paid"`
@@ -178,4 +178,15 @@ type InactivateActivityResp struct {
 	InactiveCount int       `json:"inactive_count"`
 	InactiveFlag  bool      `json:"inactive_flag"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type DeleteActivityImageReq struct {
+	ActivityId int64  `json:"activity_id"`
+	UserId     int64  `json:"user_id"`
+	ImageName  string `json:"image_name"`
+}
+
+type DeleteActivityImageResp struct {
+	ActivityId int64     `json:"activity_id"`
+	DeletedAt  time.Time `json:"deleted_at"`
 }
