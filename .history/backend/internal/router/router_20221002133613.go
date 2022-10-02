@@ -14,6 +14,4 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/login", service.LoginView)
 	r.POST("/logout", service.LogoutView)
 	r.POST("/validate-token", service.ValidateToken)
-	r.StaticFile("/", "./avatars")
-
 }

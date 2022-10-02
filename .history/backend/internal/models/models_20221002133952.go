@@ -27,13 +27,12 @@ type SignupReq struct {
 }
 
 type SignupResp struct {
-	UserId    int64  `form:"user_id"`
-	Username  string `form:"username"`
-	Email     string `form:"email"`
-	Avatarurl string `form:"avatarurl"`
-  
-	SessionToken string `form:"session_token"`
- }
+	UserId   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+
+	SessionToken string `json:"session_token"`
+}
 
 
 type ValidateTokenReq struct {
