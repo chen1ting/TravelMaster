@@ -18,11 +18,11 @@ import {
 } from "@chakra-ui/react";
 
 import { motion, useAnimation } from "framer-motion";
-import { sendCreateEventReq } from "../api/apiCreateEvent";
+import { sendCreateActivityReq } from "../api/apiCreateActivity";
 import {useNavigate} from "react-router-dom";
 const fields_width = '52.5%';
 
-const CreateEvent = () => {
+const CreateActivity = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
     const [addressevent, setAddressEvent] = useState('');
     const [descriptionevent, setDescriptionEvent] = useState('');
@@ -62,7 +62,7 @@ const CreateEvent = () => {
         }
         setErrMsg(""); // always clear after
 
-        const data = await sendCreateEventReq(descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
+        const data = await sendCreateActivityReq(descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
             , sundayclosehr, mondayopenhr, mondayclosehr, tuesdayopenhr, tuesdayclosehr, wednesdayopenhr, wednesdayclosehr
             , thursdayopenhr, thursdayclosehr, fridayopenhr, fridayclosehr, saturdayopenhr, saturdayclosehr); //////TO CHANGE THE FUNCTION
         if (data == null) {
@@ -290,4 +290,4 @@ const CreateEvent = () => {
     );
 };
 
-export default CreateEvent;
+export default CreateActivity;

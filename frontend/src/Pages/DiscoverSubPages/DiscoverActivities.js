@@ -50,7 +50,7 @@ const DiscoverActivities = () => {
                     <Button
                         as="a"
                         onClick={() => {
-                            navigate("/createevent");
+                            navigate("/createactivity");
                         }}
                         w={200}
                         m={4}

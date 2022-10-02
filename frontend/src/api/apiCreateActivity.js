@@ -1,5 +1,5 @@
 const ENDPOINT = "http://localhost:8080";
-const sendCreateEventReq = async (descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
+const sendCreateActivityReq = async (descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
     , sundayclosehr, mondayopenhr, mondayclosehr, tuesdayopenhr, tuesdayclosehr, wednesdayopenhr, wednesdayclosehr
     , thursdayopenhr, thursdayclosehr, fridayopenhr, fridayclosehr, saturdayopenhr, saturdayclosehr) => {
     console.log("?");
@@ -36,4 +36,4 @@ const sendCreateEventReq = async (descriptionlocation, addressevent, description
     return content;
 };
 
-export { sendCreateEventReq };
+export { sendCreateActivityReq };
