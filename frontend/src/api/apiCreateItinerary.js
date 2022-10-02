@@ -1,5 +1,5 @@
 const ENDPOINT = "http://localhost:8080";
-const sendCreateItinearyReq = async (descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend) => {
+const sendCreateItineraryReq = async (descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend) => {
   console.log("?");
   const rawResponse = await fetch(ENDPOINT + "/createitineary", {
     method: "POST",
@@ -21,4 +21,4 @@ const sendCreateItinearyReq = async (descriptionlocation, addressevent, descript
     const content = await rawResponse.json();
     return content;
 };
-    export { sendCreateItinearyReq };
+    export { sendCreateItineraryReq};

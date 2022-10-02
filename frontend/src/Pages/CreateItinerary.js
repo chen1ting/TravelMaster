@@ -18,13 +18,13 @@ import {
 } from "@chakra-ui/react";
 
 import { motion, useAnimation } from "framer-motion";
-import {sendCreateItinearyReq} from "../api/apiCreateItineary";
+import {sendCreateItineraryReq} from "../api/apiCreateItinerary";
 import { useNavigate } from "react-router-dom";
 
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
 
-const CreateItineary = () => {
+const CreateItinerary = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
     const [addressevent, setAddressEvent] = useState('');
     const [descriptionevent, setDescriptionEvent] = useState('');
@@ -67,7 +67,7 @@ const CreateItineary = () => {
         }
         setErrMsg(""); // always clear after
 
-        const data = await sendCreateItinearyReq(descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend);
+        const data = await sendCreateItineraryReq(descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend);
         if (data == null) {
             setShowError(true);
             setErrMsg("Sorry, something went wrong on our side.");
@@ -94,7 +94,7 @@ const CreateItineary = () => {
             <GridItem pl='2' bg='blue.50' area={'left_top'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    <Text fontSize='2xl'>Create Itineary</Text>
+                    <Text fontSize='2xl'>Create Itinerary</Text>
                 </Box>
 
             </GridItem>
@@ -248,7 +248,7 @@ const CreateItineary = () => {
                         </Stack>
                     </Flex>
                     <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
-                        <font size={5} color={'white'}>Add to itineary</font>
+                        <font size={5} color={'white'}>Add to itinerary</font>
                     </Button>
                     <Spacer/>
 
@@ -259,4 +259,4 @@ const CreateItineary = () => {
     );
 };
 
-export default CreateItineary;
+export default CreateItinerary;
