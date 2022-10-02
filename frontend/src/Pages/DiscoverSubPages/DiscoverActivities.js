@@ -22,7 +22,19 @@ const DiscoverActivities = () => {
             <GridItem area={'search'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    
+                    <Button
+                        as="a"
+                        onClick={() => {
+                            navigate("/createevent");
+                        }}
+                        w={200}
+                        m={4}
+                        bg="teal"
+                    >
+                        <font size={5} color={"white"}>
+                            Create an event
+                        </font>
+                    </Button>
                     <Input
                         m={4}
                         w={'50%'}
