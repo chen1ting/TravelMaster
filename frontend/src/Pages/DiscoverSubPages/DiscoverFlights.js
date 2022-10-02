@@ -3,7 +3,7 @@ import {
     Button,
     Flex, FormControl, FormLabel,
     Grid,
-    GridItem, Input, Select,
+    GridItem, Input, Select, SimpleGrid,
     Slider,
     SliderFilledTrack,
     SliderThumb,
@@ -21,6 +21,7 @@ import {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./DatePickerWidth.css"
+import FlightCard from "../../Components/DiscoverComponents/FlightCard";
 
 const DiscoverFlights = () => {
     const [location, setLocation] = useState(['', ''])
@@ -39,7 +40,7 @@ const DiscoverFlights = () => {
                             "results results results results"
                             "loadMore loadMore loadMore loadMore"
                             `}
-            gridTemplateRows={'1fr 8fr 1fr'}
+            gridTemplateRows={'1fr 6fr 3fr'}
             gridTemplateColumns={'28fr 28fr 28fr 16fr'}
             h='100vh'
         >
@@ -123,7 +124,26 @@ const DiscoverFlights = () => {
                 </FormControl>
             </GridItem>
             <GridItem area={"results"} pt={2}>
-                test
+                <SimpleGrid minChildWidth='300px' spacing='30px' mt={'1%'} ml={'5%'} mr={'5%'}>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                    <FlightCard></FlightCard>
+                </SimpleGrid>
             </GridItem>
             <GridItem area={'loadMore'} bgColor={'white'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
@@ -138,9 +158,9 @@ const DiscoverFlights = () => {
                         colorScheme='teal'
                         variant='outline'
                     >
-                        {/*All results loaded*/}
                         View More Results
                     </Button>
+                    {/*All results loaded*/}
                     <Text fontSize='4xl'>There are no more results to load</Text>
                 </Box>
             </GridItem>
