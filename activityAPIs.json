@@ -1,0 +1,639 @@
+{
+	"info": {
+		"_postman_id": "18ed8873-c29c-4597-8111-9afc21cebdf4",
+		"name": "TravelMaster",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15415829"
+	},
+	"item": [
+		{
+			"name": "SignupForm",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "\"yiting4\"",
+							"type": "text"
+						},
+						{
+							"key": "hashed_password",
+							"value": "\"asdfkljaslkv\"",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "\"testing4@gmail.com\"",
+							"type": "text"
+						},
+						{
+							"key": "interests",
+							"value": "[\"asjdfk\",\"adfj\"]",
+							"type": "text"
+						},
+						{
+							"key": "avatar",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"signup"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "SignupForm",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "\"yiting4\"",
+									"type": "text"
+								},
+								{
+									"key": "hashed_password",
+									"value": "\"asdfkljaslkv\"",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "\"testing4@gmail.com\"",
+									"type": "text"
+								},
+								{
+									"key": "interests",
+									"value": "[\"asjdfk\",\"adfj\"]",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"signup"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 02 Oct 2022 10:04:45 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "188"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"user_id\": 4,\n    \"username\": \"\\\"yiting4\\\"\",\n    \"email\": \"\\\"testing4@gmail.com\\\"\",\n    \"avatar_file_name\": \"88119d7e-a443-4886-aeed-4209aa254608.jpg\",\n    \"session_token\": \"473ebe95-ac88-4d4c-b1d3-429f2ce80d45\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"yiting\",\r\n    \"hashed_password\":\"asdfkljaslkv\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateActivityForm",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "\"testing2\"",
+							"type": "text"
+						},
+						{
+							"key": "rating_score",
+							"value": "4",
+							"type": "text"
+						},
+						{
+							"key": "paid",
+							"value": "true",
+							"type": "text"
+						},
+						{
+							"key": "category",
+							"value": "[\"outdoor\", \"aba\"]",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "\"Go is quite fun\"",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "103.819839",
+							"type": "text"
+						},
+						{
+							"key": "latitude",
+							"value": "1.352083",
+							"type": "text"
+						},
+						{
+							"key": "mon_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "tue_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "wed_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "thur_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "fri_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "sat_opening_time",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "sun_opening_time",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "mon_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "tue_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "wed_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "thur_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "fri_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "sat_closing_time",
+							"value": "22",
+							"type": "text"
+						},
+						{
+							"key": "sun_closing_time",
+							"value": "22",
+							"type": "text"
+						},
+						{
+							"key": "image",
+							"type": "file",
+							"src": [
+								"/D:/有趣的事儿/壁纸/2.jpg",
+								"/D:/有趣的事儿/壁纸/3.jpg",
+								"/D:/有趣的事儿/壁纸/pexels-cottonbro-4562322.jpg",
+								"/D:/有趣的事儿/壁纸/pexels-cottonbro-4783534.jpg"
+							]
+						},
+						{
+							"key": "user_id",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/create-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"create-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateActivityForm",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "\"yiha\"",
+							"type": "text"
+						},
+						{
+							"key": "rating_score",
+							"value": "4",
+							"type": "text"
+						},
+						{
+							"key": "paid",
+							"value": "true",
+							"type": "text"
+						},
+						{
+							"key": "category",
+							"value": "[\"outdoor\", \"aba\"]",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "\"Go is quite fun\"",
+							"type": "text"
+						},
+						{
+							"key": "longitude",
+							"value": "103.819839",
+							"type": "text"
+						},
+						{
+							"key": "latitude",
+							"value": "1.352083",
+							"type": "text"
+						},
+						{
+							"key": "mon_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "tue_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "wed_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "thur_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "fri_opening_time",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "sat_opening_time",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "sun_opening_time",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "mon_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "tue_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "wed_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "thur_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "fri_closing_time",
+							"value": "20",
+							"type": "text"
+						},
+						{
+							"key": "sat_closing_time",
+							"value": "22",
+							"type": "text"
+						},
+						{
+							"key": "sun_closing_time",
+							"value": "22",
+							"type": "text"
+						},
+						{
+							"key": "image",
+							"type": "file",
+							"src": "/D:/images/humanPlayerIcon.png"
+						},
+						{
+							"key": "user_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "activity_id",
+							"value": "2",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/update-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"update-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetActivityImage",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/activity-image/f13624c7-8b57-4a46-8b01-a9678852aa20pexels-cottonbro-4783534.jpg",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"activity-image",
+						"f13624c7-8b57-4a46-8b01-a9678852aa20pexels-cottonbro-4783534.jpg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAvatar",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/avatars/61ca9fdc-4621-46a6-b04b-fdc67941d5bb.jpg",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"avatars",
+						"61ca9fdc-4621-46a6-b04b-fdc67941d5bb.jpg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetActivity_ValidID",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"activity_id\":1\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/get-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"get-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetActivity_InvalidID",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"activity_id\":10\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/get-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"get-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SeachActivity_ValidRequest",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"search_text\":\"tes\",\r\n    \"page_size\":10,\r\n    \"page_no\":1\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/search-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"search-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SeachActivity_InvalidRequest",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"search_text\":\"tes\",\r\n    \"page_size\":-1,\r\n    \"page_no\":-1\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/search-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"search-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ReportInactive_InvalidID",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"activity_id\":0\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/report-inactive-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"report-inactive-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ReportInactive_ValidID",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"activity_id\":0\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/report-inactive-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"report-inactive-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteActivityImage",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \r\n    \"activity_id\":2,\r\n    \"user_id\":1,\r\n    \"image_name\":\"058d87a2-aaa2-4cf0-b63b-31356f12fb8d挪威默勒-鲁姆斯达尔托罗尔斯第根山道.jpg\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/delete-activity-image",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"delete-activity-image"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
