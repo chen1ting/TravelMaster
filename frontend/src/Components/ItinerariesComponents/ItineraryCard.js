@@ -1,32 +1,27 @@
-import {useNavigate} from "react-router-dom";
-import {Box, Link} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import { Box, Heading, Link, Text } from "@chakra-ui/react";
 
-const ItineraryCard = (itineraryID, title, startDate, endDate) => {
-    const navigate = useNavigate();
+const ItineraryCard = ({ it }) => {
+  const navigate = useNavigate();
 
-    return (
-        <Box maxW='sm' borderWidth='1px' borderRadius='lg' overflow='hidden' bgColor='orange.50'>
-            <Box p='6'>
-                <Box
-                    fontSize='lg'
-                    fontWeight='bold'
-                    lineHeight='tight'
-                    noOfLines={2}
-                >
-                    <Link
-                        onClick={() => {
-                            navigate("/"); // Change this
-                        }}
-                    >{title}</Link>
-                </Box>
-
-                <Box as='span' color='gray.600' noOfLines={1}>
-                    {startDate} {`-`} {endDate}
-                </Box>
-
-            </Box>
-        </Box>
-    )
-}
+  return (
+    <Box
+      w="500px"
+      border="1px solid white"
+      p="5"
+      borderRadius="20px"
+      textAlign="center"
+      cursor="pointer"
+      onClick={() => navigate(`/edit-itinerary/${it.id}`)}
+      _hover={{ bg: "teal.400" }}
+    >
+      <Heading size="md">{it.name}</Heading>
+      <Box mt="3" display="flex" justifyContent="space-evenly">
+        <Text>From: {new Date(it.start_time).toLocaleDateString()}</Text>
+        <Text>To: {new Date(it.end_time).toLocaleDateString()}</Text>
+      </Box>
+    </Box>
+  );
+};
 
 export default ItineraryCard;

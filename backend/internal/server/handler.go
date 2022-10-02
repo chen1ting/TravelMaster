@@ -127,6 +127,7 @@ func (s *Server) Login(ctx context.Context, req *models.LoginReq) (*models.Login
 		UserId:       user.ID,
 		Username:     user.Username,
 		Email:        user.Email,
+		AvatarName:   user.AvatarName,
 		SessionToken: sessionToken,
 	}, nil
 }
@@ -319,6 +320,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 	}
 	// insert into db generated itinerary
 	genIt := &gormModel.Itinerary{
+		Name:             uuid.New().String(),
 		OwnedByUserId:    uid,
 		Segments:         marshalledSeg,
 		StartTime:        req.StartTime,
@@ -333,6 +335,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 	return &models.GenerateItineraryResponse{
 		GeneratedItinerary: &models.Itinerary{
 			Id:               genIt.ID,
+			Name:             genIt.Name,
 			NumberOfSegments: len(segments),
 			Segments:         segments,
 			StartTime:        req.StartTime,
@@ -365,6 +368,7 @@ func (s *Server) SaveItinerary(ctx context.Context, req *models.SaveItineraryReq
 	if err != nil {
 		return nil, ErrGenericServerError
 	}
+	iti.Name = req.Name
 	iti.Segments = marshalledSeg
 	if res := s.Database.Save(&iti); res.Error != nil {
 		return nil, ErrDatabase
@@ -442,12 +446,50 @@ func (s *Server) GetItinerary(ctx context.Context, req *models.GetItineraryReque
 	return &models.GetItineraryResponse{
 		Itinerary: &models.Itinerary{
 			Id:               iti.ID,
+			Name:             iti.Name,
 			NumberOfSegments: iti.NumberOfSegments,
 			Segments:         segments,
 			StartTime:        iti.StartTime,
 			EndTime:          iti.EndTime,
 		},
 	}, nil
+}
+
+func (s *Server) GetItineraries(ctx context.Context, req *models.GetItinerariesRequest) (*models.GetItinerariesResponse, error) {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotAllowed
+		}
+		return nil, err
+	}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	var itis []gormModel.Itinerary
+	if res := s.Database.Where("owned_by_user_id = ?", uid).Find(&itis); res.Error != nil {
+		return nil, ErrDatabase
+	}
+
+	parsedItis := make([]*models.Itinerary, 0)
+	for _, iti := range itis {
+		var segments []*models.Segment
+		if err := json.Unmarshal(iti.Segments, &segments); err != nil {
+			fmt.Println(err)
+			return nil, ErrGenericServerError
+		}
+		parsedItis = append(parsedItis, &models.Itinerary{
+			Id:               iti.ID,
+			Name:             iti.Name,
+			NumberOfSegments: iti.NumberOfSegments,
+			Segments:         segments,
+			StartTime:        iti.StartTime,
+			EndTime:          iti.EndTime,
+		})
+	}
+
+	return &models.GetItinerariesResponse{Itineraries: parsedItis}, nil
 }
 
 func getValidTime(hhmm int) int {
@@ -914,5 +956,4 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 		ActivityId: activity.ID,
 		DeletedAt:  activity.UpdatedAt,
 	}, nil
-
 }

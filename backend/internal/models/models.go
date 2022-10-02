@@ -12,9 +12,10 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	UserId   int64  `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	UserId     int64  `json:"user_id"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	AvatarName string `json:"avatar_file_name"`
 
 	SessionToken string `json:"session_token"`
 }
@@ -62,6 +63,7 @@ type GenerateItineraryResponse struct {
 
 type Itinerary struct {
 	Id               int64      `json:"id"`
+	Name             string     `json:"name"`
 	NumberOfSegments int        `json:"number_of_segments"`
 	Segments         []*Segment `json:"segments"`
 	StartTime        int64      `json:"start_time"`
@@ -253,10 +255,19 @@ type DeleteActivityImageResp struct {
 
 type SaveItineraryRequest struct {
 	Id           int64      `json:"id"`
+	Name         string     `json:"name"`
 	SessionToken string     `json:"session_token"`
 	Segments     []*Segment `json:"segments"`
 }
 
 type SaveItineraryResponse struct {
 	Id int64 `json:"id"`
+}
+
+type GetItinerariesRequest struct {
+	SessionToken string `json:"session_token"`
+}
+
+type GetItinerariesResponse struct {
+	Itineraries []*Itinerary `json:"itineraries"`
 }

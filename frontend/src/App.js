@@ -1,4 +1,5 @@
 import "./App.css";
+import { useState } from "react";
 import NavBar from "./Components/NavBar";
 import { ChakraProvider } from "@chakra-ui/react";
 import {
@@ -26,14 +27,16 @@ import Bookings from "./Components/ProfileSubPages/Bookings";
 import Itinerary from "./Components/Itinerary";
 
 function App() {
+  const [imageUrl, setImageUrl] = useState("");
+
   return (
     <ChakraProvider>
       <Router>
-        <NavBar />
+        <NavBar imageUrl={imageUrl} setImageUrl={setImageUrl} />
         <Routes>
           <Route path="discover" element={<Discover />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="signup" element={<SignUp />} />
+          <Route path="signup" element={<SignUp setImageUrl={setImageUrl} />} />
           <Route path="welcome" element={<Welcome />} />
           <Route path="activitydescription" element={<ActivityDescription />} />
           <Route path="profile" element={<Profile />} />
@@ -41,7 +44,7 @@ function App() {
           <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="edit-itinerary/:id" element={<Itinerary />} />
-          <Route path="" element={<SignIn />} />
+          <Route path="" element={<SignIn setImageUrl={setImageUrl} />} />
           <Route path="createitinerary" element={<CreateItinerary />} />
 
           <Route path="createreviews" element={<CreateReviews />} />

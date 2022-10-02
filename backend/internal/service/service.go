@@ -137,6 +137,21 @@ func (s *Service) UpdateItinerary(c *gin.Context) {
 	c.JSON(http.StatusOK, saveItineraryResp)
 }
 
+func (s *Service) GetItineraries(c *gin.Context) {
+	getItinerariesReq := &models.GetItinerariesRequest{}
+	if err := c.ShouldBindJSON(getItinerariesReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	getItinerariesResp, err := s.server.GetItineraries(c, getItinerariesReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, getItinerariesResp)
+}
+
 func (s *Service) CreateActivity(c *gin.Context) {
 	createActivityForm := &models.CreateActivityForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {

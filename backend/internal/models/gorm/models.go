@@ -41,10 +41,11 @@ type Activity struct {
 }
 
 type Itinerary struct {
-	ID     int64 `gorm:"primaryKey;column:id"`
-	OwnedByUserId int64 `goorm:"column:title:owned_by_user_id"` // TODO: Foreign key to User id
-	Segments datatypes.JSON `goorm:"type:jsonb;column:segments"`
-	StartTime int64 `goorm:"column:start_time"`
-	EndTime int64 `goorm:"column:end_time"`
-	NumberOfSegments int `goorm:"column:num_of_segments"`
+	ID               int64          `gorm:"primaryKey;column:id"`
+	Name             string         `goorm:"column:name"`
+	OwnedByUserId    int64          `goorm:"column:owned_by_user_id"` // TODO: Foreign key to User id
+	Segments         datatypes.JSON `goorm:"type:jsonb;column:segments"`
+	StartTime        int64          `goorm:"column:start_time"`
+	EndTime          int64          `goorm:"column:end_time"`
+	NumberOfSegments int            `goorm:"column:num_of_segments"`
 }

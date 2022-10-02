@@ -58,10 +58,11 @@ const EditItinerary = () => {
   const [itineraryResp, setItineraryResp] = useState(null);
   const session_token = window.sessionStorage.getItem("session_token");
   const [visualMode, setVisualMode] = useState(true);
+  const [itiName, setItiName] = useState("");
 
   const { id } = useParams();
   useEffect(() => {
-    validSessionGuard(navigate);
+    validSessionGuard(navigate, "/");
     getItinerary(
       parseInt(id),
       session_token,
@@ -74,7 +75,8 @@ const EditItinerary = () => {
       setItineraryResp,
       setCurDate,
       setTimeBinsCopy,
-      setItineraryMapCopy
+      setItineraryMapCopy,
+      setItiName
     );
   }, [id, navigate, session_token]);
 
@@ -86,7 +88,8 @@ const EditItinerary = () => {
       parseInt(id),
       timeBins,
       window.sessionStorage.getItem("session_token"),
-      startDate.getTime() / 1000
+      startDate.getTime() / 1000,
+      itiName
     );
     if (saved == null) {
       setNotifMsg2("Something went wrong saving the new itinerary");
@@ -174,6 +177,23 @@ const EditItinerary = () => {
               onChange={() => setVisualMode((prev) => !prev)}
             />
           </Box>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            columnGap="3"
+          >
+            <Text>Itinerary name:</Text>
+            <Input
+              type="text"
+              value={itiName}
+              onChange={(e) => setItiName(e.target.value)}
+              w="200px"
+            />
+          </Box>
+          <Text size="sm">
+            (Tip: Change this to something you can remember it by!)
+          </Text>
           <Box
             mt="8"
             mb="5"

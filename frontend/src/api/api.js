@@ -3,18 +3,36 @@ import sha256 from "crypto-js/sha256";
 // TODO: change to read from env
 const ENDPOINT = "http://localhost:8080";
 
-const sendSignupReq = async (user, pass, email) => {
+const sendSignupReq = async (user, pass, email, pic) => {
+  const formData = new FormData();
+  formData.append("username", user);
+  formData.append("hashed_password", sha256(pass).toString());
+  formData.append("email", email);
+  formData.append("avatar", pic);
   const rawResponse = await fetch(ENDPOINT + "/signup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: user,
-      hashed_password: sha256(pass).toString(),
-      email: email,
-    }),
+    // headers: { "Content-Type": "multipart/form-data" },
+    body: formData,
   });
 
   if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+  const content = await rawResponse.json();
+  return content;
+};
+
+const sendLogoutReq = async (session_token) => {
+  const rawResponse = await fetch(ENDPOINT + "/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
     return null;
   }
@@ -98,7 +116,8 @@ const getItinerary = async (
   setItineraryResp,
   setCurDate,
   setTimeBinsCopy,
-  setItineraryMapCopy
+  setItineraryMapCopy,
+  setItiName
 ) => {
   const rawResponse = await fetch(ENDPOINT + "/get-itinerary", {
     method: "POST",
@@ -194,6 +213,7 @@ const getItinerary = async (
   setItineraryMap(itineraryMap);
   setTimeBinsCopy([...timeBins]);
   setItineraryMapCopy(new Map(itineraryMap));
+  setItiName(itinerary.name);
   setIsLoading(false);
   return content;
 };
@@ -227,7 +247,13 @@ const getActivitiesByFilter = async (
   setActivities(content.activities);
 };
 
-const saveItineraryChanges = async (id, timeBins, session_token, startTime) => {
+const saveItineraryChanges = async (
+  id,
+  timeBins,
+  session_token,
+  startTime,
+  itiName
+) => {
   const segments = [];
   for (let i = 0; i < timeBins.length; i++) {
     if (timeBins[i] == null) {
@@ -255,6 +281,7 @@ const saveItineraryChanges = async (id, timeBins, session_token, startTime) => {
       id: id,
       segments: segments,
       session_token: session_token,
+      name: itiName,
     }),
   });
 
@@ -267,6 +294,24 @@ const saveItineraryChanges = async (id, timeBins, session_token, startTime) => {
   return content.id;
 };
 
+const getItisByUser = async (session_token, setItis) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-itineraries", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  setItis(content.itineraries);
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -275,4 +320,6 @@ export {
   getItinerary,
   getActivitiesByFilter,
   saveItineraryChanges,
+  sendLogoutReq,
+  getItisByUser,
 };

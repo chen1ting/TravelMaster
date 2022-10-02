@@ -18,6 +18,7 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/generate-itinerary", service.GenerateItinerary)
 	r.POST("/get-itinerary", service.GetItinerary)
 	r.POST("/save-itinerary", service.UpdateItinerary)
+	r.POST("/get-itineraries", service.GetItineraries)
 	r.POST("/create-activity", service.CreateActivity)
 	r.POST("/get-activity", service.GetActivity)
 	r.POST("/search-activity", service.SearchActivity)
