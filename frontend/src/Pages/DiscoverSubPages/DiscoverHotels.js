@@ -110,9 +110,9 @@ const DiscoverHotels = () => {
                         colorScheme='teal'
                         variant='outline'
                     >
-                        {/*All results loaded*/}
                         View More Results
                     </Button>
+                    {/*All results loaded*/}
                     <Text fontSize='4xl'>There are no more results to load</Text>
                 </Box>
             </GridItem>
