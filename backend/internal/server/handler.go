@@ -199,40 +199,34 @@ func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	return opening
 }
 
-func ValidateFile(filePath string) (bool, error) {
+func ValidateFile(fileHeader *multipart.FileHeader) (bool, error) {
 	// open the uploaded file
-	file, err := os.Open(filePath)
 
+	file, err := fileHeader.Open()
 	if err != nil {
 		fmt.Println("Cannot open file", err)
 		return false, err
 	}
 
-	buff := make([]byte, 512) // why 512 bytes ? see http://golang.org/pkg/net/http/#DetectContentType
-	_, err = file.Read(buff)
+	// close file on exit and check for its returned error
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Println("Cannot close file", err)
+			panic(err) //TODO: panic or send message?
+		}
+	}()
 
-	if err != nil {
+	buf := make([]byte, 512)
+	if _, err := file.Read(buf); err != nil {
 		fmt.Println("Cannot read file to buff", err)
 		return false, err
 	}
 
-	filetype := http.DetectContentType(buff)
-
-	fmt.Println(filetype)
-
+	filetype := http.DetectContentType(buf)
 	switch filetype {
-	case "image/jpeg", "image/jpg":
+	case "image/jpeg", "image/jpg", "image/gif", "image/png": //"application/pdf" //TODO: allow PDF?
+		fmt.Println("received image of type: " + filetype)
 		return true, nil
-
-	case "image/gif":
-		return true, nil
-
-	case "image/png":
-		return true, nil
-
-	case "application/pdf": // not image, but application !
-		return true, nil
-
 	default:
 		fmt.Println("unknown file type uploaded")
 		return false, ErrUnknownFileType
@@ -240,7 +234,20 @@ func ValidateFile(filePath string) (bool, error) {
 }
 
 func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) (string, string, error) {
-
+	_, err := ValidateFile(image)
+	if err != nil {
+		return "", "", err
+	}
+	// create image root if it doesn't exist
+	if _, err := os.Stat(ImageRoot); errors.Is(err, os.ErrNotExist) {
+		mkdirErr := os.Mkdir(ImageRoot, os.ModePerm) // define different file access
+		if mkdirErr != nil {
+			fmt.Println(mkdirErr) // TODO: log
+		} else {
+			fmt.Printf("Created %s at %s\n", ImageRoot, CWD)
+		}
+	}
+	// create subfolder if it doesn't exist
 	fileDirectory := filepath.Join(ImageRoot, subDirectory)
 	if _, err := os.Stat(fileDirectory); errors.Is(err, os.ErrNotExist) {
 		mkdirErr := os.Mkdir(fileDirectory, os.ModePerm) // define different file access
@@ -258,12 +265,6 @@ func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) 
 	}
 	if err := c.SaveUploadedFile(image, fPath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return "", "", err
-	}
-	if _, err := ValidateFile(fPath); err != nil {
-		if errRemove := os.Remove(fPath); errRemove != nil {
-			return "", "", errRemove
-		}
 		return "", "", err
 	}
 	return uniqueImgName, fPath, nil
@@ -294,10 +295,11 @@ func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (
 	var imgPaths []string
 	var failedImages []string
 	if form.Image != nil {
-		for i := 1; i < len(form.Image); i++ {
+		for i := 0; i < len(form.Image); i++ {
 			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, "activity_image")
 			if saveErr != nil {
 				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
 			}
 			imgNames = append(imgNames, uniqueImgName)
 			imgPaths = append(imgPaths, fpath)
@@ -370,10 +372,11 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 	var imgPaths []string
 	var failedImages []string
 	if form.Image != nil {
-		for i := 1; i < len(form.Image); i++ {
+		for i := 0; i < len(form.Image); i++ {
 			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, "activity_image")
 			if saveErr != nil {
 				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
 			}
 			imgNames = append(imgNames, uniqueImgName)
 			imgPaths = append(imgPaths, fpath)
