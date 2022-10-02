@@ -93,3 +93,48 @@ func (s *Service) ValidateToken(c *gin.Context) {
 
 	c.JSON(http.StatusOK, validateTokenResp)
 }
+
+func (s *Service) GenerateItinerary(c *gin.Context) {
+	generateItineraryReq := &models.GenerateItineraryRequest{}
+	if err := c.ShouldBindJSON(generateItineraryReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	generateItineraryResp, err := s.server.GenerateItinerary(c, generateItineraryReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, generateItineraryResp)
+}
+
+func (s *Service) GetItinerary(c *gin.Context) {
+	getItineraryReq := &models.GetItineraryRequest{}
+	if err := c.ShouldBindJSON(getItineraryReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	getItineraryResp, err := s.server.GetItinerary(c, getItineraryReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, getItineraryResp)
+}
+
+func (s *Service) GetActivitiesByFilter(c *gin.Context) {
+	getActivitiesByFilterReq := &models.GetActivitiesByFilterRequest{}
+	if err := c.ShouldBindJSON(getActivitiesByFilterReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	getActivitiesByFilterResp, err := s.server.GetActivitiesByFilter(c, getActivitiesByFilterReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, getActivitiesByFilterResp)
+}

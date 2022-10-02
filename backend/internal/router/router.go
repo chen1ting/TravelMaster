@@ -14,4 +14,7 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/login", service.LoginView)
 	r.POST("/logout", service.LogoutView)
 	r.POST("/validate-token", service.ValidateToken)
+	r.POST("/generate-itinerary", service.GenerateItinerary)
+	r.POST("/get-itinerary", service.GetItinerary)
+	r.POST("/get-activities", service.GetActivitiesByFilter)
 }
