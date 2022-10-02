@@ -118,8 +118,8 @@ const SignUp = () => {
               <FormLabel>Password</FormLabel>
               <Input
                 w={fields_width}
-                type="text"
                 placeholder="Enter your password"
+                type="password"
                 onChange={(e) => setPassword(e.target.value)}
               ></Input>
             </FormControl>
@@ -127,7 +127,7 @@ const SignUp = () => {
               <FormLabel>Confirm password</FormLabel>
               <Input
                 w={fields_width}
-                type="text"
+                type="password"
                 placeholder="Enter your password again"
                 onChange={(e) => setPassword2(e.target.value)}
               ></Input>

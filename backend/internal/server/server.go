@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 
@@ -40,6 +41,9 @@ func NewServer() *Server {
 		panic(err)
 	}
 	if err := db.AutoMigrate(&gormModel.Activity{}); err != nil {
+		panic(err)
+	}
+	if err := db.AutoMigrate(&gormModel.Itinerary{}); err != nil {
 		panic(err)
 	}
 
