@@ -18,24 +18,65 @@ import {
 } from "@chakra-ui/react";
 
 import { motion, useAnimation } from "framer-motion";
+import {sendCreateItineraryReq} from "../api/apiCreateItinerary";
+import { useNavigate } from "react-router-dom";
 
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
 
-const CreateItineary = () => {
+const CreateItinerary = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
     const [addressevent, setAddressEvent] = useState('');
     const [descriptionevent, setDescriptionEvent] = useState('');
     const [eventname, setEventName] = useState('');
-    const [visittimestart, setVisitTimeStart] = useState('');
-    const [visittimeend, setVisitTimeEnd] = useState('');
-
+    const [visitdatestart, setVisitDateStart] = useState('');
+    const [visitdateend, setVisitDateEnd] = useState('');
+    const navigate = useNavigate();
+    const [showError, setShowError] = useState(false);
+    const [errMsg, setErrMsg] = useState("");
 
     //const { signIn } = useAuth();
 
-    function onSubmit(e) {
+    async function onSubmit(e) {
         e.preventDefault();
+        // might wanna consider adding a regex check for email format
+        // and also password validation regex
+        var bad =
+            descriptionlocation === "" ||
+            addressevent === "" ||
+            descriptionevent === "" ||
+            eventname === "" ||
+            visitdatestart === "" ||
+            visitdateend === "";
+        setShowError(bad);
+        if (bad) {
+            if (descriptionlocation === "") {
+                setErrMsg("A valid description location is required.");
+            } else if (addressevent === "") {
+                setErrMsg("A valid event address is required.");
+            } else if (descriptionevent === "") {
+                setErrMsg("A valid event description is required.");
+            } else if (eventname === "") {
+                setErrMsg("A valid event name is required.");
+            } else if (visitdatestart === "") {
+                setErrMsg("A valid start date is required.");
+            } else {
+                setErrMsg("A valid end date is required.");
+            }
+            return;
+        }
+        setErrMsg(""); // always clear after
 
+        const data = await sendCreateItineraryReq(descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend);
+        if (data == null) {
+            setShowError(true);
+            setErrMsg("Sorry, something went wrong on our side.");
+            return;
+        }
+
+
+        // redirect to homepage
+        navigate("/");
     }
 
     return (
@@ -53,7 +94,7 @@ const CreateItineary = () => {
             <GridItem pl='2' bg='blue.50' area={'left_top'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    <Text fontSize='2xl'>Create Itineary</Text>
+                    <Text fontSize='2xl'>Create Itinerary</Text>
                 </Box>
 
             </GridItem>
@@ -197,17 +238,17 @@ const CreateItineary = () => {
                     >
 
                         <Stack spacing={4}>
-                            <Text fontSize='3xl'>Time of Visit</Text>
+                            <Text fontSize='3xl'>Date and Time of Visit</Text>
                             <HStack spacing='24px'>
-                                <Input size="md" type="time" onChange={(e) => setVisitTimeStart(e.target.value)}/>
+                                <Input size="md" type="datetime-local" onChange={(e) => setVisitDateStart(e.target.value)}/>
                                 <Text fontSize='1xl'> to </Text>
-                                <Input size="md" type="time" onChange={(e) => setVisitTimeEnd(e.target.value)}/>
+                                <Input size="md" type="datetime-local" onChange={(e) => setVisitDateEnd(e.target.value)}/>
                             </HStack>
 
                         </Stack>
                     </Flex>
                     <Button w={fields_width} m={4} type="submit" onClick={onSubmit} bg="teal">
-                        <font size={5} color={'white'}>Add to itineary</font>
+                        <font size={5} color={'white'}>Add to itinerary</font>
                     </Button>
                     <Spacer/>
 
@@ -218,4 +259,4 @@ const CreateItineary = () => {
     );
 };
 
-export default CreateItineary;
+export default CreateItinerary;

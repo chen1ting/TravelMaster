@@ -1,12 +1,23 @@
 import {
-    Box,
+    Box, Button,
     Grid,
     GridItem,
+    Input,
+    Tab, TabList, TabPanel, TabPanels, Tabs,
     Text
 } from "@chakra-ui/react";
+import {useState} from "react";
 import DiscoverActivities from "./DiscoverSubPages/DiscoverActivities";
+import DiscoverFlights from "./DiscoverSubPages/DiscoverFlights";
+import DiscoverHotels from "./DiscoverSubPages/DiscoverHotels";
 
 const Discover = () => {
+    const [searchInput] = useState('');
+
+    function onSubmit(e) {
+        e.preventDefault();
+    }
+
     return (
         <Grid
             templateAreas={`"title"
@@ -24,7 +35,24 @@ const Discover = () => {
                 </Box>
             </GridItem>
             <GridItem area={"content"} bgColor={'white'}>
-                <DiscoverActivities></DiscoverActivities>
+                <Tabs isFitted variant='enclosed'>
+                    <TabList>
+                        <Tab _selected={{color: 'white', bg: 'orange.500'}} fontWeight={'bold'} fontSize='lg'>Events & Activities</Tab>
+                        <Tab _selected={{color: 'white', bg: 'green.400'}} fontWeight={'bold'} fontSize='lg'>Flights</Tab>
+                        <Tab _selected={{color: 'white', bg: 'blue.400'}} fontWeight={'bold'} fontSize='lg'>Hotels</Tab>
+                    </TabList>
+                    <TabPanels>
+                        <TabPanel>
+                            <DiscoverActivities></DiscoverActivities>
+                        </TabPanel>
+                        <TabPanel>
+                            <DiscoverFlights></DiscoverFlights>
+                        </TabPanel>
+                        <TabPanel>
+                            <DiscoverHotels></DiscoverHotels>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
             </GridItem>
         </Grid>
     );
