@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 //import { useAuth } from '../lib/auth';
 import { sendLoginReq } from "../api/api";
 
@@ -14,16 +14,21 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { validSessionGuard } from "../common/common";
 
 const fields_width = "52.5%";
 
-const SignIn = () => {
+const SignIn = ({ setImageUrl }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [notifMsg, setNotifMsg] = useState("");
   const [isError, setIsError] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    validSessionGuard(navigate, "", "/welcome");
+  }, [navigate]);
 
   //const { signIn } = useAuth();
 
@@ -42,6 +47,8 @@ const SignIn = () => {
     window.sessionStorage.setItem("uid", data.user_id);
     window.sessionStorage.setItem("username", data.username);
     window.sessionStorage.setItem("session_token", data.session_token);
+    window.sessionStorage.setItem("avatar_file_name", data.avatar_file_name);
+    setImageUrl(data.avatar_file_name);
 
     await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 sec
     // redirect to homepage

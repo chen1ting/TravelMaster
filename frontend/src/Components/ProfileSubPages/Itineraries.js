@@ -1,72 +1,73 @@
-// import "react-datepicker/dist/react-datepicker.css";
-// import "./customDatePickerWidth.css"
-import {Button, Center, Flex, Grid, GridItem, Spacer} from "@chakra-ui/react";
-// import Calendar from "react-calendar";
-// import 'react-calendar/dist/Calendar.css';
-import {useNavigate} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { validSessionGuard } from "../../common/common";
+import { getItisByUser } from "../../api/api";
+import {
+  Button,
+  Center,
+  Flex,
+  Grid,
+  GridItem,
+  Spacer,
+  Text,
+  Box,
+  Heading,
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 import DisplayItineraries from "../ItinerariesComponents/DisplayItineraries";
-
+import { PlusSquareIcon } from "@chakra-ui/icons";
+import ItineraryCard from "../ItinerariesComponents/ItineraryCard";
 
 const Itineraries = () => {
-    const navigate = useNavigate();
-    // const [value, onChange] = useState(new Date());
+  const navigate = useNavigate();
+  const [itis, setItis] = useState([]);
+  useEffect(() => {
+    validSessionGuard(navigate, "/");
+    getItisByUser(window.sessionStorage.getItem("session_token"), setItis);
+  }, [navigate]);
 
-    return (
-        <Grid
-            templateAreas={`"title"
-                            "content"
-                            `}
-            gridTemplateRows={'10fr 90fr'}
-            h='100vh'
-            fontWeight='bold'
-            bgColor={'blue.50'}
+  return (
+    <Box
+      display="flex"
+      flexDir="column"
+      alignItems="center"
+      w="100%"
+      rowGap="5"
+    >
+      <Box
+        mt="10"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        w="full"
+      >
+        <Heading>My Itineraries</Heading>
+      </Box>
+      <Box display="flex" justifyContent="flex-end" w="full" mr="20%">
+        <Button
+          leftIcon={<PlusSquareIcon />}
+          onClick={() => {
+            navigate("/welcome");
+          }}
+          w={250}
+          colorScheme="teal"
         >
-            <GridItem area={"title"} mt={3} ml={'4%'} mr={'4%'}>
-                <Flex>
-                    <Center fontSize='4xl'>Itineraries</Center>
-                    <Spacer />
-                    <Button
-                        as="a"
-                        onClick={() => {
-                            navigate("/createitinerary");
-                        }}
-                        w={250}
-                        m={4}
-                        bg="teal"
-                    >
-                        <font size={5} color={"white"}>
-                            Create New Itinerary
-                        </font>
-                    </Button>
-                </Flex>
-            </GridItem>
-
-            <GridItem area={"content"} bgColor={'white'}>
-                <DisplayItineraries></DisplayItineraries>
-            </GridItem>
-        </Grid>
-
-
-        // <Box>
-        //     <Box mt={3} mb={3}>
-        //         <Center>
-        //             <Calendar
-        //                 onChange={onChange}
-        //                 value={value}
-        //                 minDate={new Date(2010, 1, 1)}
-        //                 showDoubleView={true}
-        //                 minDetail={'year'}
-        //                 showNeighboringMonth={false}
-        //             />
-        //         </Center>
-        //     </Box>
-        //     <Box bgColor={'blue.50'}>
-        //         <Button>
-        //             Create New Itinerary
-        //         </Button>
-        //     </Box>
-        // </Box>
-    );
-}
+          <Text size="sm">Create New Itinerary</Text>
+        </Button>
+      </Box>
+      <Box
+        display="flex"
+        justifyContent="space-evenly"
+        alignItems="center"
+        flexWrap="wrap"
+        rowGap="10"
+        columnGap="5"
+      >
+        {itis.map((it) => (
+          <ItineraryCard it={it} />
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 export default Itineraries;

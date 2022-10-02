@@ -9,8 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 const Welcome = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    validSessionGuard(navigate);
-  }, [navigate]);
+    validSessionGuard(navigate, "/");
+  }, []);
   const user = window.sessionStorage.getItem("username");
   const session_token = window.sessionStorage.getItem("session_token");
   const now = new Date();
