@@ -23,7 +23,6 @@ import {
 import { motion, useAnimation } from "framer-motion";
 import {useNavigate} from "react-router-dom";
 
-
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
 
@@ -167,6 +166,7 @@ const CreateReview = () => {
                     align="normal"
                 >
                     <Spacer/>
+
                     <Flex
                         wrap="wrap"
                         direction="column"
