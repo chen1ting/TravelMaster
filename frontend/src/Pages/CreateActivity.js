@@ -1,5 +1,7 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
+import Geocode from "react-geocode";
+
 import {
     FormControl, FormLabel, Button, Flex, Grid, GridItem,
     AspectRatio,
@@ -22,11 +24,32 @@ import { sendCreateActivityReq } from "../api/apiCreateActivity";
 import {useNavigate} from "react-router-dom";
 const fields_width = '52.5%';
 
+
+// set response language. Defaults to english.
+Geocode.setLanguage("en");
+
+// set response region. Its optional.
+// A Geocoding request with region=es (Spain) will return the Spanish city.
+Geocode.setRegion("sg");
+
+// set location_type filter . Its optional.
+// google geocoder returns more that one address for given lat/lng.
+// In some case we need one address as response for which google itself provides a location_type filter.
+// So we can easily parse the result for fetching address components
+// ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER, APPROXIMATE are the accepted values.
+// And according to the below google docs in description, ROOFTOP param returns the most accurate result.
+Geocode.setLocationType("ROOFTOP");
+
+// Enable or disable logs. Its optional.
+Geocode.enableDebug();
+
+
 const CreateActivity = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
-    const [addressevent, setAddressEvent] = useState('');
-    const [descriptionevent, setDescriptionEvent] = useState('');
-    const [eventname, setEventName] = useState('');
+    const [addressactivity, setAddressActivity] = useState('');
+    const [descriptionActivity, setDescriptionActivity] = useState('');
+    const [activityname, setActivityName] = useState('');
+    const [ispaid, setIsPaid] = useState('');
     const [sundayopenhr, setSundayOpenHr] = useState('');
     const [sundayclosehr, setSundayCloseHr] = useState('');
     const [mondayopenhr, setMondayOpenHr] = useState('');
@@ -42,6 +65,8 @@ const CreateActivity = () => {
     const [saturdayopenhr, setSaturdayOpenHr] = useState('');
     const [saturdayclosehr, setSaturdayCloseHr] = useState('');
 
+    const [image, setImage] = useState('');
+
     const [showError, setShowError] = useState(false);
     const [errMsg, setErrMsg] = useState("");
     const navigate = useNavigate();
@@ -52,9 +77,9 @@ const CreateActivity = () => {
         // and also password validation regex
         var bad =
             descriptionlocation === "" ||
-            addressevent === "" ||
-            descriptionevent === "" ||
-            eventname === "" ||
+            addressactivity === "" ||
+            descriptionActivity === "" ||
+            activityname === "" ||
         setShowError(bad);
         if (bad) {
             setErrMsg("A valid review and title is required.");
@@ -62,7 +87,7 @@ const CreateActivity = () => {
         }
         setErrMsg(""); // always clear after
 
-        const data = await sendCreateActivityReq(descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
+        const data = await sendCreateActivityReq(descriptionlocation, addressactivity, descriptionActivity, activityname, ispaid, image, sundayopenhr
             , sundayclosehr, mondayopenhr, mondayclosehr, tuesdayopenhr, tuesdayclosehr, wednesdayopenhr, wednesdayclosehr
             , thursdayopenhr, thursdayclosehr, fridayopenhr, fridayclosehr, saturdayopenhr, saturdayclosehr); //////TO CHANGE THE FUNCTION
         if (data == null) {
@@ -91,7 +116,7 @@ const CreateActivity = () => {
             <GridItem pl='2' bg='blue.50' area={'left_top'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    <Text fontSize='2xl'>Events</Text>
+                    <Text fontSize='2xl'>Activity</Text>
                 </Box>
 
             </GridItem>
@@ -101,76 +126,16 @@ const CreateActivity = () => {
                     spacing={4}
                     align='center'>
                     <Spacer/>
-                    <AspectRatio width="64" ratio={1}>
-                        <Box
-                            borderColor="gray.300"
-                            borderStyle="dashed"
-                            borderWidth="2px"
-                            rounded="md"
-                            shadow="sm"
-                            role="group"
-                            transition="all 150ms ease-in-out"
-                            _hover={{
-                                shadow: "md"
-                            }}
-                            as={motion.div}
-                            initial="rest"
-                            animate="rest"
-                            whileHover="hover"
-                            textAlign={"center"}
-                        >
-                            <Box position="relative" height="100%" width="100%">
-                                <Box
-                                    position="absolute"
-                                    top="0"
-                                    left="0"
-                                    height="100%"
-                                    width="100%"
-                                    display="flex"
-                                    flexDirection="column"
-                                >
-                                    <Stack
-                                        height="100%"
-                                        width="100%"
-                                        display="flex"
-                                        alignItems="center"
-                                        justify="center"
-                                        spacing="4"
-                                    >
-                                        <Box height="16" width="12" position="relative">
-
-                                        </Box>
-                                        <Stack p="8" textAlign="center" spacing="1">
-                                            <Heading fontSize="lg" color="gray.700" fontWeight="bold">
-                                                Drop images here
-                                            </Heading>
-                                            <Text fontWeight="light">or click to upload</Text>
-                                        </Stack>
-                                    </Stack>
-                                </Box>
-                                <Input
-                                    type="file"
-                                    height="100%"
-                                    width="100%"
-                                    position="absolute"
-                                    top="0"
-                                    left="0"
-                                    opacity="0"
-                                    aria-hidden="true"
-                                    accept="image/*"
-                                />
-                            </Box>
-                        </Box>
-                    </AspectRatio>
+                    <Input size="lg" type="file" onChange={(e) => setImage(e.target.value)}/>
                     <Input
                         m={4}
                         w={fields_width}
                         bgColor={'whitesmoke'}
                         type="text"
                         placeholder="Name of Event"
-                        onChange={(e) => setEventName(e.target.value)}
+                        onChange={(e) => setActivityName(e.target.value)}
                     ></Input>
-                    <Checkbox>Is it Free?</Checkbox>
+                    <Checkbox onChange={(e) => setIsPaid(e.target.value)}>Is it an ticketed entrance?</Checkbox>
                 </VStack>
             </GridItem>
 
@@ -201,18 +166,18 @@ const CreateActivity = () => {
                                         ></Input>
                                     </HStack>
                                     <HStack spacing='86px'>
-                                        <Text fontSize='xl'>Address of Event</Text>
+                                        <Text fontSize='xl'>Address of Activity</Text>
                                         <Input
                                             m={4}
                                             w={"96"}
                                             bgColor={'whitesmoke'}
                                             type="text"
                                             placeholder=""
-                                            onChange={(e) => setAddressEvent(e.target.value)}
+                                            onChange={(e) => setAddressActivity(e.target.value)}
                                         ></Input>
                                     </HStack>
                                     <HStack spacing='54px'>
-                                        <Text fontSize='xl'>Description of Event</Text>
+                                        <Text fontSize='xl'>Description of Activity</Text>
                                         <Input
                                             m={4}
                                             w={"96"}
@@ -220,7 +185,7 @@ const CreateActivity = () => {
                                             bgColor={'whitesmoke'}
                                             type="text"
                                             placeholder=""
-                                            onChange={(e) => setDescriptionEvent(e.target.value)}
+                                            onChange={(e) => setDescriptionActivity(e.target.value)}
                                         ></Input>
                                     </HStack>
                                 </Stack>
@@ -233,7 +198,7 @@ const CreateActivity = () => {
                             >
 
                                 <Stack spacing={4}>
-                                    <Text fontSize='3xl'>Event Hours</Text>
+                                    <Text fontSize='3xl'>Activity Hours</Text>
                                     <HStack spacing='24px'>
                                         <Text fontSize='1xl' size="2000">Sunday</Text>
                                         <Input size="md" type="time" onChange={(e) => setSundayOpenHr(e.target.value)}/>

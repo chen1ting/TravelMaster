@@ -1,5 +1,5 @@
 const ENDPOINT = "http://localhost:8080";
-const sendCreateActivityReq = async (descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
+const sendCreateActivityReq = async (descriptionlocation, addressactivity, descriptionActivity, activityname, ispaid, image, sundayopenhr
     , sundayclosehr, mondayopenhr, mondayclosehr, tuesdayopenhr, tuesdayclosehr, wednesdayopenhr, wednesdayclosehr
     , thursdayopenhr, thursdayclosehr, fridayopenhr, fridayclosehr, saturdayopenhr, saturdayclosehr) => {
     console.log("?");
@@ -8,9 +8,10 @@ const sendCreateActivityReq = async (descriptionlocation, addressevent, descript
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             category: descriptionlocation,
-            latitude: addressevent,
-            description: descriptionevent,
-            title: eventname,
+            latitude: addressactivity,
+            description: descriptionActivity,
+            title: activityname,
+            paid: ispaid,
             sun_opening_time: sundayopenhr,
             sun_closing_time: sundayclosehr,
             mon_opening_time: mondayopenhr,

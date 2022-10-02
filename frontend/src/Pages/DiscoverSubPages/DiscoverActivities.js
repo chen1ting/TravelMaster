@@ -57,7 +57,7 @@ const DiscoverActivities = () => {
                         bg="teal"
                     >
                         <font size={5} color={"white"}>
-                            Create an event
+                            Create an activity
                         </font>
                     </Button>
 
