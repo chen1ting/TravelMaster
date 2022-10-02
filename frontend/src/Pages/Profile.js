@@ -42,7 +42,7 @@ const Profile = () => {
                     <TabList>
                         <Tab _selected={{ color: 'white', bg: 'orange.500' }}>Activity Feed</Tab>
                         <Tab _selected={{ color: 'white', bg: 'green.400' }}>Itineraries</Tab>
-                        <Tab _selected={{ color: 'white', bg: 'blue.400' }}>Bookings</Tab>
+                        {/*<Tab _selected={{ color: 'white', bg: 'blue.400' }}>Bookings</Tab>*/}
                     </TabList>
                     <TabPanels>
                         <TabPanel>
@@ -51,9 +51,9 @@ const Profile = () => {
                         <TabPanel>
                             <Itineraries></Itineraries>
                         </TabPanel>
-                        <TabPanel>
-                            <Bookings></Bookings>
-                        </TabPanel>
+                        {/*<TabPanel>*/}
+                        {/*    <Bookings></Bookings>*/}
+                        {/*</TabPanel>*/}
                     </TabPanels>
                 </Tabs>
             </GridItem>

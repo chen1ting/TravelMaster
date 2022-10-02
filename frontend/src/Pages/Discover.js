@@ -1,8 +1,7 @@
 import {
-    Box, Button,
+    Button, Center, Flex,
     Grid,
-    GridItem,
-    Text
+    GridItem, Spacer,
 } from "@chakra-ui/react";
 import DiscoverActivities from "./DiscoverSubPages/DiscoverActivities";
 import {useNavigate} from "react-router-dom";
@@ -12,23 +11,18 @@ const Discover = () => {
 
     return (
         <Grid
-            templateAreas={`"title createNew"
-                            "content content"
+            templateAreas={`"title"
+                            "content"
                             `}
             gridTemplateRows={'10fr 90fr'}
             h='100vh'
             fontWeight='bold'
             bgColor={'blue.50'}
         >
-            <GridItem area={"title"}>
-                <Box position={'relative'} top={'40%'} left={'17.5%'} transform={'translate(-50%,-50%)'}
-                     textAlign={"left"} width='fit-content' mt={'1%'}>
-                    <Text fontSize='4xl'>Discover</Text>
-                </Box>
-            </GridItem>
-            <GridItem area={'createNew'}>
-                <Box position={'relative'} top={'40%'} left={'80%'} transform={'translate(-50%,-50%)'}
-                     textAlign={"left"} width='fit-content' mt={'1%'}>
+            <GridItem area={"title"} mt={3} ml={'4%'} mr={'4%'}>
+                <Flex>
+                    <Center fontSize='4xl'>Discover</Center>
+                    <Spacer />
                     <Button
                         as="a"
                         onClick={() => {
@@ -42,8 +36,9 @@ const Discover = () => {
                             Create New Activity
                         </font>
                     </Button>
-                </Box>
+                </Flex>
             </GridItem>
+
             <GridItem area={"content"} bgColor={'white'}>
                 <DiscoverActivities></DiscoverActivities>
             </GridItem>
