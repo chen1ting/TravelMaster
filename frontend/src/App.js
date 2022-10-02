@@ -16,7 +16,9 @@ import ActivityDescription from './Pages/ActivityDescription';
 import Profile from "./Pages/Profile";
 
 import CreateEvent from './Pages/CreateEvent';
-import CreateItineary from './Pages/CreateItineary';
+
+import CreateItinerary from './Pages/CreateItinerary';
+
 import CreateReviews from './Pages/CreateReviews';
 
 import Itineraries from "./Components/ProfileSubPages/Itineraries";
@@ -39,7 +41,9 @@ function App() {
                     <Route path='bookings' element={<Bookings/>}/>
                     <Route path="" element={<SignIn/>}/>
                     <Route path="createevent" element={<CreateEvent/>}/>
-                    <Route path="createitineary" element={<CreateItineary/>}/>
+
+                    <Route path="createitinerary" element={<CreateItinerary/>}/>
+
                     <Route path="createreviews" element={<CreateReviews/>}/>
 
                 </Routes>

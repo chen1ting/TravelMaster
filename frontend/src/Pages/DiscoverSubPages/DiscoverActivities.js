@@ -1,5 +1,7 @@
 import {Center, Grid, GridItem, Input, SimpleGrid} from "@chakra-ui/react";
 import {useState} from "react";
+import { useNavigate } from "react-router-dom";
+
 import ActivityCard from "../../Components/DiscoverComponents/ActivityCard";
 
 const ShowActivities = () => {
@@ -25,9 +27,10 @@ const ShowActivities = () => {
     )
 }
 
+
 const DiscoverActivities = () => {
     const [searchInput] = useState('');
-
+    const navigate = useNavigate();
     function onSubmit(e) {
         e.preventDefault();
     }
@@ -41,7 +44,10 @@ const DiscoverActivities = () => {
             h='80vh'
         >
             <GridItem area={'search'}>
+
+
                 <Center>
+
                     <Input
                         m={4}
                         w={'50%'}
