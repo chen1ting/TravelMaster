@@ -24,26 +24,29 @@ type LogoutReq struct {
 }
 
 type SignupReq struct {
-	Username       string `json:"username"`
-	HashedPassword string `json:"hashed_password"`
-	Email          string `json:"email"`
-	// Interests      []string `json:"interests"` update later, not as part of initial sign up req
+	Username       string                   `form:"username"`
+	HashedPassword string                   `form:"hashed_password"`
+	Email          string                   `form:"email"`
+	Avatar         *multipart.FileHeader    `form:"avatar"`
+	 // Interests      []string `json:"interests"` update later, not as part of initial sign up req
 }
 
 type SignupResp struct {
 	UserId   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	Avatarurl string  `json:"avatarurl"`
 
 	SessionToken string `json:"session_token"`
 }
+
 
 type ValidateTokenReq struct {
 	SessionToken string `json:"session_token"`
 }
 
 type ValidateTokenResp struct {
-	Valid  bool  `json:"valid"`
+	Valid bool `json:"valid"`
 	UserId int64 `json:"user_id"`
 }
 

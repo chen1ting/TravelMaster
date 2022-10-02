@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-redis/redis/v9"
+
 	"github.com/google/uuid"
 
 	"github.com/jackc/pgconn"
@@ -48,11 +50,45 @@ func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.Sig
 		return nil, ErrBadRequest
 	}
 
+	file, err := req.Avatar.Open()
+	if err!= nil{
+		return  nil, err
+	}
+	defer file.Close()
+
+	//new directory "avatars" to save the files
+	e := os.MkdirAll("avatars", 0755)
+	if e != nil{
+		return nil, e
+	}
+
+	ext:= filepath.Ext(req.Avatar.Filename) //file extension
+	n := (uuid.New()).String()              // to random the filename
+
+	dest := filepath.Join( "./avatars", n + ext)
+
+	///new file locally in avatars
+	newfile, err := os.Create(dest)
+	if err != nil {
+		return nil, err
+	}
+	defer newfile.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil{
+		return nil, err
+	}
+
+	//copy original file to newfile
+	newfile.Write(fileBytes)
+
+
 	// attempt to save user to DB
 	user := gormModel.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.HashedPassword,
+		Username:  req.Username,
+		Email:     req.Email,
+		Password:  req.HashedPassword,
+		Avatarurl: dest,
 	}
 
 	if result := s.Database.Model(&user).Create(&user); result.Error != nil {
@@ -75,6 +111,7 @@ func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.Sig
 		UserId:       user.ID,
 		Username:     user.Username,
 		Email:        user.Email,
+		Avatarurl:    user.Avatarurl,
 		SessionToken: sessionToken,
 	}, nil
 }
@@ -151,7 +188,7 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 	if err != nil {
 		if err == redis.Nil {
 			return &models.ValidateTokenResp{
-				Valid:  false,
+				Valid: false,
 				UserId: -1,
 			}, nil
 		}
@@ -162,7 +199,7 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 		return nil, err
 	}
 	return &models.ValidateTokenResp{
-		Valid:  true,
+		Valid: true,
 		UserId: uid,
 	}, nil
 }
