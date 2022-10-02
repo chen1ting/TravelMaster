@@ -18,8 +18,8 @@ import {
 } from "@chakra-ui/react";
 
 import { motion, useAnimation } from "framer-motion";
-import { sendCreateEventReq } from "../api/apiCreateEvent";
-import {useNavigate} from "react-router-dom";
+
+//import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
 
 const CreateEvent = () => {
@@ -28,6 +28,7 @@ const CreateEvent = () => {
     const [descriptionevent, setDescriptionEvent] = useState('');
     const [eventname, setEventName] = useState('');
     const [sundayopenhr, setSundayOpenHr] = useState('');
+
     const [sundayclosehr, setSundayCloseHr] = useState('');
     const [mondayopenhr, setMondayOpenHr] = useState('');
     const [mondayclosehr, setMondayCloseHr] = useState('');
@@ -42,38 +43,12 @@ const CreateEvent = () => {
     const [saturdayopenhr, setSaturdayOpenHr] = useState('');
     const [saturdayclosehr, setSaturdayCloseHr] = useState('');
 
-    const [showError, setShowError] = useState(false);
-    const [errMsg, setErrMsg] = useState("");
-    const navigate = useNavigate();
 
-    async function onSubmit(e) {
+    //const { signIn } = useAuth();
+
+    function onSubmit(e) {
         e.preventDefault();
-        // might wanna consider adding a regex check for email format
-        // and also password validation regex
-        var bad =
-            descriptionlocation === "" ||
-            addressevent === "" ||
-            descriptionevent === "" ||
-            eventname === "" ||
-        setShowError(bad);
-        if (bad) {
-            setErrMsg("A valid review and title is required.");
-            return;
-        }
-        setErrMsg(""); // always clear after
 
-        const data = await sendCreateEventReq(descriptionlocation, addressevent, descriptionevent, eventname, sundayopenhr
-            , sundayclosehr, mondayopenhr, mondayclosehr, tuesdayopenhr, tuesdayclosehr, wednesdayopenhr, wednesdayclosehr
-            , thursdayopenhr, thursdayclosehr, fridayopenhr, fridayclosehr, saturdayopenhr, saturdayclosehr); //////TO CHANGE THE FUNCTION
-        if (data == null) {
-            setShowError(true);
-            setErrMsg("Sorry, something went wrong on our side.");
-            return;
-        }
-
-
-        // redirect to homepage
-        navigate("/");
     }
 
     return (

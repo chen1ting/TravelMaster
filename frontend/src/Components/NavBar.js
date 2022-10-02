@@ -67,7 +67,7 @@ const Header = () => {
                     {/* Navbar buttons */}
                     <Menu>
                         {NavButton('Discover', '/discover')}
-                        {NavButton('Create an Itinerary', '/createitinerary')}
+                        {NavButton('Create an Itinerary', '/createitinery')}
                         {NavButton('Itineraries', '/itineraries')}
                         {NavButton('Bookings', '/bookings')}
                     </Menu>

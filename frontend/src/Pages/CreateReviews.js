@@ -1,7 +1,5 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
-import { sendCreateReviewReq } from "../api/apiCreateReviews";
-
 
 import {
     FormControl, FormLabel, Button, Flex, Grid, GridItem,
@@ -21,8 +19,6 @@ import {
 } from "@chakra-ui/react";
 
 import { motion, useAnimation } from "framer-motion";
-import {useNavigate} from "react-router-dom";
-
 
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';
@@ -34,38 +30,12 @@ const CreateReview = () => {
     const [uploadImg3, setUploadImg3] = useState('');
     const [reviewTitle, setReviewTitle] = useState('');
     const [reviewBody, setReviewBody] = useState('');
-
-    const [showError, setShowError] = useState(false);
-    const [errMsg, setErrMsg] = useState("");
     let name= "Felix"
-    //let date= "23 September 2022"
+    let date= "23 September 2022"
     let profileImg = "https://mdbootstrap.com/img/new/standard/city/042.webp"
-    const navigate = useNavigate();
-
-    async function onSubmit(e) {
+    function onSubmit(e) {
         e.preventDefault();
-        // might wanna consider adding a regex check for email format
-        // and also password validation regex
-        var bad =
-            reviewTitle === "" ||
-            reviewBody === ""
-        setShowError(bad);
-        if (bad) {
-            setErrMsg("A valid review and title is required.");
-            return;
-        }
-        setErrMsg(""); // always clear after
 
-        const data = await sendCreateReviewReq(name, new Date().toISOString().slice(0, 10), profileImg, reviewTitle, reviewBody, uploadImg1, uploadImg2, uploadImg3); //////TO CHANGE THE FUNCTION
-        if (data == null) {
-            setShowError(true);
-            setErrMsg("Sorry, something went wrong on our side.");
-            return;
-        }
-
-
-        // redirect to homepage
-        navigate("/");
     }
 
     return (
