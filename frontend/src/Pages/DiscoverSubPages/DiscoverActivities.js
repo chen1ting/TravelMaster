@@ -60,6 +60,7 @@ const DiscoverActivities = () => {
                             Create an event
                         </font>
                     </Button>
+
                     <Input
                         m={4}
                         w={'50%'}
