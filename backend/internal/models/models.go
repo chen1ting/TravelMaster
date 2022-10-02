@@ -1,6 +1,7 @@
 package models
 
 import (
+	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 	"mime/multipart"
 	"time"
 )
@@ -130,8 +131,8 @@ type SearchActivityReq struct {
 }
 
 type SearchActivityResp struct {
-	Activities   string `json:"activities"`
-	ResultNumber int64  `json:"result_no"`
+	Activities   []gormModel.Activity `json:"activities"`
+	ResultNumber int64                `json:"result_no"`
 }
 
 type UpdateActivityForm struct {

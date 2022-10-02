@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -500,12 +499,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 	if result.Error != nil {
 		return nil, ErrNoSearchFail
 	}
-	jsStr, err := json.Marshal(activities)
-	if err != nil {
-		return nil, ErrParsingResultFail
-	}
 	return &models.SearchActivityResp{
-		Activities:   string(jsStr),
+		Activities:   activities,
 		ResultNumber: result.RowsAffected,
 	}, nil
 }
