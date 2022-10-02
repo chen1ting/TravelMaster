@@ -241,26 +241,17 @@ func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) 
 	if err != nil {
 		return "", "", err
 	}
-	// create image root if it doesn't exist
-	if _, err := os.Stat(ImageRoot); errors.Is(err, os.ErrNotExist) {
-		mkdirErr := os.Mkdir(ImageRoot, os.ModePerm) // define different file access
-		if mkdirErr != nil {
-			fmt.Println(mkdirErr) // TODO: log
-		} else {
-			fmt.Printf("Created %s at %s\n", ImageRoot, CWD)
-		}
-	}
 	// create subfolder if it doesn't exist
 	fileDirectory := filepath.Join(ImageRoot, subDirectory)
 	if _, err := os.Stat(fileDirectory); errors.Is(err, os.ErrNotExist) {
-		mkdirErr := os.Mkdir(fileDirectory, os.ModePerm) // define different file access
+		mkdirErr := os.MkdirAll(fileDirectory, os.ModePerm) // define different file access
 		if mkdirErr != nil {
 			fmt.Println(mkdirErr) // TODO: log
 		} else {
 			fmt.Printf("Created %s at %s\n", fileDirectory, ImageRoot)
 		}
 	}
-	uniqueImgName := uuid.NewString() + image.Filename
+	uniqueImgName := uuid.NewString() + filepath.Ext(image.Filename)
 	fPath := filepath.Join(fileDirectory, uniqueImgName)
 	if _, err := os.Create(fPath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
