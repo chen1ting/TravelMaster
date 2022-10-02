@@ -25,7 +25,7 @@ type Activity struct {
 	Description   string         `gorm:"column:description"`
 	Longitude     float32        `gorm:"gorm:longitude; default:-180.1"`
 	Latitude      float32        `gorm:"gorm:latitude; default:-90.1"`
-	ImageURL      string         `gorm:"column:image"`
+	ImageNames    pq.StringArray `gorm:"column:image_name"`
 	OpeningTimes  pq.Int32Array  `gorm:"type:int[];column:opening_times"`
 
 	// System fields

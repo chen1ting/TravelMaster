@@ -58,7 +58,7 @@ type ActivityInfoForm struct {
 	Longitude   float32  `form:"longitude"`
 	Latitude    float32  `form:"latitude"`
 	// Assumption: one image file upload at once
-	Image *multipart.FileHeader `form:"image"`
+	Image []*multipart.FileHeader `form:"image"`
 
 	// fields for opening & closing hours
 	MonOpeningTime  int `form:"mon_opening_time"`
@@ -78,8 +78,9 @@ type ActivityInfoForm struct {
 }
 
 type CreateActivityResp struct {
-	ActivityId int64     `json:"activity_id"`
-	CreatedAt  time.Time `json:"created_at"`
+	ActivityId     int64     `json:"activity_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	ImageSaveFails []string  `json:"failed_images"`
 }
 
 type GetActivityReq struct {
@@ -95,7 +96,7 @@ type GetActivityResp struct {
 	Description string   `json:"description"`
 	Longitude   float32  `json:"longitude"`
 	Latitude    float32  `json:"latitude"`
-	ImageURL    string   `json:"image_url"`
+	ImageNames  []string `json:"image_names"`
 
 	// fields for opening & closing hours
 	MonOpeningTime  int `json:"mon_opening_time"`
@@ -142,8 +143,8 @@ type UpdateActivityForm struct {
 	Description string   `form:"description"`
 	Longitude   float32  `form:"longitude"`
 	Latitude    float32  `form:"latitude"`
-	// Assumption: one image file upload at once
-	Image *multipart.FileHeader `form:"image"`
+	// Assumption: multiple image file upload at once
+	Image []*multipart.FileHeader `form:"image"`
 
 	// fields for opening & closing hours
 	MonOpeningTime  int `form:"mon_opening_time"`
@@ -163,8 +164,9 @@ type UpdateActivityForm struct {
 }
 
 type UpdateActivityResp struct {
-	ActivityId int64     `json:"activity_id"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ActivityId     int64     `json:"activity_id"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	ImageSaveFails []string  `json:"failed_images"`
 }
 
 type InactivateActivityReq struct {

@@ -20,5 +20,5 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/search-activity", service.SearchActivity)
 	r.POST("/update-activity", service.UpdateActivity)
 	r.POST("/report-inactive-activity", service.ReportInactiveActivity)
-	r.Use(static.Serve("/assets", static.LocalFile("./assets", true)))
+	r.Use(static.Serve("/activity-image", static.LocalFile("./assets/activity_image", true)))
 }

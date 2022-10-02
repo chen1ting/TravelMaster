@@ -35,6 +35,9 @@ var (
 	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail          = errors.New("search failed")
 	ErrParsingResultFail     = errors.New("cannot parse result")
+	ErrUnknownFileType       = errors.New("unknown file type uploaded")
+	CWD, _                   = os.Getwd()
+	ImageRoot                = filepath.Join(CWD, "assets")
 )
 
 func (s *Server) Signup(ctx context.Context, req *models.SignupReq) (*models.SignupResp, error) {
@@ -196,30 +199,74 @@ func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	return opening
 }
 
-func SaveFile(image *multipart.FileHeader, c *gin.Context) (string, error) {
+func ValidateFile(filePath string) (bool, error) {
+	// open the uploaded file
+	file, err := os.Open(filePath)
 
-	//  TODO: this file path should be in global variable or config?
-	cwd, _ := os.Getwd()
-	if _, err := os.Stat("assets"); errors.Is(err, os.ErrNotExist) {
-		mkdirErr := os.Mkdir("assets", os.ModePerm) // you might want different file access, this suffice for this example
+	if err != nil {
+		fmt.Println("Cannot open file", err)
+		return false, err
+	}
+
+	buff := make([]byte, 512) // why 512 bytes ? see http://golang.org/pkg/net/http/#DetectContentType
+	_, err = file.Read(buff)
+
+	if err != nil {
+		fmt.Println("Cannot read file to buff", err)
+		return false, err
+	}
+
+	filetype := http.DetectContentType(buff)
+
+	fmt.Println(filetype)
+
+	switch filetype {
+	case "image/jpeg", "image/jpg":
+		return true, nil
+
+	case "image/gif":
+		return true, nil
+
+	case "image/png":
+		return true, nil
+
+	case "application/pdf": // not image, but application !
+		return true, nil
+
+	default:
+		fmt.Println("unknown file type uploaded")
+		return false, ErrUnknownFileType
+	}
+}
+
+func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) (string, string, error) {
+
+	fileDirectory := filepath.Join(ImageRoot, subDirectory)
+	if _, err := os.Stat(fileDirectory); errors.Is(err, os.ErrNotExist) {
+		mkdirErr := os.Mkdir(fileDirectory, os.ModePerm) // define different file access
 		if mkdirErr != nil {
 			fmt.Println(mkdirErr) // TODO: log
 		} else {
-			fmt.Printf("Created %s at %s\n", "assets", cwd)
+			fmt.Printf("Created %s at %s\n", fileDirectory, ImageRoot)
 		}
 	}
 	uniqueImgName := uuid.NewString() + image.Filename
-	fPath := filepath.Join(cwd, "assets", uniqueImgName)
-	_, err := os.Create(fPath)
-	if err != nil {
-		return "", err
+	fPath := filepath.Join(fileDirectory, uniqueImgName)
+	if _, err := os.Create(fPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return "", "", err
 	}
-	saveErr := c.SaveUploadedFile(image, fPath)
-	if saveErr != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": saveErr.Error()})
-		return "", saveErr
+	if err := c.SaveUploadedFile(image, fPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return "", "", err
 	}
-	return uniqueImgName, nil
+	if _, err := ValidateFile(fPath); err != nil {
+		if errRemove := os.Remove(fPath); errRemove != nil {
+			return "", "", errRemove
+		}
+		return "", "", err
+	}
+	return uniqueImgName, fPath, nil
 }
 
 func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (*models.CreateActivityResp, error) {
@@ -243,13 +290,18 @@ func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (
 		return nil, ErrActivityAlreadyExists
 	}
 
-	ImgPath := ""
+	var imgNames []string
+	var imgPaths []string
+	var failedImages []string
 	if form.Image != nil {
-		uniqueImgName, saveErr := SaveFile(form.Image, c)
-		if saveErr != nil {
-			return nil, saveErr
+		for i := 1; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, "activity_image")
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
 		}
-		ImgPath = "/assets/" + uniqueImgName
 	}
 
 	// add activity to database
@@ -263,7 +315,7 @@ func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (
 		Longitude:     form.Longitude,
 		Latitude:      form.Latitude,
 		OpeningTimes:  packCreateOpeningTimes(form),
-		ImageURL:      ImgPath,
+		ImageNames:    imgNames,
 
 		// system settings
 		InactiveCount: 0,
@@ -274,17 +326,87 @@ func (s *Server) CreateActivity(form *models.ActivityInfoForm, c *gin.Context) (
 
 	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
 		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
-		err := os.Remove(ImgPath)
-		if err != nil {
-			fmt.Println("create_activity error deleting image file: ", err) // TODO: write to log instead
+		// if result cannot be saved, remove all saved images
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
 		}
 		return nil, result.Error
 	}
 
 	// if no error, return success response
 	return &models.CreateActivityResp{
-		ActivityId: activity.ID,
-		CreatedAt:  activity.CreatedAt,
+		ActivityId:     activity.ID,
+		CreatedAt:      activity.CreatedAt,
+		ImageSaveFails: failedImages,
+	}, nil
+}
+
+func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
+	if form == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrInvalidActivityID
+	}
+
+	// see if the user id matches the activity's user id
+	if activity.UserID != form.UserID {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	if form.Title == "" {
+		return nil, ErrNullTitle
+	}
+
+	var imgNames = activity.ImageNames
+	var imgPaths []string
+	var failedImages []string
+	if form.Image != nil {
+		for i := 1; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, "activity_image")
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
+		}
+	}
+
+	// update activity and save to database
+	activity.Title = form.Title
+	activity.AverageRating = form.Rating
+	activity.Paid = form.Paid
+	activity.Category = form.Category
+	activity.Description = form.Description
+	activity.Longitude = form.Longitude
+	activity.Latitude = form.Latitude
+	activity.ImageNames = imgNames
+	activity.OpeningTimes = packUpdateOpeningTimes(form)
+	s.Database.Save(&activity)
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
+		}
+		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	// if no error, return success response
+	return &models.UpdateActivityResp{
+		ActivityId:     activity.ID,
+		UpdatedAt:      activity.UpdatedAt,
+		ImageSaveFails: failedImages,
 	}, nil
 }
 
@@ -308,7 +430,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		Description: activity.Description,
 		Longitude:   activity.Longitude,
 		Latitude:    activity.Latitude,
-		ImageURL:    activity.ImageURL,
+		ImageNames:  activity.ImageNames,
 
 		MonOpeningTime:  int(activity.OpeningTimes[0]),
 		TueOpeningTime:  int(activity.OpeningTimes[1]),
@@ -371,64 +493,6 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 	return &models.SearchActivityResp{
 		Activities:   string(jsStr),
 		ResultNumber: result.RowsAffected,
-	}, nil
-}
-
-func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
-	if form == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-
-	// see if the user id matches the activity's user id
-	if activity.UserID != form.UserID {
-		return nil, ErrInvalidUpdateUser
-	}
-
-	if form.Title == "" {
-		return nil, ErrNullTitle
-	}
-
-	ImgPath := activity.ImageURL
-	if form.Image != nil {
-		uniqueImgName, saveErr := SaveFile(form.Image, c)
-		if saveErr != nil {
-			return nil, saveErr
-		}
-		ImgPath = "/assets/" + uniqueImgName
-	}
-	// update activity and save to database
-	activity.Title = form.Title
-	activity.AverageRating = form.Rating
-	activity.Paid = form.Paid
-	activity.Category = form.Category
-	activity.Description = form.Description
-	activity.Longitude = form.Longitude
-	activity.Latitude = form.Latitude
-	activity.ImageURL = ImgPath
-	activity.OpeningTimes = packUpdateOpeningTimes(form)
-	s.Database.Save(&activity)
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		var perr *pgconn.PgError
-		if errors.As(result.Error, &perr) && perr.Code == "23505" {
-			return nil, ErrActivityAlreadyExists
-		}
-		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-
-	// if no error, return success response
-	return &models.UpdateActivityResp{
-		ActivityId: activity.ID,
-		UpdatedAt:  activity.UpdatedAt,
 	}, nil
 }
 

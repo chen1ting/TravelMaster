@@ -107,6 +107,21 @@ func (s *Service) CreateActivity(c *gin.Context) {
 	c.JSON(http.StatusCreated, createActivityResp)
 }
 
+func (s *Service) UpdateActivity(c *gin.Context) {
+	updateActivityForm := &models.UpdateActivityForm{}
+	if err := c.ShouldBind(&updateActivityForm); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	updateActivityResp, err := s.server.UpdateActivity(updateActivityForm, c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, updateActivityResp)
+}
+
 func (s *Service) GetActivity(c *gin.Context) {
 	getActivityReq := &models.GetActivityReq{}
 	if err := c.ShouldBindJSON(&getActivityReq); err != nil {
@@ -135,21 +150,6 @@ func (s *Service) SearchActivity(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, searchActivityResp)
-}
-
-func (s *Service) UpdateActivity(c *gin.Context) {
-	updateActivityReq := &models.UpdateActivityForm{}
-	if err := c.ShouldBindJSON(&updateActivityReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	updateActivityResp, err := s.server.UpdateActivity(updateActivityReq, c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, updateActivityResp)
 }
 
 func (s *Service) ReportInactiveActivity(c *gin.Context) {
