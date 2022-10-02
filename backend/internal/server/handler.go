@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
@@ -23,6 +24,9 @@ import (
 )
 
 var (
+	ErrNotAllowed            = errors.New("user is not allowed to perform this action")
+	ErrGenericServerError    = errors.New("generic server error")
+	ErrDatabase              = errors.New("database error")
 	ErrBadRequest            = errors.New("bad request")
 	ErrMissingUserInfo       = errors.New("eight email, username, or hashed password missing")
 	ErrUserAlreadyExists     = errors.New("user already exists")
@@ -186,301 +190,507 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 }
 
 func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItineraryRequest) (*models.GenerateItineraryResponse, error) {
-	// TODO: for now hardcoded resp from 29/9/2022, 3:00 PM to 30/9/2022, 11:00 PM
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotAllowed
+		}
+		return nil, err
+	}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// retrieve all activites
+	var activities []gormModel.Activity
+	if err := s.Database.Find(&activities).Error; err != nil {
+		return nil, ErrDatabase
+	}
+
+	actMap := make(map[string]map[*gormModel.Activity]bool)
+	for _, act := range activities {
+		for _, cat := range act.Category {
+			if actMap[cat] == nil {
+				actMap[cat] = make(map[*gormModel.Activity]bool)
+			}
+			actMap[cat][&act] = true
+		}
+	}
+
+	// fill up fixed slots first 8am - 10am
+	startTime := time.Unix(req.StartTime, 0)
+	startBase := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, startTime.Location()).Unix()
+	// endTime := time.Unix(req.EndTime, 0)
+	// endBase := time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, endTime.Location()).Unix()
+	// n := (endBase - startBase) / (60*60) + 24
+	// buckets := make([]*models.Segment, n)
+	startIdx := (req.StartTime - startBase) / (60 * 60)
+	day := int(float64(req.StartTime/86400)+4) % 7
+	// endIdx := (req.EndTime - startBase) / (60*60)
+	hr := int(startIdx) // 0 indexed hr
+	x := req.StartTime
+	y := req.EndTime
+	segments := make([]*models.Segment, 0)
+	used := make(map[int64]bool)
+	for x <= y {
+		if (hr >= 7 && hr <= 8) || (hr >= 11 && hr <= 12) || (hr >= 6 && hr <= 7) { // breakfast, lunch, time
+			// randomly select a food activity that is open at that time
+			activity, h := randomAndIsOpen(actMap["food"], day, hr, used)
+			if activity == nil { // no food activity somehow...
+				fmt.Printf("WARN: no food activity for start time: %d\n", x)
+				hr += 2
+				x += int64(2 * 60 * 60)
+				continue
+			}
+			segments = append(segments, &models.Segment{
+				StartTime:       x,
+				EndTime:         x + int64(h*60*60),
+				ActivitySummary: activity,
+			})
+			used[activity.Id] = true
+			hr += h + 2 // 2h gap between every activity
+			x += int64((h + 2) * 60 * 60)
+		} else if hr >= 9 { // 10 PM or later, fast forward to 8 AM next day
+			ff := 7 - hr + 12
+			hr = 7
+			x += int64(ff * 60 * 60)
+			day = (day + 1) % 7
+		} else { // any 2 hr time slot for any activity or less if exceeds end time
+			ok := false
+			for _, cat := range req.PreferredCategories {
+				activity, h := randomAndIsOpen(actMap[cat], day, hr, used)
+				if activity != nil {
+					ok = true
+					segments = append(segments, &models.Segment{
+						StartTime:       x,
+						EndTime:         x + int64(h*60*60),
+						ActivitySummary: activity,
+					})
+					used[activity.Id] = true
+					hr += h + 2 // 2h gap between every activity
+					break
+				}
+			}
+			if !ok {
+				// any cat is ok
+				for _, m := range actMap {
+					activity, h := randomAndIsOpen(m, day, hr, used)
+					if activity != nil {
+						ok = true
+						segments = append(segments, &models.Segment{
+							StartTime:       x,
+							EndTime:         x + int64(h*60*60),
+							ActivitySummary: activity,
+						})
+						used[activity.Id] = true
+						hr += h + 2 // 2h gap between every activity
+						break
+					}
+				}
+			}
+			if !ok {
+				fmt.Printf("WARN: no planned activity for start time: %d\n", x)
+				hr += 2
+				x += int64(2 * 60 * 60)
+			}
+		}
+	}
+
+	marshalledSeg, err := json.Marshal(segments)
+	if err != nil {
+		return nil, ErrGenericServerError
+	}
+	// insert into db generated itinerary
+	genIt := &gormModel.Itinerary{
+		OwnedByUserId:    uid,
+		Segments:         marshalledSeg,
+		StartTime:        req.StartTime,
+		EndTime:          req.EndTime,
+		NumberOfSegments: len(segments),
+	}
+	if res := s.Database.Create(genIt); res.Error != nil {
+		return nil, ErrDatabase
+	}
+
+	// return itinerary as resp
 	return &models.GenerateItineraryResponse{
 		GeneratedItinerary: &models.Itinerary{
-			Id: 100,
-			StartTime: 1664434800,
-			EndTime: 1664550000,
-			NumberOfSegments: 3,
-			Segments: []*models.Segment{
-				{
-					StartTime: 1664434800, // 29/9/2022, 3:00 PM
-					EndTime: 1664442000, // 29/9/2022, 5:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 1,
-						Name: "Sample activity 1",
-						Description: "This is a sample and test activity...",
-						AverageRating: 3.5,
-						Categories: []string{"Fun"},
-						ImageUrl: "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800",
-					},
-				},
-				{
-					StartTime: 1664449200, // 30/9/2022, 7:00 PM
-					EndTime: 1664456400, // 29/9/2022, 9:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Restaurant ABC",
-						Description: "This is an activity for your dinner",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
-					},
-				},
-				{
-					StartTime: 1664456400, // 29/9/2022, 9:00 PM
-					EndTime: 1664463600, // 29/9/2022, 11:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 2,
-						Name: "Sample activity 2",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something Long"},
-						ImageUrl: "https://media.istockphoto.com/photos/tropical-white-sand-beach-with-coco-palms-picture-id1181563943?k=20&m=1181563943&s=612x612&w=0&h=r46MQMvFnvrzzTfjVmvZED5nZyTmAYwISDvkdtM2i2A=",
-					},
-				},
-				{
-					StartTime: 1664496000, // 30/9/2022, 8:00 AM
-					EndTime: 1664503200, // 30/9/2022, 10:00 AM
-					ActivitySummary: models.ActivitySummary{
-						Id: 200,
-						Name: "Breakie Time",
-						Description: "This is for breakfast.",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://static.thehoneycombers.com/wp-content/uploads/sites/4/2022/04/Sundays-Beach-Club-in-Uluwatu-Bali-Indonesia.jpeg",
-					},
-				},
-				{
-					StartTime: 1664503200, // 30/9/2022, 10:00 AM
-					EndTime: 1664510400, // 30/9/2022, 12:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 3,
-						Name: "Sample activity 3",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something else", "Another thing", "Fun"},
-						ImageUrl: "https://image.shutterstock.com/image-photo/chairs-umbrella-palm-beach-tropical-260nw-559599520.jpg",
-					},
-				},
-				{
-					StartTime: 1664510400, // 30/9/2022, 12:00 PM
-					EndTime: 1664517600, // 30/9/2022, 2:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 10,
-						Name: "Lunch time bby",
-						Description: "This is for lunch",
-						AverageRating: 4.5,
-						Categories: []string{"Food"},
-						ImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxkErgnfKaYHK1adHcY02d7f_B7sD0mwSLMg&usqp=CAU",
-					},
-				},
-				{
-					StartTime: 1664517600, // 30/9/2022, 2:00 PM
-					EndTime: 1664524800, // 30/9/2022, 4:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 4,
-						Name: "Sample activity 4",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://media.istockphoto.com/photos/tropical-beach-palm-trees-sea-wave-and-white-sand-picture-id1300296030?b=1&k=20&m=1300296030&s=170667a&w=0&h=w1s7kmN2TH7O326d263Cs-E44teA1hy6u29UIVf_z1w=",
-					},
-				},
-				{
-					StartTime: 1664532000, // 30/9/2022, 6:00 PM
-					EndTime: 1664535600, // 30/9/2022, 7:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Sample activity 5",
-						Description: "This is a sample and test activity...",
-						AverageRating: 2,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://i.insider.com/5bfec49248eb12058423acf7?width=700",
-					},
-				},
-				{
-					StartTime: 1664535600, // 30/9/2022, 7:00 PM
-					EndTime: 1664542800, // 30/9/2022, 9:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Restaurant ABC",
-						Description: "This is an activity for your dinner",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
-					},
-				},
-				{
-					StartTime: 1664542800, // 30/9/2022, 9:00 PM
-					EndTime: 1664550000, // 30/9/2022, 11:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 6,
-						Name: "Sample activity 6",
-						Description: "This is a sample and test activity...",
-						AverageRating: 3,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://www.travelandleisure.com/thmb/mUQhPpdcuEfnsprkLEyuT4BWK_M=/1800x1012/smart/filters:no_upscale()/saud-beach-luzon-philippines-WRLDBEACH0421-15e2c368e7ad4495be803bd60cafa379.jpg",
-					},
-				},
-			},
+			Id:               genIt.ID,
+			NumberOfSegments: len(segments),
+			Segments:         segments,
+			StartTime:        req.StartTime,
+			EndTime:          req.EndTime,
 		},
 	}, nil
+
+	// // TODO: for now hardcoded resp from 29/9/2022, 3:00 PM to 30/9/2022, 11:00 PM
+	// return &models.GenerateItineraryResponse{
+	// 	GeneratedItinerary: &models.Itinerary{
+	// 		Id: 100,
+	// 		StartTime: 1664434800,
+	// 		EndTime: 1664550000,
+	// 		NumberOfSegments: 3,
+	// 		Segments: []*models.Segment{
+	// 			{
+	// 				StartTime: 1664434800, // 29/9/2022, 3:00 PM
+	// 				EndTime: 1664442000, // 29/9/2022, 5:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 1,
+	// 					Name: "Sample activity 1",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 3.5,
+	// 					Categories: []string{"Fun"},
+	// 					ImageUrl: "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664449200, // 30/9/2022, 7:00 PM
+	// 				EndTime: 1664456400, // 29/9/2022, 9:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 5,
+	// 					Name: "Restaurant ABC",
+	// 					Description: "This is an activity for your dinner",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Food"},
+	// 					ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664456400, // 29/9/2022, 9:00 PM
+	// 				EndTime: 1664463600, // 29/9/2022, 11:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 2,
+	// 					Name: "Sample activity 2",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Something Long"},
+	// 					ImageUrl: "https://media.istockphoto.com/photos/tropical-white-sand-beach-with-coco-palms-picture-id1181563943?k=20&m=1181563943&s=612x612&w=0&h=r46MQMvFnvrzzTfjVmvZED5nZyTmAYwISDvkdtM2i2A=",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664496000, // 30/9/2022, 8:00 AM
+	// 				EndTime: 1664503200, // 30/9/2022, 10:00 AM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 200,
+	// 					Name: "Breakie Time",
+	// 					Description: "This is for breakfast.",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Food"},
+	// 					ImageUrl: "https://static.thehoneycombers.com/wp-content/uploads/sites/4/2022/04/Sundays-Beach-Club-in-Uluwatu-Bali-Indonesia.jpeg",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664503200, // 30/9/2022, 10:00 AM
+	// 				EndTime: 1664510400, // 30/9/2022, 12:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 3,
+	// 					Name: "Sample activity 3",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Something else", "Another thing", "Fun"},
+	// 					ImageUrl: "https://image.shutterstock.com/image-photo/chairs-umbrella-palm-beach-tropical-260nw-559599520.jpg",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664510400, // 30/9/2022, 12:00 PM
+	// 				EndTime: 1664517600, // 30/9/2022, 2:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 10,
+	// 					Name: "Lunch time bby",
+	// 					Description: "This is for lunch",
+	// 					AverageRating: 4.5,
+	// 					Categories: []string{"Food"},
+	// 					ImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxkErgnfKaYHK1adHcY02d7f_B7sD0mwSLMg&usqp=CAU",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664517600, // 30/9/2022, 2:00 PM
+	// 				EndTime: 1664524800, // 30/9/2022, 4:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 4,
+	// 					Name: "Sample activity 4",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Something Long", "ABC123", "another thing"},
+	// 					ImageUrl: "https://media.istockphoto.com/photos/tropical-beach-palm-trees-sea-wave-and-white-sand-picture-id1300296030?b=1&k=20&m=1300296030&s=170667a&w=0&h=w1s7kmN2TH7O326d263Cs-E44teA1hy6u29UIVf_z1w=",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664532000, // 30/9/2022, 6:00 PM
+	// 				EndTime: 1664535600, // 30/9/2022, 7:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 5,
+	// 					Name: "Sample activity 5",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 2,
+	// 					Categories: []string{"Something Long", "ABC123", "another thing"},
+	// 					ImageUrl: "https://i.insider.com/5bfec49248eb12058423acf7?width=700",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664535600, // 30/9/2022, 7:00 PM
+	// 				EndTime: 1664542800, // 30/9/2022, 9:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 5,
+	// 					Name: "Restaurant ABC",
+	// 					Description: "This is an activity for your dinner",
+	// 					AverageRating: 4,
+	// 					Categories: []string{"Food"},
+	// 					ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
+	// 				},
+	// 			},
+	// 			{
+	// 				StartTime: 1664542800, // 30/9/2022, 9:00 PM
+	// 				EndTime: 1664550000, // 30/9/2022, 11:00 PM
+	// 				ActivitySummary: &models.ActivitySummary{
+	// 					Id: 6,
+	// 					Name: "Sample activity 6",
+	// 					Description: "This is a sample and test activity...",
+	// 					AverageRating: 3,
+	// 					Categories: []string{"Something Long", "ABC123", "another thing"},
+	// 					ImageUrl: "https://www.travelandleisure.com/thmb/mUQhPpdcuEfnsprkLEyuT4BWK_M=/1800x1012/smart/filters:no_upscale()/saud-beach-luzon-philippines-WRLDBEACH0421-15e2c368e7ad4495be803bd60cafa379.jpg",
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }, nil
 }
 
+// returns the activity summary and the time allocated for the activity: 1 or 2 hr
+// it will try to return 2h, and only return 1 if the activity ends before x+2
+func randomAndIsOpen(choices map[*gormModel.Activity]bool, day int, hr int, used map[int64]bool) (*models.ActivitySummary, int) {
+	for act := range choices {
+		opening := int(act.OpeningTimes[day])
+		closing := int(act.OpeningTimes[day+7])
+		if hr < opening || hr > closing || used[act.ID] {
+			continue
+		}
+		actTime := min(2, closing-hr)
+		if actTime == 0 { // act time must at least an hr long
+			continue
+		}
+		imageUrl := ""
+		if len(act.ImageNames) > 0 {
+			imageUrl = act.ImageNames[0]
+		}
+		return &models.ActivitySummary{
+			Id:            act.ID,
+			Name:          act.Title,
+			Description:   act.Description,
+			AverageRating: float64(act.AverageRating),
+			Categories:    act.Category,
+			ImageUrl:      imageUrl,
+		}, actTime
+	}
+
+	return nil, 0
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
+}
 
 func (s *Server) GetItinerary(ctx context.Context, req *models.GetItineraryRequest) (*models.GetItineraryResponse, error) {
-	// TODO: for now hardcoded resp from 29/9/2022, 3:00 PM to 30/9/2022, 11:00 PM
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotAllowed
+		}
+		return nil, err
+	}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	var iti gormModel.Itinerary
+	if res := s.Database.Find(&iti, req.Id); res.Error != nil {
+		return nil, ErrDatabase
+	}
+	if iti.OwnedByUserId != uid {
+		return nil, ErrNotAllowed
+	}
+
+	var segments []*models.Segment
+	if err := json.Unmarshal(iti.Segments, &segments); err != nil {
+		fmt.Println(err)
+		return nil, ErrGenericServerError
+	}
+
 	return &models.GetItineraryResponse{
 		Itinerary: &models.Itinerary{
-			Id: 100,
-			StartTime: 1664434800,
-			EndTime: 1664550000,
-			NumberOfSegments: 3,
-			Segments: []*models.Segment{
-				{
-					StartTime: 1664434800, // 29/9/2022, 3:00 PM
-					EndTime: 1664442000, // 29/9/2022, 5:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 1,
-						Name: "Sample activity 1",
-						Description: "This is a sample and test activity...",
-						AverageRating: 3.5,
-						Categories: []string{"Fun"},
-						ImageUrl: "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800",
-					},
-				},
-				{
-					StartTime: 1664449200, // 30/9/2022, 7:00 PM
-					EndTime: 1664456400, // 29/9/2022, 9:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Restaurant ABC",
-						Description: "This is an activity for your dinner",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
-					},
-				},
-				{
-					StartTime: 1664456400, // 29/9/2022, 9:00 PM
-					EndTime: 1664463600, // 29/9/2022, 11:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 2,
-						Name: "Sample activity 2",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something Long"},
-						ImageUrl: "https://media.istockphoto.com/photos/tropical-white-sand-beach-with-coco-palms-picture-id1181563943?k=20&m=1181563943&s=612x612&w=0&h=r46MQMvFnvrzzTfjVmvZED5nZyTmAYwISDvkdtM2i2A=",
-					},
-				},
-				{
-					StartTime: 1664496000, // 30/9/2022, 8:00 AM
-					EndTime: 1664503200, // 30/9/2022, 10:00 AM
-					ActivitySummary: models.ActivitySummary{
-						Id: 200,
-						Name: "Breakie Time",
-						Description: "This is for breakfast.",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://static.thehoneycombers.com/wp-content/uploads/sites/4/2022/04/Sundays-Beach-Club-in-Uluwatu-Bali-Indonesia.jpeg",
-					},
-				},
-				{
-					StartTime: 1664503200, // 30/9/2022, 10:00 AM
-					EndTime: 1664510400, // 30/9/2022, 12:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 3,
-						Name: "Sample activity 3",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something else", "Another thing", "Fun"},
-						ImageUrl: "https://image.shutterstock.com/image-photo/chairs-umbrella-palm-beach-tropical-260nw-559599520.jpg",
-					},
-				},
-				{
-					StartTime: 1664510400, // 30/9/2022, 12:00 PM
-					EndTime: 1664517600, // 30/9/2022, 2:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 10,
-						Name: "Lunch time bby",
-						Description: "This is for lunch",
-						AverageRating: 4.5,
-						Categories: []string{"Food"},
-						ImageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxkErgnfKaYHK1adHcY02d7f_B7sD0mwSLMg&usqp=CAU",
-					},
-				},
-				{
-					StartTime: 1664517600, // 30/9/2022, 2:00 PM
-					EndTime: 1664524800, // 30/9/2022, 4:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 4,
-						Name: "Sample activity 4",
-						Description: "This is a sample and test activity...",
-						AverageRating: 4,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://media.istockphoto.com/photos/tropical-beach-palm-trees-sea-wave-and-white-sand-picture-id1300296030?b=1&k=20&m=1300296030&s=170667a&w=0&h=w1s7kmN2TH7O326d263Cs-E44teA1hy6u29UIVf_z1w=",
-					},
-				},
-				{
-					StartTime: 1664532000, // 30/9/2022, 6:00 PM
-					EndTime: 1664535600, // 30/9/2022, 7:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Sample activity 5",
-						Description: "This is a sample and test activity...",
-						AverageRating: 2,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://i.insider.com/5bfec49248eb12058423acf7?width=700",
-					},
-				},
-				{
-					StartTime: 1664535600, // 30/9/2022, 7:00 PM
-					EndTime: 1664542800, // 30/9/2022, 9:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 5,
-						Name: "Restaurant ABC",
-						Description: "This is an activity for your dinner",
-						AverageRating: 4,
-						Categories: []string{"Food"},
-						ImageUrl: "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
-					},
-				},
-				{
-					StartTime: 1664542800, // 30/9/2022, 9:00 PM
-					EndTime: 1664550000, // 30/9/2022, 11:00 PM
-					ActivitySummary: models.ActivitySummary{
-						Id: 6,
-						Name: "Sample activity 6",
-						Description: "This is a sample and test activity...",
-						AverageRating: 3,
-						Categories: []string{"Something Long", "ABC123", "another thing"},
-						ImageUrl: "https://www.travelandleisure.com/thmb/mUQhPpdcuEfnsprkLEyuT4BWK_M=/1800x1012/smart/filters:no_upscale()/saud-beach-luzon-philippines-WRLDBEACH0421-15e2c368e7ad4495be803bd60cafa379.jpg",
-					},
-				},
-			},
+			Id:               iti.ID,
+			NumberOfSegments: iti.NumberOfSegments,
+			Segments:         segments,
+			StartTime:        iti.StartTime,
+			EndTime:          iti.EndTime,
 		},
 	}, nil
+
+	// TODO: for now hardcoded resp from 29/9/2022, 3:00 PM to 30/9/2022, 11:00 PM
+	//return &models.GetItineraryResponse{
+	//	Itinerary: &models.Itinerary{
+	//		Id:               100,
+	//		StartTime:        1664434800,
+	//		EndTime:          1664550000,
+	//		NumberOfSegments: 3,
+	//		Segments: []*models.Segment{
+	//			{
+	//				StartTime: 1664434800, // 29/9/2022, 3:00 PM
+	//				EndTime:   1664442000, // 29/9/2022, 5:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            1,
+	//					Name:          "Sample activity 1",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 3.5,
+	//					Categories:    []string{"Fun"},
+	//					ImageUrl:      "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664449200, // 30/9/2022, 7:00 PM
+	//				EndTime:   1664456400, // 29/9/2022, 9:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            5,
+	//					Name:          "Restaurant ABC",
+	//					Description:   "This is an activity for your dinner",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Food"},
+	//					ImageUrl:      "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664456400, // 29/9/2022, 9:00 PM
+	//				EndTime:   1664463600, // 29/9/2022, 11:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            2,
+	//					Name:          "Sample activity 2",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Something Long"},
+	//					ImageUrl:      "https://media.istockphoto.com/photos/tropical-white-sand-beach-with-coco-palms-picture-id1181563943?k=20&m=1181563943&s=612x612&w=0&h=r46MQMvFnvrzzTfjVmvZED5nZyTmAYwISDvkdtM2i2A=",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664496000, // 30/9/2022, 8:00 AM
+	//				EndTime:   1664503200, // 30/9/2022, 10:00 AM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            200,
+	//					Name:          "Breakie Time",
+	//					Description:   "This is for breakfast.",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Food"},
+	//					ImageUrl:      "https://static.thehoneycombers.com/wp-content/uploads/sites/4/2022/04/Sundays-Beach-Club-in-Uluwatu-Bali-Indonesia.jpeg",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664503200, // 30/9/2022, 10:00 AM
+	//				EndTime:   1664510400, // 30/9/2022, 12:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            3,
+	//					Name:          "Sample activity 3",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Something else", "Another thing", "Fun"},
+	//					ImageUrl:      "https://image.shutterstock.com/image-photo/chairs-umbrella-palm-beach-tropical-260nw-559599520.jpg",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664510400, // 30/9/2022, 12:00 PM
+	//				EndTime:   1664517600, // 30/9/2022, 2:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            10,
+	//					Name:          "Lunch time bby",
+	//					Description:   "This is for lunch",
+	//					AverageRating: 4.5,
+	//					Categories:    []string{"Food"},
+	//					ImageUrl:      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxkErgnfKaYHK1adHcY02d7f_B7sD0mwSLMg&usqp=CAU",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664517600, // 30/9/2022, 2:00 PM
+	//				EndTime:   1664524800, // 30/9/2022, 4:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            4,
+	//					Name:          "Sample activity 4",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Something Long", "ABC123", "another thing"},
+	//					ImageUrl:      "https://media.istockphoto.com/photos/tropical-beach-palm-trees-sea-wave-and-white-sand-picture-id1300296030?b=1&k=20&m=1300296030&s=170667a&w=0&h=w1s7kmN2TH7O326d263Cs-E44teA1hy6u29UIVf_z1w=",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664532000, // 30/9/2022, 6:00 PM
+	//				EndTime:   1664535600, // 30/9/2022, 7:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            5,
+	//					Name:          "Sample activity 5",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 2,
+	//					Categories:    []string{"Something Long", "ABC123", "another thing"},
+	//					ImageUrl:      "https://i.insider.com/5bfec49248eb12058423acf7?width=700",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664535600, // 30/9/2022, 7:00 PM
+	//				EndTime:   1664542800, // 30/9/2022, 9:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            5,
+	//					Name:          "Restaurant ABC",
+	//					Description:   "This is an activity for your dinner",
+	//					AverageRating: 4,
+	//					Categories:    []string{"Food"},
+	//					ImageUrl:      "https://media.cntraveler.com/photos/61eae2a9fe18edcbd885cb01/5:4/w_3790,h_3032,c_limit/Seychelles_GettyImages-1169388113.jpg",
+	//				},
+	//			},
+	//			{
+	//				StartTime: 1664542800, // 30/9/2022, 9:00 PM
+	//				EndTime:   1664550000, // 30/9/2022, 11:00 PM
+	//				ActivitySummary: &models.ActivitySummary{
+	//					Id:            6,
+	//					Name:          "Sample activity 6",
+	//					Description:   "This is a sample and test activity...",
+	//					AverageRating: 3,
+	//					Categories:    []string{"Something Long", "ABC123", "another thing"},
+	//					ImageUrl:      "https://www.travelandleisure.com/thmb/mUQhPpdcuEfnsprkLEyuT4BWK_M=/1800x1012/smart/filters:no_upscale()/saud-beach-luzon-philippines-WRLDBEACH0421-15e2c368e7ad4495be803bd60cafa379.jpg",
+	//				},
+	//			},
+	//		},
+	//	},
+	//}, nil
 }
 
-func (s *Server) GetActivitiesByFilter(ctx context.Context, req * models.GetActivitiesByFilterRequest) (*models.GetActivitiesByFilterResponse, error) {
+func (s *Server) GetActivitiesByFilter(ctx context.Context, req *models.GetActivitiesByFilterRequest) (*models.GetActivitiesByFilterResponse, error) {
 	return &models.GetActivitiesByFilterResponse{
 		NumOfResults: 3,
 		Activities: []*models.ActivitySummary{
 			{
-				Id: 1,
-				Name: "Sample test 1",
-				Description: "Sample description of this activity...",
+				Id:            1,
+				Name:          "Sample test 1",
+				Description:   "Sample description of this activity...",
 				AverageRating: 3.5,
-				Categories: []string{"Fun"},
-				ImageUrl: "https://visitbeaches.org/static/media/beach-stock.a6ea40bc.jpeg",
+				Categories:    []string{"Fun"},
+				ImageUrl:      "https://visitbeaches.org/static/media/beach-stock.a6ea40bc.jpeg",
 			},
 			{
-				Id: 2,
-				Name: "Sample test 2",
-				Description: "Sample description of this activity...",
+				Id:            2,
+				Name:          "Sample test 2",
+				Description:   "Sample description of this activity...",
 				AverageRating: 3,
-				Categories: []string{"Fun", "Something else"},
-				ImageUrl: "https://www.ucdavis.edu/sites/default/files/styles/ucd_panoramic_image/public/media/images/beaches-near-uc-davis.jpg?h=8e58fdb5&itok=0D79HHcC",
+				Categories:    []string{"Fun", "Something else"},
+				ImageUrl:      "https://www.ucdavis.edu/sites/default/files/styles/ucd_panoramic_image/public/media/images/beaches-near-uc-davis.jpg?h=8e58fdb5&itok=0D79HHcC",
 			},
 			{
-				Id: 3,
-				Name: "Sample test 3",
-				Description: "Sample description of this activity...",
+				Id:            3,
+				Name:          "Sample test 3",
+				Description:   "Sample description of this activity...",
 				AverageRating: 5,
-				Categories: []string{"Fun", "Something else"},
-				ImageUrl: "https://visitbeaches.org/static/media/beach-stock.a6ea40bc.jpeg",
+				Categories:    []string{"Fun", "Something else"},
+				ImageUrl:      "https://visitbeaches.org/static/media/beach-stock.a6ea40bc.jpeg",
 			},
 		},
 	}, nil
@@ -497,27 +707,28 @@ func getValidTime(hhmm int) int {
 
 func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
 	var opening []int32
-	opening = append(opening, int32(getValidTime(createForm.MonOpeningTime)),
+	opening = append(opening, int32(getValidTime(createForm.SunOpeningTime)),
+		int32(getValidTime(createForm.MonOpeningTime)),
 		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
 		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.FriOpeningTime)),
-		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunOpeningTime)),
+		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunClosingTime)),
 		int32(getValidTime(createForm.MonClosingTime)), int32(getValidTime(createForm.TueClosingTime)),
 		int32(getValidTime(createForm.WedClosingTime)), int32(getValidTime(createForm.ThurClosingTime)),
 		int32(getValidTime(createForm.FriClosingTime)), int32(getValidTime(createForm.SatClosingTime)),
-		int32(getValidTime(createForm.SunClosingTime)))
+	)
 	return opening
 }
 
 func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	var opening []int32
-	opening = append(opening, int32(getValidTime(updateReq.MonOpeningTime)),
+	opening = append(opening, int32(getValidTime(updateReq.SunOpeningTime)),
+		int32(getValidTime(updateReq.MonOpeningTime)),
 		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
 		int32(getValidTime(updateReq.ThurOpeningTime)), int32(getValidTime(updateReq.FriOpeningTime)),
-		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunOpeningTime)),
+		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunClosingTime)),
 		int32(getValidTime(updateReq.MonClosingTime)), int32(getValidTime(updateReq.TueClosingTime)),
 		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
-		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)),
-		int32(getValidTime(updateReq.SunClosingTime)))
+		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)))
 	return opening
 }
 

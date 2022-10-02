@@ -72,9 +72,9 @@ type Itinerary struct {
 }
 
 type Segment struct {
-	StartTime int `json:"start_time"` // every time bin is 30 minutes, time bin 0 = 00:00, time bin 1 = 00:29, etc
-	EndTime int `json:"end_time"` // in total there will be 48 time bins from 00:00 to 23:59
-	ActivitySummary ActivitySummary `json:"activity_summary"`
+	StartTime int64 `json:"start_time"`
+	EndTime int64 `json:"end_time"`
+	ActivitySummary *ActivitySummary `json:"activity_summary"`
 }
 
 type ActivitySummary struct {
