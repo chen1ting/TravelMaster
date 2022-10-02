@@ -15,14 +15,18 @@ const ActivityCard = (activityID, title, rating, paidActivity, activityCategory,
                 lineHeight='tight'
                 noOfLines={2}
             >
-                <Link href="frontend/src/Pages/ActivityDescription">{title}</Link>
+                <Link
+                    onClick={() => {
+                        navigate("frontend/src/Pages/ActivityDescription"); // Change this
+                    }}
+                >{title}</Link>
             </Box>
 
-            <Box as='span' color='gray.600'>
+            <Box as='span' color='gray.600' noOfLines={1}>
                 {paidActivity ? 'Paid Activity' : 'FREE!'}
             </Box>
 
-            <Box as='span' color='gray.600'>
+            <Box as='span' color='gray.600' noOfLines={1}>
                 {activityCategory}
             </Box>
 
@@ -35,14 +39,15 @@ const ActivityCard = (activityID, title, rating, paidActivity, activityCategory,
                     />))}
                 <Box as='span' ml='2' color='gray.600' fontSize='sm' href="reviews">
                     <Link
-                        onClick={ () => {
-                            navigate("frontend/src/Pages/Reviews");
+                        onClick={() => {
+                            navigate("frontend/src/Pages/Reviews"); // Change this
                         }}
                     >Activity Reviews</Link>
                 </Box>
             </Box>
         </Box>
-    </Box>)
+    </Box>
+    )
 }
 
 export default ActivityCard;
