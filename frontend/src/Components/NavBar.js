@@ -62,16 +62,18 @@ const Header = () => {
                 flexBasis={{base: '100%', md: 'auto'}}
                 paddingRight={paddingSpace}
             >
+
                 <Flex fontSize={'xl'} px="10">
                     {/* Navbar buttons */}
                     <Menu>
                         {NavButton('Discover', '/discover')}
-                        {NavButton('Create an Itinerary', '/createitinery')}
+                        {NavButton('Create an Itinerary', '/createitinerary')}
                         {NavButton('Itineraries', '/itineraries')}
                         {NavButton('Bookings', '/bookings')}
                     </Menu>
 
                     {/* User Icon (Profile) */}
+
                     <Flex alignItems={'center'} px="3">
                         <Menu>
                             <MenuButton

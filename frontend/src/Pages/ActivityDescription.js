@@ -1,5 +1,5 @@
 import {Box, Grid, GridItem, Heading, Stack} from '@chakra-ui/react';
-import ActivityCard from '../Components/ActivityCard';
+import ActivityCard from '../Components/DiscoverComponents/ActivityCard';
 
 // const DescriptionCard = () =>{
 //     const Activity = {

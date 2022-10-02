@@ -14,9 +14,15 @@ import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from "./Pages/ActivityDescription";
 import Profile from "./Pages/Profile";
+
+import CreateEvent from "./Pages/CreateEvent";
+
+import CreateItinerary from "./Pages/CreateItinerary";
+
+import CreateReviews from "./Pages/CreateReviews";
+
 import Itineraries from "./Components/ProfileSubPages/Itineraries";
 import Bookings from "./Components/ProfileSubPages/Bookings";
-import CreateEvent from "./Pages/CreateEvent";
 import Itinerary from "./Components/Itinerary";
 
 function App() {
@@ -36,6 +42,9 @@ function App() {
           <Route path="bookings" element={<Bookings />} />
           <Route path="edit-itinerary/:id" element={<Itinerary />} />
           <Route path="" element={<SignIn />} />
+          <Route path="createitinerary" element={<CreateItinerary />} />
+
+          <Route path="createreviews" element={<CreateReviews />} />
         </Routes>
       </Router>
     </ChakraProvider>
