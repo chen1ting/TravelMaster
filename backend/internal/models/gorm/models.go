@@ -6,13 +6,13 @@ import (
 )
 
 type User struct {
-	ID        int64          `gorm:"primaryKey;column:id"`
-	Username  string         `gorm:"unique;column:username"`
-	Email     string         `gorm:"unique;column:email"`
-	Password  string         `gorm:"column:password"`
-	Interests pq.StringArray `gorm:"type:text[];column:interests"`
-	Avatarurl string         `gorm:"column:avatarurl"`
-	CreatedAt time.Time
+	ID         int64          `gorm:"primaryKey;column:id"`
+	Username   string         `gorm:"unique;column:username"`
+	Email      string         `gorm:"unique;column:email"`
+	Password   string         `gorm:"column:password"`
+	Interests  pq.StringArray `gorm:"type:text[];column:interests"`
+	AvatarName string         `gorm:"column:avatar_name"`
+	CreatedAt  time.Time
 }
 
 type Activity struct {

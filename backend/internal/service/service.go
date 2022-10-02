@@ -32,12 +32,12 @@ func (s *Service) Ping(c *gin.Context) {
 }
 
 func (s *Service) SignupView(c *gin.Context) {
-	signupReq := &models.SignupReq{}
-	if err := c.ShouldBindJSON(&signupReq); err != nil {
+	signupForm := &models.SignupForm{}
+	if err := c.ShouldBind(&signupForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	signupResp, err := s.server.Signup(c, signupReq)
+	signupResp, err := s.server.Signup(c, signupForm)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
