@@ -19,7 +19,7 @@ const Profile = ({ imageUrl }) => {
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
                     <Avatar
-                        size={"md"}
+                        size={"xl"}
                         src={"http://localhost:8080/avatars/" + imageUrl}
                     />
                 </Box>
