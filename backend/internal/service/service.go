@@ -152,6 +152,25 @@ func (s *Service) GetItineraries(c *gin.Context) {
 	c.JSON(http.StatusOK, getItinerariesResp)
 }
 
+func (s *Service) AddReview(c *gin.Context) {
+	addReviewReq := &models.AddReviewReq{}
+	if err := c.ShouldBindJSON(addReviewReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	addReviewResp, err := s.server.AddReview(c, addReviewReq)
+	if err != nil {
+		if err == server.ErrUserAlreadyCreatedReview {
+			c.JSON(http.StatusMethodNotAllowed, err)
+			return
+		}
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, addReviewResp)
+}
+
 func (s *Service) CreateActivity(c *gin.Context) {
 	createActivityForm := &models.CreateActivityForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {

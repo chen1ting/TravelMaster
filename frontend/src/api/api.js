@@ -93,6 +93,7 @@ const getActivityById = async (activityId, setActivity, setIsLoading) => {
   });
 
   if (rawResponse.status !== 200) {
+    setIsLoading(false);
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
     return null;
   }
@@ -374,6 +375,36 @@ const getItisByUser = async (session_token, setItis) => {
   setItis(content.itineraries);
 };
 
+const addReview = async (
+  session_token,
+  aid,
+  title,
+  desc,
+  stars,
+  setActivity
+) => {
+  const rawResponse = await fetch(ENDPOINT + "/add-review", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+      activity_id: aid,
+      title: title,
+      description: desc,
+      rating: stars,
+    }),
+  });
+
+  if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return rawResponse.status;
+  }
+
+  const content = await rawResponse.json();
+  setActivity(content);
+  return 201;
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -386,4 +417,5 @@ export {
   getItisByUser,
   sendCreateActivityReq,
   getActivityById,
+  addReview,
 };

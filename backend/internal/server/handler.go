@@ -24,27 +24,29 @@ import (
 )
 
 var (
-	ErrNotAllowed            = errors.New("user is not allowed to perform this action")
-	ErrGenericServerError    = errors.New("generic server error")
-	ErrDatabase              = errors.New("database error")
-	ErrBadRequest            = errors.New("bad request")
-	ErrMissingUserInfo       = errors.New("eight email, username, or hashed password missing")
-	ErrUserAlreadyExists     = errors.New("user already exists")
-	ErrInvalidLogin          = errors.New("invalid login")
-	ErrActivityAlreadyExists = errors.New("an activity with the same title already exists")
-	ErrNullTitle             = errors.New("title cannot be empty")
-	ErrInvalidActivityID     = errors.New("activity id doesn't exist")
-	ErrInvalidCreateUser     = errors.New("user id doesn't exists")
-	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
-	ErrNoSearchFail          = errors.New("searchName failed")
-	ErrParsingResultFail     = errors.New("cannot parse result")
-	ErrUnknownFileType       = errors.New("unknown file type uploaded")
-	ErrImageNoMatch          = errors.New("image not found in the list of the activity")
-	ErrImageNotFound         = errors.New("image not found on server, removed file name in the database")
-	CWD, _                   = os.Getwd()
-	ImageRoot                = filepath.Join(CWD, "assets")
-	ActivityImageFolder      = "activity_images"
-	AvatarFolder             = "avatars"
+	ErrUserAlreadyCreatedReview = errors.New("user already created review for the activity")
+	ErrNotAllowed               = errors.New("user is not allowed to perform this action")
+	ErrGenericServerError       = errors.New("generic server error")
+	ErrDatabase                 = errors.New("database error")
+	ErrBadRequest               = errors.New("bad request")
+	ErrMissingUserInfo          = errors.New("eight email, username, or hashed password missing")
+	ErrUserAlreadyExists        = errors.New("user already exists")
+	ErrInvalidLogin             = errors.New("invalid login")
+	ErrActivityAlreadyExists    = errors.New("an activity with the same title already exists")
+	ErrActivityNotFound         = errors.New("activity not found")
+	ErrNullTitle                = errors.New("title cannot be empty")
+	ErrInvalidActivityID        = errors.New("activity id doesn't exist")
+	ErrInvalidCreateUser        = errors.New("user id doesn't exists")
+	ErrInvalidUpdateUser        = errors.New("user id doesn't match the activity's user id")
+	ErrNoSearchFail             = errors.New("searchName failed")
+	ErrParsingResultFail        = errors.New("cannot parse result")
+	ErrUnknownFileType          = errors.New("unknown file type uploaded")
+	ErrImageNoMatch             = errors.New("image not found in the list of the activity")
+	ErrImageNotFound            = errors.New("image not found on server, removed file name in the database")
+	CWD, _                      = os.Getwd()
+	ImageRoot                   = filepath.Join(CWD, "assets")
+	ActivityImageFolder         = "activity_images"
+	AvatarFolder                = "avatars"
 )
 
 func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.SignupResp, error) {
@@ -643,7 +645,7 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		InactiveCount: 0,
 		InactiveFlag:  false,
 		ReviewCounts:  0,
-		ReviewIds:     "",
+		ReviewIds:     []int64{},
 	}
 
 	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
@@ -732,15 +734,72 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 	}, nil
 }
 
-func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
+// TODO: IMPT: this function is not safe for concurrent access, we should implement a lock
+func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*models.GetActivityResp, error) {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotAllowed
+		}
+		return nil, err
 	}
-	var activity gormModel.Activity
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+	// assert that user has not made a review before for this activity
+	review := gormModel.Review{
+		Title:       req.Title,
+		Description: req.Description,
+		UserId:      uid,
+		ActivityId:  req.ActivityId,
+		Rating:      req.Rating,
+	}
+	if res := s.Database.Create(&review); res.Error != nil {
+		// i'll just assume its a violation error here, but its not necessarily the case
+		return nil, ErrUserAlreadyCreatedReview
+	}
+
+	// fetch activity
+	var activity gormModel.Activity
+	result := s.Database.First(&activity, req.ActivityId)
+	if result.Error != nil {
 		return nil, ErrInvalidActivityID
+	}
+	if result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
+	activity.ReviewCounts++
+	activity.AverageRating = newAvg
+	activity.ReviewIds = append(activity.ReviewIds, review.ID)
+	if res := s.Database.Save(&activity); res.Error != nil {
+		return nil, ErrDatabase
+	}
+
+	var reviews []gormModel.Review
+	var ids []int64
+	for _, id := range activity.ReviewIds {
+		ids = append(ids, id)
+	}
+	if len(activity.ReviewIds) > 0 {
+		if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
+			return nil, ErrDatabase
+		}
+	}
+
+	parsedReview := make([]*models.Reviews, 0)
+	for _, review := range reviews {
+		parsedReview = append(parsedReview, &models.Reviews{
+			Id:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
 	}
 
 	return &models.GetActivityResp{
@@ -772,8 +831,76 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		//ReviewList: activity.ReviewID,	// TODO: get reviews
-		CreatedAt: activity.CreatedAt,
+		ReviewsList:   parsedReview,
+		CreatedAt:     activity.CreatedAt,
+	}, nil
+}
+
+func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+		return nil, ErrInvalidActivityID
+	}
+
+	var reviews []gormModel.Review
+	var ids []int64
+	for _, id := range activity.ReviewIds {
+		ids = append(ids, id)
+	}
+	if len(activity.ReviewIds) > 0 {
+		if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
+			return nil, ErrDatabase
+		}
+	}
+
+	parsedReview := make([]*models.Reviews, 0)
+	for _, review := range reviews {
+		parsedReview = append(parsedReview, &models.Reviews{
+			Id:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
+	}
+
+	return &models.GetActivityResp{
+		ActivityId:  activity.ID,
+		Title:       activity.Title,
+		Rating:      activity.AverageRating,
+		Paid:        activity.Paid,
+		Category:    activity.Category,
+		Description: activity.Description,
+		Longitude:   activity.Longitude,
+		Latitude:    activity.Latitude,
+		ImageNames:  activity.ImageNames,
+
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
+
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		ReviewCounts:  activity.ReviewCounts,
+		ReviewsList:   parsedReview,
+		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
 
