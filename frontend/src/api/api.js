@@ -204,10 +204,11 @@ const getItinerary = async (
 
   const content = await rawResponse.json();
   const itinerary = content.itinerary;
-  if (itinerary.number_of_segments === 0) {
-    setNotifMsg("Failed to generate an itinerary :(");
-    return null;
-  }
+  // if (itinerary.number_of_segments === 0) {
+  //   setNotifMsg("Failed to generate an itinerary :(");
+  //   setIsLoading(false);
+  //   return null;
+  // }
   setItineraryResp(itinerary);
 
   // TODO: some heavylifting work here
@@ -405,6 +406,26 @@ const addReview = async (
   return 201;
 };
 
+const fetchUserInfo = async (uid, setAvatar, setUsername) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-user-info", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: uid,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return rawResponse.status;
+  }
+
+  const content = await rawResponse.json();
+  setAvatar(content.avatar_url);
+  setUsername(content.username);
+  return 200;
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -418,4 +439,5 @@ export {
   sendCreateActivityReq,
   getActivityById,
   addReview,
+  fetchUserInfo,
 };

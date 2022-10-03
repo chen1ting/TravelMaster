@@ -20,7 +20,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getActivityById, addReview } from "../api/api";
+import { getActivityById, addReview, fetchUserInfo } from "../api/api";
 import StarRatings from "react-star-ratings";
 
 const Activity = () => {
@@ -164,7 +164,7 @@ const Reviews = ({ reviews, aid, setActivity }) => {
       setIsError(false);
       setNotifMsg("");
       return;
-    } else if (code != 201) {
+    } else if (code !== 201) {
       setIsError(true);
       setNotifMsg("Something went wrong...");
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -175,16 +175,20 @@ const Reviews = ({ reviews, aid, setActivity }) => {
 
     setIsError(false);
     setNotifMsg("Successfully uploaded your review.");
+    setStars(0);
+    setTitle("");
+    setDesc("");
     await new Promise((resolve) => setTimeout(resolve, 3000));
     setNotifMsg("");
   };
   return (
-    <Box>
+    <Box mb="32">
       <Heading mt="3" mb="5">
         Reviews
       </Heading>
       {notifMsg && (
         <Text
+          m="4"
           w="500px"
           px="5"
           py="3"
@@ -212,6 +216,7 @@ const Reviews = ({ reviews, aid, setActivity }) => {
               type="text"
               placeholder="Enter a title for your review"
               onChange={(e) => setTitle(e.target.value)}
+              value={title}
             />
             <Box display="flex" alignItems="center" columnGap="2">
               <Text fontSize="18">Rating: </Text>
@@ -231,10 +236,11 @@ const Reviews = ({ reviews, aid, setActivity }) => {
             </Box>
           </Box>
           <Textarea
-            w="700px"
-            h="200px"
+            w="600px"
+            h="120px"
             placeholder="Enter your review"
             onChange={(e) => setDesc(e.target.value)}
+            value={desc}
           />
           <Box display="flex" justifyContent="flex-end">
             <Button w="200px" colorScheme="green" onClick={submitReview}>
@@ -250,12 +256,53 @@ const Reviews = ({ reviews, aid, setActivity }) => {
       ) : (
         <Box>
           {reviews.map((rev) => (
-            <Box>
-              <Text>{rev.title}</Text>
-            </Box>
+            <ReviewCard key={rev.id} rev={rev} />
           ))}
         </Box>
       )}
+    </Box>
+  );
+};
+
+const ReviewCard = ({ rev }) => {
+  const [avatar, setAvatar] = useState("");
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    fetchUserInfo(rev.user_id, setAvatar, setUsername);
+  }, [rev.user_id]);
+
+  return (
+    <Box
+      display="flex"
+      justifyContent="flex-start"
+      alignItems="center"
+      columnGap="10"
+      borderTop="1px solid white"
+      my="4"
+      py="4"
+      borderBottom="1px solid white"
+    >
+      <Box pt="5">
+        <Avatar src={`http://localhost:8080/avatars/${avatar}`} />
+        <Text my="2">{username}</Text>
+      </Box>
+      <Box display="flex" flexDir="column" rowGap="2">
+        <Heading size="lg">{rev.title}</Heading>
+        <StarRatings
+          starHoverColor="#F6E05E"
+          starRatedColor="#F6E05E"
+          starDimension="18px"
+          rating={rev.rating}
+          numberOfStars={5}
+          name="rating"
+          isAggregateRating
+          starSpacing="2px"
+        />
+        <Text mt="4" w="500px">
+          {rev.description}
+        </Text>
+      </Box>
     </Box>
   );
 };

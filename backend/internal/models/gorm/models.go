@@ -38,6 +38,7 @@ type Activity struct {
 	ReviewIds     pq.Int64Array `gorm:"type:int[];column:review_ids"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	UserReports   []User `gorm:"many2many:user_reports"`
 }
 
 type Itinerary struct {
@@ -57,4 +58,11 @@ type Review struct {
 	UserId      int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to User id
 	ActivityId  int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to Activity id
 	Rating      float32 `gorm:"column:rating"`
+}
+
+type ReportHistory struct {
+	UserId     int64  `gorm:"primaryKey;column:user_id"`
+	ActivityId int64  `gorm:"primaryKey;column:activity_id"`
+	Reason     string `gorm:"column:reason"` //for feedback purposes
+	CreatedAt  time.Time
 }
