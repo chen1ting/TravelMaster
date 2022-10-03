@@ -228,3 +228,33 @@ func (s *Service) DeleteActivityImage(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, deleteActivityImageResp)
 }
+
+func (s *Service) CreateReview(c *gin.Context) {
+	createReviewReq := &models.CreateReviewReq{}
+	if err := c.ShouldBindJSON(&createReviewReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	createReviewResp, err := s.server.CreateReview(createReviewReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, createReviewResp)
+}
+
+func (s *Service) UpdateReview(c *gin.Context) {
+	updateReviewReq := &models.UpdateReviewReq{}
+	if err := c.ShouldBindJSON(&updateReviewReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	updateReviewResp, err := s.server.UpdateReview(updateReviewReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, updateReviewResp)
+}

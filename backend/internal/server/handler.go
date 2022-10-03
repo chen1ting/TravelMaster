@@ -32,7 +32,7 @@ var (
 	ErrNullTitle             = errors.New("title cannot be empty")
 	ErrNullReview            = errors.New("review content cannot be empty")
 	ErrActivityNotFound      = errors.New("activity id doesn't exist")
-	ErrReviewNotFound        = errors.New("review id doesn't exist")
+	ErrReviewNotFound        = errors.New("review not found")
 	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail          = errors.New("search name failed")
 	ErrUnknownFileType       = errors.New("unknown file type uploaded")
@@ -206,7 +206,7 @@ func (s *Server) UpdateProfile(req *models.UpdateProfileReq) (*models.UpdateProf
 
 func (s *Server) GetProfile(req *models.GetProfileReq) (*models.GetProfileResp, error) {
 	var user gormModel.User
-	if result := s.Database.Where("id=?", req.UserId).Preload("Activities").Preload("Reviews").Find(&user); result.Error != nil {
+	if result := s.Database.Where("id=?", req.UserId).Preload("Activities").Preload("Reviews").Find(&user); result.RowsAffected == 0 {
 		//if result := s.Database.First(&user, req.UserId); result.Error != nil {
 		return nil, ErrUserNotFound
 	}
@@ -243,7 +243,7 @@ func (s *Server) UpdateAvatar(form *models.UpdateAvatarForm, c *gin.Context) (*m
 		return nil, ErrMissingUserInfo
 	}
 	// if saveErr occurs, return nil
-	avatarName, avatarPath, saveErr := SaveFile(form.Avatar, c, ActivityImageFolder)
+	avatarName, avatarPath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
 	if saveErr != nil {
 		return nil, saveErr
 	}
@@ -568,7 +568,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReview
 
 	var review gormModel.Review
 	// find review in the database by review id
-	if result := s.Database.Where("id=?", req.ReviewId, "user_id=?", req.UserId, "activity_id=?", req.ActivityId).Find(&review); result.Error != nil {
+	if result := s.Database.Where("id=? AND user_id=? AND activity_id=?", req.ReviewId, req.UserId, req.ActivityId).Find(&review); result.Error != nil {
 		return nil, ErrReviewNotFound
 	}
 
