@@ -3,6 +3,10 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
+
+import AutoComplete from 'places-autocomplete-react'
+import { geocodeByAddress, getLatLng } from 'react-google-places-autocomplete';
+
 import {
   FormControl,
   FormLabel,
@@ -54,7 +58,6 @@ const Discover = () => {
   const [notifMsg, setNotifMsg] = useState("");
   const [isError, setIsError] = useState(false);
   const pageSize = 5;
-
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fetchActivities = async () => {
@@ -305,6 +308,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
   const [picture, setPicture] = useState(null);
   const [isPaid, setIsPaid] = useState(false);
 
+  const [addressActivity, setAddressActivity] = useState('');
   const daysList = [
     "Sunday",
     "Monday",
@@ -319,6 +323,12 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
   ]); // day: i, open: i, close i+7
 
   const submitCreateActivityForm = async () => {
+    var json = JSON.parse(addressActivity);
+    geocodeByAddress(json.formattedAddress)
+        .then(results => getLatLng(results[0]))
+        .then(({ lat, lng }) =>
+            console.log('Successfully got latitude and longitude', { lat, lng }) //INTERFACE LAT and LNG
+        );
     const data = await sendCreateActivityReq(
       window.sessionStorage.getItem("uid"),
       title,
@@ -407,6 +417,14 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
         </FormControl>
 
         {/* THIS IS A TODO for geosearch */}
+        <AutoComplete
+            placesKey="AIzaSyBH5ccwom9VK1HcDBWucl6t5h4B0AS5yDw"
+            inputId="address"
+            setAddress={(addressObject) => setAddressActivity(addressObject)}
+            required={true}
+        />
+
+
         <FormControl isRequired mt={4}>
           <FormLabel>Location</FormLabel>
           <Input placeholder="Enter the location of the event" />
