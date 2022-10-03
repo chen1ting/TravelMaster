@@ -30,10 +30,11 @@ var (
 	ErrActivityAlreadyExists = errors.New("an activity with the same title already exists")
 	ErrUserNotFound          = errors.New("user id doesn't exists")
 	ErrNullTitle             = errors.New("title cannot be empty")
+	ErrNullReview            = errors.New("review content cannot be empty")
 	ErrActivityNotFound      = errors.New("activity id doesn't exist")
 	ErrReviewNotFound        = errors.New("review id doesn't exist")
 	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
-	ErrNoSearchFail          = errors.New("searchName failed")
+	ErrNoSearchFail          = errors.New("search name failed")
 	ErrUnknownFileType       = errors.New("unknown file type uploaded")
 	ErrImageNoMatch          = errors.New("image not found in the list of the activity")
 	ErrImageNotFound         = errors.New("image not found on server, removed file name in the database")
@@ -313,7 +314,7 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 	//if err := s.Database.Model(&user).Association("Activities").Append(&activity); err != nil {
 	if result := s.Database.Save(&activity); result.Error != nil {
 		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
-		// if result cannot be saved, removeName all saved images
+		// if result cannot be saved, RemoveName all saved images
 		for i := 0; i < len(imgPaths); i++ {
 			err := os.Remove(imgPaths[i])
 			if err != nil { // TODO: write to log instead
@@ -483,7 +484,7 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 		return nil, ErrInvalidUpdateUser
 	}
 
-	idx := searchName(activity.ImageNames, req.ImageName)
+	idx := SearchName(activity.ImageNames, req.ImageName)
 	fmt.Println(idx)
 	if idx >= len(activity.ImageNames) {
 		return nil, ErrImageNoMatch
@@ -491,7 +492,7 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 	err := os.Remove(filepath.Join(ImageRoot, ActivityImageFolder, req.ImageName))
 	if err != nil {
 		fmt.Println("image delete unsuccessful, ", err)
-		activity.ImageNames = removeName(activity.ImageNames, idx)
+		activity.ImageNames = RemoveName(activity.ImageNames, idx)
 		if result := s.Database.Save(&activity); result.Error != nil {
 			fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
 			return nil, result.Error
@@ -499,7 +500,7 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 		return nil, ErrImageNotFound
 	}
 
-	activity.ImageNames = removeName(activity.ImageNames, idx)
+	activity.ImageNames = RemoveName(activity.ImageNames, idx)
 
 	if result := s.Database.Save(&activity); result.Error != nil {
 		fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
@@ -515,6 +516,10 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReviewResp, error) {
 	if req == nil {
 		return nil, ErrBadRequest
+	}
+
+	if req.Review == "" {
+		return nil, ErrNullReview
 	}
 
 	var user gormModel.User
@@ -540,14 +545,8 @@ func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReview
 		return nil, result.Error
 	}
 
-	//update the average rating of the activity if the new review is correctly saved
-	totalRating := activity.AvgReviewRating * float32(activity.ReviewCounts)
-	totalRating += req.Rating
-	activity.ReviewCounts++
-	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
+	if err := s.UpdateAverageReview(&activity, true, req.Rating); err != nil {
+		return nil, err
 	}
 
 	return &models.CreateReviewResp{
@@ -563,17 +562,14 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReview
 		return nil, ErrBadRequest
 	}
 
+	if req.Review == "" {
+		return nil, ErrNullReview
+	}
+
 	var review gormModel.Review
 	// find review in the database by review id
 	if result := s.Database.Where("id=?", req.ReviewId, "user_id=?", req.UserId, "activity_id=?", req.ActivityId).Find(&review); result.Error != nil {
 		return nil, ErrReviewNotFound
-	}
-
-	review.Review = req.Review
-	review.Rating = req.Rating
-	if result := s.Database.Save(&review); result.Error != nil {
-		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
 	}
 
 	var activity gormModel.Activity
@@ -582,13 +578,28 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReview
 		return nil, ErrActivityNotFound
 	}
 
-	//update the average rating of the activity if the new review is correctly saved
-	totalRating := activity.AvgReviewRating * float32(activity.ReviewCounts)
-	totalRating += req.Rating
-	activity.ReviewCounts++
-	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
+	if err := s.UpdateAverageReview(&activity, false, review.Rating); err != nil {
+		return nil, err
+	}
+
+	if req.Delete {
+		s.Database.Delete(&review)
+		return &models.UpdateReviewResp{
+			ReviewId:      req.ReviewId,
+			UpdatedAt:     time.Now(),
+			ReviewCounts:  activity.ReviewCounts,
+			AverageRating: activity.AvgReviewRating,
+		}, nil
+	}
+
+	if err := s.UpdateAverageReview(&activity, true, req.Rating); err != nil {
+		return nil, err
+	}
+
+	review.Review = req.Review
+	review.Rating = req.Rating
+	if result := s.Database.Save(&review); result.Error != nil {
+		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
 		return nil, result.Error
 	}
 
@@ -720,7 +731,7 @@ func Paginate(r *models.SearchActivityReq) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func searchName(s []string, name string) int {
+func SearchName(s []string, name string) int {
 	i := 0
 	for ; i < len(s); i++ {
 		if s[i] == name {
@@ -731,10 +742,31 @@ func searchName(s []string, name string) int {
 }
 
 // assuming image order doesn't matter
-func removeName(s []string, i int) []string {
+func RemoveName(s []string, i int) []string {
 	if i > len(s) {
 		return s
 	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func (s *Server) UpdateAverageReview(activity *gormModel.Activity, add bool, rating float32) error {
+	//update the average rating of the activity if the new review is correctly saved
+	var totalRating float32
+	if add {
+		totalRating = activity.AvgReviewRating * float32(activity.ReviewCounts)
+		totalRating += rating
+		activity.ReviewCounts++
+	} else {
+		totalRating = activity.AvgReviewRating * float32(activity.ReviewCounts)
+		totalRating -= rating
+		activity.ReviewCounts--
+	}
+
+	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
+		return result.Error
+	}
+	return nil
 }

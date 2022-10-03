@@ -213,7 +213,7 @@ type CreateReviewResp struct {
 }
 
 type UpdateReviewReq struct {
-	ReviewId   int     `json:"review_id"`
+	ReviewId   int64   `json:"review_id"`
 	ActivityId int64   `json:"activity_id"`
 	UserId     int64   `json:"user_id"`
 	Delete     bool    `json:"delete"`
