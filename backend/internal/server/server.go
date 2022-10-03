@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 
 	"github.com/chen1ting/TravelMaster/internal/config"
@@ -20,8 +21,9 @@ type Server struct {
 }
 
 type ServerInf interface {
-	Signup(ctx context.Context, req *models.SignupReq) (*models.SignupResp, error)
+	Signup(c *gin.Context, req *models.SignupForm) (*models.SignupResp, error)
 	Login(ctx context.Context, req *models.LoginReq) (*models.LoginResp, error)
+	// TODO: add in all handle functions here?
 }
 
 var _ ServerInf = (*Server)(nil)
@@ -39,6 +41,9 @@ func NewServer() *Server {
 		panic(err)
 	}
 	if err := db.AutoMigrate(&gormModel.Activity{}); err != nil {
+		panic(err)
+	}
+	if err := db.AutoMigrate(&gormModel.Itinerary{}); err != nil {
 		panic(err)
 	}
 

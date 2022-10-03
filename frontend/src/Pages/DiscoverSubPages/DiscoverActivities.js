@@ -1,22 +1,23 @@
 import {Center, Grid, GridItem, Input, SimpleGrid, Button} from "@chakra-ui/react";
 import {useState} from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 import ActivityCard from "../../Components/DiscoverComponents/ActivityCard";
 
+//
 const ShowActivities = () => {
     let activityDisplayList = []
-    for (let i = 0; i < 2; i++) {
+    for (let i = 1; i < 7; i++) {
         {
             activityDisplayList.push(
-                ActivityCard(0,'title 1', 3, false, 'cat1', 'https://bit.ly/2Z4KKcF')
-            )
-        }
-    }
-    for (let i = 5; i < 7; i++) {
-        {
-            activityDisplayList.push(
-                ActivityCard(1,'title 2', 4, true, 'cat4', 'https://bit.ly/2Z4KKcF')
+                ActivityCard(
+                    1,
+                    'title 2',
+                    4,
+                    true,
+                    'cat4',
+                    'https://bit.ly/2Z4KKcF'
+                )
             )
         }
     }
@@ -29,7 +30,7 @@ const ShowActivities = () => {
 
 
 const DiscoverActivities = () => {
-    const [searchInput] = useState('');
+    const [searchInput, setSearchInput] = useState('');
     const navigate = useNavigate();
     function onSubmit(e) {
         e.preventDefault();
@@ -47,6 +48,7 @@ const DiscoverActivities = () => {
 
 
                 <Center>
+
                     <Button
                         as="a"
                         onClick={() => {
@@ -61,6 +63,7 @@ const DiscoverActivities = () => {
                         </font>
                     </Button>
 
+
                     <Input
                         m={4}
                         w={'50%'}
@@ -70,7 +73,7 @@ const DiscoverActivities = () => {
                         variant='outline'
                         focusBorderColor='lime'
                         placeholder='Search for activities!'
-                        onChange={(e) => searchInput(e.target.value)}
+                        onChange={(e) => searchInput(e.target.value)} // Change this
                     />
                 </Center>
             </GridItem>
