@@ -20,6 +20,7 @@ const Profile = ({ imageUrl }) => {
                      textAlign={"center"}>
                     <Avatar
                         size={"xl"}
+
                         src={"http://localhost:8080/avatars/" + imageUrl}
                     />
                 </Box>
