@@ -24,22 +24,24 @@ import (
 
 var (
 	ErrBadRequest            = errors.New("bad request")
-	ErrMissingUserInfo       = errors.New("eight email, username, or hashed password missing")
+	ErrMissingUserInfo       = errors.New("missing necessary user information")
 	ErrUserAlreadyExists     = errors.New("user already exists")
 	ErrInvalidLogin          = errors.New("invalid login")
 	ErrActivityAlreadyExists = errors.New("an activity with the same title already exists")
+	ErrUserNotFound          = errors.New("user id doesn't exists")
 	ErrNullTitle             = errors.New("title cannot be empty")
-	ErrInvalidActivityID     = errors.New("activity id doesn't exist")
-	ErrInvalidCreateUser     = errors.New("user id doesn't exists")
+	ErrActivityNotFound      = errors.New("activity id doesn't exist")
+	ErrReviewNotFound        = errors.New("review id doesn't exist")
 	ErrInvalidUpdateUser     = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail          = errors.New("searchName failed")
 	ErrUnknownFileType       = errors.New("unknown file type uploaded")
 	ErrImageNoMatch          = errors.New("image not found in the list of the activity")
 	ErrImageNotFound         = errors.New("image not found on server, removed file name in the database")
-	CWD, _                   = os.Getwd()
-	ImageRoot                = filepath.Join(CWD, "assets")
-	ActivityImageFolder      = "activity_images"
-	AvatarFolder             = "avatars"
+	// database error code reference https://github.com/jackc/pgerrcode/blob/master/errcode.go
+	CWD, _              = os.Getwd()
+	ImageRoot           = filepath.Join(CWD, "assets")
+	ActivityImageFolder = "activity_images"
+	AvatarFolder        = "avatars"
 )
 
 func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.SignupResp, error) {
@@ -183,6 +185,423 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 	}, nil
 }
 
+func (s *Server) UpdateProfile(req *models.UpdateProfileReq) (*models.UpdateProfileResp, error) {
+	var user gormModel.User
+	if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	user.Interests = req.Interests
+	user.AboutMe = req.AboutMe
+
+	if result := s.Database.Save(&user); result.Error != nil {
+		fmt.Println("update_profile err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	return &models.UpdateProfileResp{
+		UserId:    user.ID,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) GetProfile(req *models.GetProfileReq) (*models.GetProfileResp, error) {
+	var user gormModel.User
+	if result := s.Database.Where("id=?", req.UserId).Preload("Activities").Preload("Reviews").Find(&user); result.Error != nil {
+		//if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	return &models.GetProfileResp{
+		User:        user,
+		RetrievedAt: time.Now(),
+	}, nil
+}
+
+func (s *Server) UpdateAvatar(form *models.UpdateAvatarForm, c *gin.Context) (*models.UpdateAvatarResp, error) {
+	var user gormModel.User
+	if result := s.Database.First(&user, form.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	// assumption: delete request has higher priority
+	if form.Delete {
+		if err := os.Remove(filepath.Join(ImageRoot, AvatarFolder, user.AvatarName)); err != nil {
+			fmt.Println("Unable to remove user avatar, ", err.Error())
+		}
+		user.AvatarName = "" //reset the avatar name
+		if result := s.Database.Save(&user); result.Error != nil {
+			fmt.Println("Unable to update database", result.Error.Error())
+			return nil, result.Error
+		}
+		return &models.UpdateAvatarResp{
+			UserId:            user.ID,
+			UpdatedAt:         time.Now(),
+			NewAvatarFileName: "",
+		}, nil
+	}
+	// if the request is not delete, yet no avatar file received, return error
+	if form.Avatar == nil {
+		fmt.Println("received no file for update", ErrMissingUserInfo.Error())
+		return nil, ErrMissingUserInfo
+	}
+	// if saveErr occurs, return nil
+	avatarName, avatarPath, saveErr := SaveFile(form.Avatar, c, ActivityImageFolder)
+	if saveErr != nil {
+		return nil, saveErr
+	}
+	user.AvatarName = avatarName
+	if result := s.Database.Save(&user); result.Error != nil {
+		if err := os.Remove(avatarPath); err != nil {
+			fmt.Println("received no file for update", ErrMissingUserInfo.Error())
+			return nil, err
+		}
+		return nil, result.Error
+	}
+	return &models.UpdateAvatarResp{
+		UserId:            user.ID,
+		UpdatedAt:         user.UpdatedAt,
+		NewAvatarFileName: user.AvatarName,
+	}, nil
+}
+
+func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
+	if form == nil {
+		return nil, ErrBadRequest
+	}
+
+	var user gormModel.User
+	if result := s.Database.First(&user, form.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+
+	if form.Title == "" {
+		fmt.Println("create_activity err: ", ErrNullTitle) // TODO: write to log instead
+		return nil, ErrNullTitle
+	}
+
+	var activitySearch gormModel.Activity
+	if result := s.Database.Where("Title = ?", form.Title).First(&activitySearch); result.RowsAffected > 0 {
+		fmt.Println("create_activity err: ", ErrActivityAlreadyExists) // TODO: write to log instead
+		return nil, ErrActivityAlreadyExists
+	}
+
+	var imgNames []string
+	var imgPaths []string
+	var failedImages []string
+	if form.Image != nil {
+		for i := 0; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
+		}
+	}
+
+	// add activity to database
+	activity := gormModel.Activity{
+		UserID:       form.UserId,
+		Title:        form.Title,
+		Paid:         form.Paid,
+		AuthorRating: form.Rating,
+		Category:     form.Category,
+		Description:  form.Description,
+		Longitude:    form.Longitude,
+		Latitude:     form.Latitude,
+		OpeningTimes: packCreateOpeningTimes(form),
+		ImageNames:   imgNames,
+	}
+	//if err := s.Database.Model(&user).Association("Activities").Append(&activity); err != nil {
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
+		// if result cannot be saved, removeName all saved images
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
+		}
+		return nil, result.Error
+	}
+
+	// if no error, return success response
+	return &models.CreateActivityResp{
+		ActivityId:     activity.ID,
+		CreatedAt:      activity.CreatedAt,
+		ImageSaveFails: failedImages,
+	}, nil
+}
+
+func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
+	if form == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	// see if the user id matches the activity's user id
+	if activity.UserID != form.UserId {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	if form.Title == "" {
+		return nil, ErrNullTitle
+	}
+
+	var imgNames = activity.ImageNames
+	var imgPaths []string
+	var failedImages []string
+	if form.Image != nil {
+		for i := 0; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
+		}
+	}
+
+	// update activity and save to database
+	activity.Title = form.Title
+	activity.AuthorRating = form.Rating
+	activity.Paid = form.Paid
+	activity.Category = form.Category
+	activity.Description = form.Description
+	activity.Longitude = form.Longitude
+	activity.Latitude = form.Latitude
+	activity.ImageNames = imgNames
+	activity.OpeningTimes = packUpdateOpeningTimes(form)
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
+		}
+		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	// if no error, return success response
+	return &models.UpdateActivityResp{
+		ActivityId:     activity.ID,
+		UpdatedAt:      activity.UpdatedAt,
+		ImageSaveFails: failedImages,
+	}, nil
+}
+
+func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil {
+		return nil, ErrActivityNotFound
+	}
+
+	return &models.GetActivityResp{
+		Activity:    activity,
+		RetrievedAt: time.Now(),
+	}, nil
+}
+
+func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+	var activities []gormModel.Activity
+
+	result := s.Database.Where("title ILIKE ? AND inactive_flag = ?", "%"+req.SearchText+"%", "0").Order("created_at desc").Scopes(Paginate(req)).Find(&activities)
+	// if activity cannot be found by given ID, return error
+	if result.Error != nil {
+		return nil, ErrNoSearchFail
+	}
+	return &models.SearchActivityResp{
+		Activities:   activities,
+		ResultNumber: result.RowsAffected,
+	}, nil
+}
+
+func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*models.InactivateActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+		return nil, ErrActivityNotFound
+	}
+
+	//TODO: put invalid threshold into global variable?
+	invalidThreshold := 10
+
+	activity.InactiveCount++
+	if activity.InactiveCount >= invalidThreshold {
+		activity.InactiveFlag = true
+	}
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("inactivate_activity err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	return &models.InactivateActivityResp{
+		ActivityId:    activity.ID,
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		UpdatedAt:     activity.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*models.DeleteActivityImageResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	// see if the user id matches the activity's user id
+	if activity.UserID != req.UserId {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	idx := searchName(activity.ImageNames, req.ImageName)
+	fmt.Println(idx)
+	if idx >= len(activity.ImageNames) {
+		return nil, ErrImageNoMatch
+	}
+	err := os.Remove(filepath.Join(ImageRoot, ActivityImageFolder, req.ImageName))
+	if err != nil {
+		fmt.Println("image delete unsuccessful, ", err)
+		activity.ImageNames = removeName(activity.ImageNames, idx)
+		if result := s.Database.Save(&activity); result.Error != nil {
+			fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
+			return nil, result.Error
+		}
+		return nil, ErrImageNotFound
+	}
+
+	activity.ImageNames = removeName(activity.ImageNames, idx)
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	return &models.DeleteActivityImageResp{
+		ActivityId: activity.ID,
+		DeletedAt:  activity.UpdatedAt,
+	}, nil
+
+}
+
+func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReviewResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	var user gormModel.User
+	// find the user in database
+	if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+
+	var activity gormModel.Activity
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	review := gormModel.Review{
+		UserId:     req.UserId,
+		ActivityId: req.ActivityId,
+		Review:     req.Review,
+		Rating:     req.Rating,
+	}
+	if result := s.Database.Save(&review); result.Error != nil {
+		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	//update the average rating of the activity if the new review is correctly saved
+	totalRating := activity.AvgReviewRating * float32(activity.ReviewCounts)
+	totalRating += req.Rating
+	activity.ReviewCounts++
+	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	return &models.CreateReviewResp{
+		ReviewId:      review.ID,
+		CreatedAt:     review.CreatedAt,
+		ReviewCounts:  activity.ReviewCounts,
+		AverageRating: activity.AvgReviewRating,
+	}, nil
+}
+
+func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReviewResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	var review gormModel.Review
+	// find review in the database by review id
+	if result := s.Database.Where("id=?", req.ReviewId, "user_id=?", req.UserId, "activity_id=?", req.ActivityId).Find(&review); result.Error != nil {
+		return nil, ErrReviewNotFound
+	}
+
+	review.Review = req.Review
+	review.Rating = req.Rating
+	if result := s.Database.Save(&review); result.Error != nil {
+		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	var activity gormModel.Activity
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	//update the average rating of the activity if the new review is correctly saved
+	totalRating := activity.AvgReviewRating * float32(activity.ReviewCounts)
+	totalRating += req.Rating
+	activity.ReviewCounts++
+	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	return &models.UpdateReviewResp{
+		ReviewId:      review.ID,
+		UpdatedAt:     review.UpdatedAt,
+		ReviewCounts:  activity.ReviewCounts,
+		AverageRating: activity.AvgReviewRating,
+	}, nil
+}
+
+// ValidateFile onwards are utility functions
+
 func getValidTime(hhmm int) int {
 	hour := hhmm / 100
 	min := hhmm % 100
@@ -281,187 +700,6 @@ func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) 
 	return uniqueImgName, fPath, nil
 }
 
-func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
-	if form == nil {
-		return nil, ErrBadRequest
-	}
-
-	var user gormModel.User
-	if result := s.Database.First(&user, form.UserId); result.Error != nil {
-		return nil, ErrInvalidCreateUser
-	}
-
-	if form.Title == "" {
-		fmt.Println("create_activity err: ", ErrNullTitle) // TODO: write to log instead
-		return nil, ErrNullTitle
-	}
-
-	var activitySearch gormModel.Activity
-	if result := s.Database.Where("Title = ?", form.Title).First(&activitySearch); result.RowsAffected > 0 {
-		fmt.Println("create_activity err: ", ErrActivityAlreadyExists) // TODO: write to log instead
-		return nil, ErrActivityAlreadyExists
-	}
-
-	var imgNames []string
-	var imgPaths []string
-	var failedImages []string
-	if form.Image != nil {
-		for i := 0; i < len(form.Image); i++ {
-			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
-			if saveErr != nil {
-				failedImages = append(failedImages, form.Image[i].Filename)
-				continue
-			}
-			imgNames = append(imgNames, uniqueImgName)
-			imgPaths = append(imgPaths, fpath)
-		}
-	}
-
-	// add activity to database
-	activity := gormModel.Activity{
-		UserID:       form.UserId,
-		Title:        form.Title,
-		Paid:         form.Paid,
-		AuthorRating: form.Rating,
-		Category:     form.Category,
-		Description:  form.Description,
-		Longitude:    form.Longitude,
-		Latitude:     form.Latitude,
-		OpeningTimes: packCreateOpeningTimes(form),
-		ImageNames:   imgNames,
-	}
-
-	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
-		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
-		// if result cannot be saved, removeName all saved images
-		for i := 0; i < len(imgPaths); i++ {
-			err := os.Remove(imgPaths[i])
-			if err != nil { // TODO: write to log instead
-				fmt.Println("create_activity error deleting image file: ", err)
-			}
-		}
-		return nil, result.Error
-	}
-
-	// if no error, return success response
-	return &models.CreateActivityResp{
-		ActivityId:     activity.ID,
-		CreatedAt:      activity.CreatedAt,
-		ImageSaveFails: failedImages,
-	}, nil
-}
-
-func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
-	if form == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil || result.RowsAffected == 0 {
-		return nil, ErrInvalidActivityID
-	}
-
-	// see if the user id matches the activity's user id
-	if activity.UserID != form.UserId {
-		return nil, ErrInvalidUpdateUser
-	}
-
-	if form.Title == "" {
-		return nil, ErrNullTitle
-	}
-
-	var imgNames = activity.ImageNames
-	var imgPaths []string
-	var failedImages []string
-	if form.Image != nil {
-		for i := 0; i < len(form.Image); i++ {
-			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
-			if saveErr != nil {
-				failedImages = append(failedImages, form.Image[i].Filename)
-				continue
-			}
-			imgNames = append(imgNames, uniqueImgName)
-			imgPaths = append(imgPaths, fpath)
-		}
-	}
-
-	// update activity and save to database
-	activity.Title = form.Title
-	activity.AuthorRating = form.Rating
-	activity.Paid = form.Paid
-	activity.Category = form.Category
-	activity.Description = form.Description
-	activity.Longitude = form.Longitude
-	activity.Latitude = form.Latitude
-	activity.ImageNames = imgNames
-	activity.OpeningTimes = packUpdateOpeningTimes(form)
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		for i := 0; i < len(imgPaths); i++ {
-			err := os.Remove(imgPaths[i])
-			if err != nil { // TODO: write to log instead
-				fmt.Println("create_activity error deleting image file: ", err)
-			}
-		}
-		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-	// if no error, return success response
-	return &models.UpdateActivityResp{
-		ActivityId:     activity.ID,
-		UpdatedAt:      activity.UpdatedAt,
-		ImageSaveFails: failedImages,
-	}, nil
-}
-
-func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AuthorRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		//ReviewList: activity.ReviewID,	// TODO: get reviews
-		CreatedAt: activity.CreatedAt,
-	}, nil
-}
-
 func Paginate(r *models.SearchActivityReq) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		page := r.PageNumber
@@ -482,57 +720,6 @@ func Paginate(r *models.SearchActivityReq) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-	var activities []gormModel.Activity
-
-	result := s.Database.Where("title ILIKE ? AND inactive_flag = ?", "%"+req.SearchText+"%", "0").Order("created_at desc").Scopes(Paginate(req)).Find(&activities)
-	// if activity cannot be found by given ID, return error
-	if result.Error != nil {
-		return nil, ErrNoSearchFail
-	}
-	return &models.SearchActivityResp{
-		Activities:   activities,
-		ResultNumber: result.RowsAffected,
-	}, nil
-}
-
-func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*models.InactivateActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-
-	//TODO: put invalid threshold into global variable?
-	invalidThreshold := 10
-
-	activity.InactiveCount++
-	if activity.InactiveCount >= invalidThreshold {
-		activity.InactiveFlag = true
-	}
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("inactivate_activity err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-
-	return &models.InactivateActivityResp{
-		ActivityId:    activity.ID,
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		UpdatedAt:     activity.UpdatedAt,
-	}, nil
-}
-
 func searchName(s []string, name string) int {
 	i := 0
 	for ; i < len(s); i++ {
@@ -550,51 +737,4 @@ func removeName(s []string, i int) []string {
 	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
-}
-
-func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*models.DeleteActivityImageResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
-		return nil, ErrInvalidActivityID
-	}
-
-	// see if the user id matches the activity's user id
-	if activity.UserID != req.UserId {
-		return nil, ErrInvalidUpdateUser
-	}
-
-	idx := searchName(activity.ImageNames, req.ImageName)
-	fmt.Println(idx)
-	if idx >= len(activity.ImageNames) {
-		return nil, ErrImageNoMatch
-	}
-	err := os.Remove(filepath.Join(ImageRoot, ActivityImageFolder, req.ImageName))
-	if err != nil {
-		fmt.Println("image delete unsuccessful, ", err)
-		activity.ImageNames = removeName(activity.ImageNames, idx)
-		if result := s.Database.Save(&activity); result.Error != nil {
-			fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
-			return nil, result.Error
-		}
-		return nil, ErrImageNotFound
-	}
-
-	activity.ImageNames = removeName(activity.ImageNames, idx)
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-	return &models.DeleteActivityImageResp{
-		ActivityId: activity.ID,
-		DeletedAt:  activity.UpdatedAt,
-	}, nil
-
 }

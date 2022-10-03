@@ -42,6 +42,9 @@ func NewServer() *Server {
 	if err := db.AutoMigrate(&gormModel.Activity{}); err != nil {
 		panic(err)
 	}
+	if err := db.AutoMigrate(&gormModel.Review{}); err != nil {
+		panic(err)
+	}
 
 	sessionRedis := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", conf.SessionRedisHost, conf.SessionRedisPort),

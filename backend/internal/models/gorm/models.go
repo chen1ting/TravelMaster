@@ -13,9 +13,10 @@ type User struct {
 	Interests  pq.StringArray `gorm:"type:text[];column:interests"`
 	AboutMe    string         `gorm:"column:about_me"`
 	AvatarName string         `gorm:"column:avatar_name"`
-	Activities []Activity
-	Reviews    []Review
+	Activities []Activity     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Reviews    []Review       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type Activity struct {
@@ -34,10 +35,10 @@ type Activity struct {
 	OpeningTimes    pq.Int32Array  `gorm:"type:int[];column:opening_times"`
 
 	// System fields
-	InactiveCount int  `gorm:"column:inactive_count; default: 0"`
-	InactiveFlag  bool `gorm:"column:inactive_flag; default:false"`
-	ReviewCounts  int  `gorm:"column:review_counts; default:0"`
-	Reviews       []Review
+	InactiveCount int      `gorm:"column:inactive_count; default: 0"`
+	InactiveFlag  bool     `gorm:"column:inactive_flag; default:false"`
+	ReviewCounts  int      `gorm:"column:review_counts; default:0"`
+	Reviews       []Review `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -49,10 +50,10 @@ type Itinerary struct {
 
 type Review struct {
 	ID         int64 `gorm:"primaryKey;column:id"`
-	UserId     int
-	User       User
-	ActivityId int
-	Activity   Activity
+	UserId     int64
+	ActivityId int64
 	Review     string  `gorm:"column:review"`
 	Rating     float32 `gorm:"column:rating"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }

@@ -2,7 +2,6 @@ package models
 
 import (
 	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
-	"github.com/lib/pq"
 	"mime/multipart"
 	"time"
 )
@@ -50,7 +49,7 @@ type ValidateTokenResp struct {
 	UserId int64 `json:"user_id"`
 }
 
-// TODO: endpoint or update profile
+// TODO: allow change of usernames?
 type UpdateProfileReq struct {
 	UserId    int64    `json:"user_id"`
 	AboutMe   string   `json:"about_me"`
@@ -62,26 +61,16 @@ type UpdateProfileResp struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TODO: endpoint for getProfile
 type GetProfileReq struct {
 	UserId int64 `json:"user_id"`
 }
 
 type GetProfileResp struct {
-	ID         int64          `json:"primaryKey;column:id"`
-	Username   string         `json:"unique;column:username"`
-	Email      string         `json:"unique;column:email"`
-	Password   string         `json:"column:password"`
-	Interests  pq.StringArray `json:"type:text[];column:interests"`
-	AboutMe    string         `json:"column:about_me"`
-	AvatarName string         `json:"column:avatar_name"`
-	Activities []gormModel.Activity
-	Reviews    []gormModel.Review
-	CreatedAt  time.Time
+	User        gormModel.User `json:"user"`
+	RetrievedAt time.Time      `json:"retrieved_at"`
 }
 
-// TODO: endpoint for updateAvatar
-type UpdateAvatarReq struct {
+type UpdateAvatarForm struct {
 	UserId int64                 `form:"user_id"`
 	Delete bool                  `form:"delete"`
 	Avatar *multipart.FileHeader `form:"avatar"`
@@ -95,14 +84,15 @@ type UpdateAvatarResp struct {
 
 type CreateActivityForm struct {
 	// Assumption: user token is already validated
-	UserId      int64    `form:"user_id"`
-	Title       string   `form:"title"`
-	Rating      float32  `form:"rating_score"`
-	Paid        bool     `form:"paid"`
-	Category    []string `form:"category"`
-	Description string   `form:"description"`
-	Longitude   float32  `form:"longitude"`
-	Latitude    float32  `form:"latitude"`
+	UserId   int64    `form:"user_id"`
+	Title    string   `form:"title"`
+	Rating   float32  `form:"rating_score"`
+	Paid     bool     `form:"paid"`
+	Category []string `form:"category"` // issue: form binding for string not working as expected
+	// please send in a json style list of string
+	Description string  `form:"description"`
+	Longitude   float32 `form:"longitude"`
+	Latitude    float32 `form:"latitude"`
 	// Assumption: one image file upload at once
 	Image []*multipart.FileHeader `form:"image"`
 
@@ -134,37 +124,8 @@ type GetActivityReq struct {
 }
 
 type GetActivityResp struct {
-	ActivityId  int64    `json:"activity_id"`
-	Title       string   `json:"title"`
-	Rating      float32  `json:"rating_score"`
-	Paid        bool     `json:"paid"`
-	Category    []string `json:"category"`
-	Description string   `json:"description"`
-	Longitude   float32  `json:"longitude"`
-	Latitude    float32  `json:"latitude"`
-	ImageNames  []string `json:"image_names"`
-
-	// fields for opening & closing hours
-	MonOpeningTime  int `json:"mon_opening_time"`
-	MonClosingTime  int `json:"mon_closing_time"`
-	TueOpeningTime  int `json:"tue_opening_time"`
-	TueClosingTime  int `json:"tue_closing_time"`
-	WedOpeningTime  int `json:"wed_opening_time"`
-	WedClosingTime  int `json:"wed_closing_time"`
-	ThurOpeningTime int `json:"thur_opening_time"`
-	ThurClosingTime int `json:"thur_closing_time"`
-	FriOpeningTime  int `json:"fri_opening_time"`
-	FriClosingTime  int `json:"fri_closing_time"`
-	SatOpeningTime  int `json:"sat_opening_time"`
-	SatClosingTime  int `json:"sat_closing_time"`
-	SunOpeningTime  int `json:"sun_opening_time"`
-	SunClosingTime  int `json:"sun_closing_time"`
-
-	InactiveCount int       `json:"inactive_count"`
-	InactiveFlag  bool      `json:"inactive_flag"`
-	ReviewCounts  int       `json:"review_counts"`
-	ReviewList    string    `json:"review_list"`
-	CreatedAt     time.Time `json:"created_at"`
+	Activity    gormModel.Activity `json:"activity"`
+	RetrievedAt time.Time          `json:"retrieved_at"`
 }
 
 type SearchActivityReq struct {
@@ -246,7 +207,7 @@ type CreateReviewReq struct {
 
 type CreateReviewResp struct {
 	ReviewId      int64     `json:"review_id"`
-	UpdatedAt     time.Time `json:"Updated_at"`
+	CreatedAt     time.Time `json:"created_at"`
 	ReviewCounts  int       `json:"review_counts"`
 	AverageRating float32   `json:"average_rating"`
 }

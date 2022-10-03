@@ -91,13 +91,60 @@ func (s *Service) ValidateToken(c *gin.Context) {
 	c.JSON(http.StatusOK, validateTokenResp)
 }
 
+func (s *Service) UpdateProfile(c *gin.Context) {
+	updateProfileReq := &models.UpdateProfileReq{}
+	if err := c.ShouldBindJSON(&updateProfileReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createActivityResp, err := s.server.UpdateProfile(updateProfileReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, createActivityResp)
+}
+
+func (s *Service) GetProfile(c *gin.Context) {
+	getProfileReq := &models.GetProfileReq{}
+	if err := c.ShouldBindJSON(&getProfileReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createActivityResp, err := s.server.GetProfile(getProfileReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, createActivityResp)
+}
+
+func (s *Service) UpdateAvatar(c *gin.Context) {
+	updateAvatarForm := &models.UpdateAvatarForm{}
+	if err := c.ShouldBind(&updateAvatarForm); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createActivityResp, err := s.server.UpdateAvatar(updateAvatarForm, c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, createActivityResp)
+}
+
 func (s *Service) CreateActivity(c *gin.Context) {
 	createActivityForm := &models.CreateActivityForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	createActivityResp, err := s.server.CreateActivity(createActivityForm, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
