@@ -19,7 +19,8 @@ const Profile = ({ imageUrl }) => {
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
                     <Avatar
-                        size={"md"}
+                        size={"xl"}
+
                         src={"http://localhost:8080/avatars/" + imageUrl}
                     />
                 </Box>
@@ -32,13 +33,7 @@ const Profile = ({ imageUrl }) => {
                 </Box>
             </GridItem>
             <GridItem area={'about'} bg={'lightskyblue'}>
-                <Box
-                    mt={'10%'}
-                    ml={'10%'}
-                    mr={'10%'}>
-                    <Text fontWeight='bold'>About you</Text>
-                    !!! Add about you here !!!
-                </Box>
+
             </GridItem>
             <GridItem area={'tabs'}>
                 <Tabs isFitted variant='enclosed'>
