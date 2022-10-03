@@ -1,3 +1,5 @@
 .idea
 .vscode
 *.jpg
+
+frontend/src/api/apiKey.js
