@@ -48,6 +48,22 @@ const DiscoverActivities = () => {
 
 
                 <Center>
+
+                    <Button
+                        as="a"
+                        onClick={() => {
+                            navigate("/createactivity");
+                        }}
+                        w={200}
+                        m={4}
+                        bg="teal"
+                    >
+                        <font size={5} color={"white"}>
+                            Create an activity
+                        </font>
+                    </Button>
+
+
                     <Input
                         m={4}
                         w={'50%'}
