@@ -17,4 +17,6 @@ const validSessionGuard = async (navigate, pathIfNotOk, pathIfOk) => {
   }
 };
 
-export { validSessionGuard };
+const apiKey = "AIzaSyBH5ccwom9VK1HcDBWucl6t5h4B0AS5yDw";
+
+export { validSessionGuard, apiKey };

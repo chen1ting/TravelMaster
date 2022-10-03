@@ -43,12 +43,16 @@ func NewServer() *Server {
 	if err := db.AutoMigrate(&gormModel.Activity{}); err != nil {
 		panic(err)
 	}
+	if err := db.AutoMigrate(&gormModel.Review{}); err != nil {
+		panic(err)
+	}
 	if err := db.AutoMigrate(&gormModel.Itinerary{}); err != nil {
 		panic(err)
 	}
 	if err := db.AutoMigrate(&gormModel.Review{}); err != nil {
 		panic(err)
 	}
+
 	if err := db.AutoMigrate(&gormModel.ReportHistory{}); err != nil {
 		panic(err)
 	}

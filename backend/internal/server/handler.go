@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 
@@ -24,6 +25,7 @@ import (
 )
 
 var (
+	ErrUserNotExist             = errors.New("user not exist")
 	ErrUserAlreadyCreatedReview = errors.New("user already created review for the activity")
 	ErrNotAllowed               = errors.New("user is not allowed to perform this action")
 	ErrGenericServerError       = errors.New("generic server error")
@@ -35,10 +37,11 @@ var (
 	ErrActivityAlreadyExists    = errors.New("an activity with the same title already exists")
 	ErrActivityNotFound         = errors.New("activity not found")
 	ErrNullTitle                = errors.New("title cannot be empty")
-	ErrInvalidActivityID        = errors.New("activity id doesn't exist")
-	ErrInvalidCreateUser        = errors.New("user id doesn't exists")
+	ErrUserNotFound             = errors.New("user id doesn't exists")
+	ErrNullReview               = errors.New("review content cannot be empty")
+	ErrReviewNotFound           = errors.New("review not found")
 	ErrInvalidUpdateUser        = errors.New("user id doesn't match the activity's user id")
-	ErrNoSearchFail             = errors.New("searchName failed")
+	ErrNoSearchFail             = errors.New("search Name failed")
 	ErrAlreadyReported          = errors.New("user has already reported the activity")
 	ErrUnknownFileType          = errors.New("unknown file type uploaded")
 	ErrImageNoMatch             = errors.New("image not found in the list of the activity")
@@ -76,11 +79,10 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 		Username:   form.Username,
 		Email:      form.Email,
 		Password:   form.HashedPassword,
-		Interests:  form.Interests,
 		AvatarName: uniqueImgName,
 	}
 
-	if result := s.Database.Model(&user).Create(&user); result.Error != nil {
+	if result := s.Database.Omit(clause.Associations).Create(&user); result.Error != nil { //s.Database.Model(&user).Create(&user)
 		err := os.Remove(fpath)
 		if err != nil { // TODO: write to log instead
 			fmt.Println("sign_up have error deleting avatar: ", err)
@@ -205,7 +207,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 		return nil, err
 	}
 
-	// retrieve all activites
+	// retrieve all activities
 	var activities []gormModel.Activity
 	if err := s.Database.Find(&activities).Error; err != nil {
 		return nil, ErrDatabase
@@ -232,7 +234,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 				InactiveCount: act.InactiveCount,
 				InactiveFlag:  act.InactiveFlag,
 				ReviewCounts:  act.ReviewCounts,
-				ReviewIds:     act.ReviewIds,
+				Reviews:       act.Reviews,
 				CreatedAt:     act.CreatedAt,
 				UpdatedAt:     act.UpdatedAt,
 			})
@@ -261,8 +263,8 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			activity, h := randomAndIsOpen(actMap["food"], day, hr, used)
 			if activity == nil { // no food activity somehow...
 				fmt.Printf("WARN: no food activity for start time: %d\n", x)
-				hr += 2
-				x += int64(2 * 60 * 60)
+				hr += 1
+				x += int64(60 * 60)
 				continue
 			}
 			segments = append(segments, &models.Segment{
@@ -272,7 +274,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			})
 			hr += h + 2 // 2h gap between every activity
 			x += int64((h + 2) * 60 * 60)
-		} else if hr >= 9 { // 10 PM or later, fast forward to 8 AM next day
+		} else if hr >= 21 { // 10 PM or later, fast forward to 8 AM next day
 			ff := 7 - hr + 12
 			hr = 7
 			x += int64(ff * 60 * 60)
@@ -310,8 +312,8 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			}
 			if !ok {
 				fmt.Printf("WARN: no planned activity for start time: %d\n", x)
-				hr += 2
-				x += int64(2 * 60 * 60)
+				hr += 1
+				x += int64(60 * 60)
 			}
 		}
 	}
@@ -385,12 +387,12 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 	for _, act := range choices {
 		opening := int(act.OpeningTimes[day])
 		closing := int(act.OpeningTimes[day+7])
-		//fmt.Println("DEUBG choice: ", act, day, hr, used)
+		//fmt.Println("DEBUG choice: ", act, day, hr, used)
 		if hr < opening || hr > closing || used[act.ID] {
 			continue
 		}
 		actTime := min(2, closing-hr)
-		if actTime == 0 { // act time must at least an hr long
+		if actTime == 0 { // act time must at least an hour long
 			continue
 		}
 		imageUrl := ""
@@ -530,6 +532,660 @@ func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	return opening
 }
 
+func (s *Server) UpdateProfile(req *models.UpdateProfileReq) (*models.UpdateProfileResp, error) {
+	var user gormModel.User
+	if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	user.Interests = req.Interests
+	user.AboutMe = req.AboutMe
+
+	if result := s.Database.Save(&user); result.Error != nil {
+		fmt.Println("update_profile err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	return &models.UpdateProfileResp{
+		UserId:    user.ID,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) GetProfile(req *models.GetProfileReq) (*models.GetProfileResp, error) {
+	var user gormModel.User
+	if result := s.Database.Where("id=?", req.UserId).Preload("Activities").Preload("Reviews").Find(&user); result.RowsAffected == 0 {
+		//if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	return &models.GetProfileResp{
+		User:        user,
+		RetrievedAt: time.Now(),
+	}, nil
+}
+
+func (s *Server) UpdateAvatar(form *models.UpdateAvatarForm, c *gin.Context) (*models.UpdateAvatarResp, error) {
+	var user gormModel.User
+	if result := s.Database.First(&user, form.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+	// assumption: delete request has higher priority
+	if form.Delete {
+		if err := os.Remove(filepath.Join(ImageRoot, AvatarFolder, user.AvatarName)); err != nil {
+			fmt.Println("Unable to remove user avatar, ", err.Error())
+		}
+		user.AvatarName = "" //reset the avatar name
+		if result := s.Database.Save(&user); result.Error != nil {
+			fmt.Println("Unable to update database", result.Error.Error())
+			return nil, result.Error
+		}
+		return &models.UpdateAvatarResp{
+			UserId:            user.ID,
+			UpdatedAt:         time.Now(),
+			NewAvatarFileName: "",
+		}, nil
+	}
+	// if the request is not delete, yet no avatar file received, return error
+	if form.Avatar == nil {
+		fmt.Println("received no file for update", ErrMissingUserInfo.Error())
+		return nil, ErrMissingUserInfo
+	}
+	// if saveErr occurs, return nil
+	avatarName, avatarPath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
+	if saveErr != nil {
+		return nil, saveErr
+	}
+	user.AvatarName = avatarName
+	if result := s.Database.Save(&user); result.Error != nil {
+		if err := os.Remove(avatarPath); err != nil {
+			fmt.Println("received no file for update", ErrMissingUserInfo.Error())
+			return nil, err
+		}
+		return nil, result.Error
+	}
+	return &models.UpdateAvatarResp{
+		UserId:            user.ID,
+		UpdatedAt:         user.UpdatedAt,
+		NewAvatarFileName: user.AvatarName,
+	}, nil
+}
+
+func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
+	if form == nil {
+		return nil, ErrBadRequest
+	}
+
+	var user gormModel.User
+	if result := s.Database.First(&user, form.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
+	}
+
+	if form.Title == "" {
+		fmt.Println("create_activity err: ", ErrNullTitle) // TODO: write to log instead
+		return nil, ErrNullTitle
+	}
+
+	var activitySearch gormModel.Activity
+	if result := s.Database.Where("Title = ?", form.Title).First(&activitySearch); result.RowsAffected > 0 {
+		fmt.Println("create_activity err: ", ErrActivityAlreadyExists) // TODO: write to log instead
+		return nil, ErrActivityAlreadyExists
+	}
+
+	var imgNames []string
+	var imgPaths []string
+	var failedImages []string
+	if form.Image != nil {
+		for i := 0; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
+		}
+	}
+
+	// add activity to database
+	activity := gormModel.Activity{
+		UserID:       form.UserId,
+		Title:        form.Title,
+		Paid:         form.Paid,
+		AuthorRating: form.Rating,
+		Category:     form.Category,
+		Description:  form.Description,
+		Longitude:    form.Longitude,
+		Latitude:     form.Latitude,
+		OpeningTimes: packCreateOpeningTimes(form),
+		ImageNames:   imgNames,
+	}
+	//if err := s.Database.Model(&user).Association("Activities").Append(&activity); err != nil {
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
+		// if result cannot be saved, RemoveName all saved images
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
+		}
+		return nil, result.Error
+	}
+
+	// if no error, return success response
+	return &models.CreateActivityResp{
+		ActivityId:     activity.ID,
+		CreatedAt:      activity.CreatedAt,
+		ImageSaveFails: failedImages,
+	}, nil
+}
+
+func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
+	if form == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	// see if the user id matches the activity's user id
+	if activity.UserID != form.UserId {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	if form.Title == "" {
+		return nil, ErrNullTitle
+	}
+
+	var imgNames = activity.ImageNames
+	var imgPaths []string
+	var failedImages []string
+	if form.Image != nil {
+		for i := 0; i < len(form.Image); i++ {
+			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
+			if saveErr != nil {
+				failedImages = append(failedImages, form.Image[i].Filename)
+				continue
+			}
+			imgNames = append(imgNames, uniqueImgName)
+			imgPaths = append(imgPaths, fpath)
+		}
+	}
+
+	// update activity and save to database
+	activity.Title = form.Title
+	activity.AuthorRating = form.Rating
+	activity.Paid = form.Paid
+	activity.Category = form.Category
+	activity.Description = form.Description
+	activity.Longitude = form.Longitude
+	activity.Latitude = form.Latitude
+	activity.ImageNames = imgNames
+	activity.OpeningTimes = packUpdateOpeningTimes(form)
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		for i := 0; i < len(imgPaths); i++ {
+			err := os.Remove(imgPaths[i])
+			if err != nil { // TODO: write to log instead
+				fmt.Println("create_activity error deleting image file: ", err)
+			}
+		}
+		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	// if no error, return success response
+	return &models.UpdateActivityResp{
+		ActivityId:     activity.ID,
+		UpdatedAt:      activity.UpdatedAt,
+		ImageSaveFails: failedImages,
+	}, nil
+}
+
+func (s *Server) GetUserInfo(ctx context.Context, req *models.GetUserInfoReq) (*models.GetUserInfoResp, error) {
+	var user gormModel.User
+	if res := s.Database.First(&user, req.UserId); res.Error != nil {
+		// TODO: for now assume user not exist, and not some db conn/query issue
+		return nil, ErrUserNotExist
+	}
+
+	return &models.GetUserInfoResp{Username: user.Username, AvatarUrl: user.AvatarName}, nil
+}
+
+// TODO: IMPT: this function is not safe for concurrent access, we should implement a lock
+func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*models.GetActivityResp, error) {
+	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotAllowed
+		}
+		return nil, err
+	}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// assert that user has not made a review before for this activity
+	review := gormModel.Review{
+		Title:       req.Title,
+		Description: req.Description,
+		UserId:      uid,
+		ActivityId:  req.ActivityId,
+		Rating:      req.Rating,
+	}
+	if res := s.Database.Create(&review); res.Error != nil {
+		// i'll just assume its a violation error here, but its not necessarily the case
+		return nil, ErrUserAlreadyCreatedReview
+	}
+
+	// fetch activity
+	var activity gormModel.Activity
+	result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity) //s.Database.First(&activity, req.ActivityId)
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+	if result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
+	activity.ReviewCounts++
+	activity.AverageRating = newAvg
+	if res := s.Database.Save(&activity); res.Error != nil {
+		return nil, ErrDatabase
+	}
+
+	/*
+
+		var reviews []gormModel.Review
+		var ids []int64
+		for _, id := range activity.ReviewIds {
+			ids = append(ids, id)
+		}
+		if len(activity.ReviewIds) > 0 {
+			if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
+				return nil, ErrDatabase
+			}
+		}
+
+		parsedReview := make([]*models.Reviews, 0)
+
+		for _, review := range reviews {
+			parsedReview = append(parsedReview, &models.Reviews{
+				Id:          review.ID,
+				UserId:      review.UserId,
+				ActivityId:  review.ActivityId,
+				Title:       review.Title,
+				Description: review.Description,
+				Rating:      review.Rating,
+			})
+		}
+	*/
+
+	return &models.GetActivityResp{
+		ActivityId:  activity.ID,
+		Title:       activity.Title,
+		Rating:      activity.AverageRating,
+		Paid:        activity.Paid,
+		Category:    activity.Category,
+		Description: activity.Description,
+		Longitude:   activity.Longitude,
+		Latitude:    activity.Latitude,
+		ImageNames:  activity.ImageNames,
+
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
+
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		ReviewCounts:  activity.ReviewCounts,
+		ReviewsList:   activity.Reviews,
+		CreatedAt:     activity.CreatedAt,
+	}, nil
+}
+
+func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	return &models.GetActivityResp{
+		ActivityId:  activity.ID,
+		Title:       activity.Title,
+		Rating:      activity.AverageRating,
+		Paid:        activity.Paid,
+		Category:    activity.Category,
+		Description: activity.Description,
+		Longitude:   activity.Longitude,
+		Latitude:    activity.Latitude,
+		ImageNames:  activity.ImageNames,
+
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
+
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		ReviewCounts:  activity.ReviewCounts,
+		ReviewsList:   activity.Reviews,
+		CreatedAt:     activity.CreatedAt,
+	}, nil
+}
+
+func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+	var activities []gormModel.Activity
+
+	result := s.Database.Where("title ILIKE ? AND inactive_flag = ?", "%"+req.SearchText+"%", "0").Order("created_at desc").Scopes(Paginate(req)).Find(&activities)
+	// if activity cannot be found by given ID, return error
+	if result.Error != nil {
+		return nil, ErrNoSearchFail
+	}
+
+	// one more level of filtering by times allowed
+	// only enforced if specified
+	filteredAct := make([]*models.ActivitySummary, 0)
+	if len(req.Times) > 0 {
+		for _, act := range activities {
+			ok := true
+			for _, time := range req.Times {
+				if !(time.StartTimeOffset >= int(act.OpeningTimes[time.Day]) && time.EndTimeOffset <= int(act.OpeningTimes[time.Day+7])) {
+					fmt.Println("not ok: ", time.StartTimeOffset, int(act.OpeningTimes[time.Day]), time.EndTimeOffset, int(act.OpeningTimes[time.Day+7]))
+					ok = false
+					break
+				}
+			}
+			imageUrl := ""
+			if len(act.ImageNames) > 0 {
+				imageUrl = act.ImageNames[0]
+			}
+			if ok {
+				filteredAct = append(filteredAct, &models.ActivitySummary{
+					Id:            act.ID,
+					Name:          act.Title,
+					Description:   act.Description,
+					AverageRating: float64(act.AverageRating),
+					Categories:    act.Category,
+					ImageUrl:      imageUrl,
+				})
+			}
+		}
+	} else {
+		for _, act := range activities {
+			imageUrl := ""
+			if len(act.ImageNames) > 0 {
+				imageUrl = act.ImageNames[0]
+			}
+			filteredAct = append(filteredAct, &models.ActivitySummary{
+				Id:            act.ID,
+				Name:          act.Title,
+				Description:   act.Description,
+				AverageRating: float64(act.AverageRating),
+				Categories:    act.Category,
+				ImageUrl:      imageUrl,
+			})
+		}
+	}
+
+	return &models.SearchActivityResp{
+		Activities:   filteredAct,
+		NumOfResults: len(filteredAct),
+	}, nil
+}
+
+func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*models.InactivateActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+		return nil, ErrActivityNotFound
+	}
+
+	reportHistory := &gormModel.ReportHistory{
+		UserId:     req.UserId,
+		ActivityId: req.ActivityId,
+		Reason:     req.Reason,
+	}
+	if result := s.Database.Create(&reportHistory); result.Error != nil {
+		return nil, ErrAlreadyReported
+	}
+
+	//TODO: put invalid threshold into global variable?
+	invalidThreshold := 10
+
+	activity.InactiveCount++
+	if activity.InactiveCount >= invalidThreshold {
+		activity.InactiveFlag = true
+	}
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("inactivate_activity err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+
+	return &models.InactivateActivityResp{
+		ActivityId:    activity.ID,
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		UpdatedAt:     activity.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*models.DeleteActivityImageResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	// see if the user id matches the activity's user id
+	if activity.UserID != req.UserId {
+		return nil, ErrInvalidUpdateUser
+	}
+
+	idx := SearchName(activity.ImageNames, req.ImageName)
+	if idx >= len(activity.ImageNames) {
+		return nil, ErrImageNoMatch
+	}
+	err := os.Remove(filepath.Join(ImageRoot, ActivityImageFolder, req.ImageName))
+	if err != nil {
+		fmt.Println("image delete unsuccessful, ", err)
+		activity.ImageNames = RemoveName(activity.ImageNames, idx)
+		if result := s.Database.Save(&activity); result.Error != nil {
+			fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
+			return nil, ErrDatabase
+		}
+		return nil, ErrImageNotFound
+	}
+
+	activity.ImageNames = RemoveName(activity.ImageNames, idx)
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
+		return nil, result.Error
+	}
+	return &models.DeleteActivityImageResp{
+		ActivityId: activity.ID,
+		DeletedAt:  activity.UpdatedAt,
+	}, nil
+
+}
+
+/*
+	func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReviewResp, error) {
+		if req == nil {
+			return nil, ErrBadRequest
+		}
+
+		if req.Review == "" {
+			return nil, ErrNullReview
+		}
+
+		var user gormModel.User
+		// find the user in database
+		if result := s.Database.First(&user, req.UserId); result.Error != nil {
+			return nil, ErrUserNotFound
+		}
+
+		var activity gormModel.Activity
+		// if activity cannot be found by given ID, return error
+		if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
+			return nil, ErrActivityNotFound
+		}
+
+		review := gormModel.Review{
+			UserId:      req.UserId,
+			ActivityId:  req.ActivityId,
+			Description: req.Review,
+			Rating:      req.Rating,
+		}
+		if result := s.Database.Save(&review); result.Error != nil {
+			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+			return nil, result.Error
+		}
+
+		if err := s.UpdateAverageReview(&activity, true, req.Rating); err != nil {
+			return nil, err
+		}
+
+		return &models.CreateReviewResp{
+			ReviewId:      review.ID,
+			CreatedAt:     review.CreatedAt,
+			ReviewCounts:  activity.ReviewCounts,
+			AverageRating: activity.AverageRating,
+		}, nil
+	}
+*/
+func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	if req.Title == "" || req.NewRating < 0 {
+		return nil, ErrNullReview
+	}
+
+	var review gormModel.Review
+	// find review in the database by review id
+	if result := s.Database.Where("id=? AND user_id=? AND activity_id=?", req.ReviewId, req.UserId, req.ActivityId).Find(&review); result.RowsAffected == 0 {
+		return nil, ErrReviewNotFound
+	}
+
+	var activity gormModel.Activity
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	// user update
+	var newAvg float32
+	if activity.ReviewCounts-1 == 0 {
+		newAvg = 0
+	} else {
+		newAvg = (float32(activity.ReviewCounts)*activity.AverageRating - review.Rating) / float32(activity.ReviewCounts-1)
+	}
+	activity.ReviewCounts--
+	activity.AverageRating = newAvg
+	if req.Delete {
+		s.Database.Delete(&review)
+	} else {
+		newAvg = (float32(activity.ReviewCounts)*activity.AverageRating + req.NewRating) / float32(activity.ReviewCounts+1)
+		activity.ReviewCounts++
+		activity.AverageRating = newAvg
+		review.Title = req.Title
+		review.Rating = req.NewRating
+		if result := s.Database.Save(&review); result.Error != nil {
+			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+			return nil, ErrDatabase
+		}
+	}
+	// save changes to activity table
+	if res := s.Database.Save(&activity); res.Error != nil {
+		return nil, ErrDatabase
+	}
+
+	fmt.Println(activity.AverageRating)
+	return &models.GetActivityResp{
+		ActivityId:  activity.ID,
+		Title:       activity.Title,
+		Rating:      activity.AverageRating,
+		Paid:        activity.Paid,
+		Category:    activity.Category,
+		Description: activity.Description,
+		Longitude:   activity.Longitude,
+		Latitude:    activity.Latitude,
+		ImageNames:  activity.ImageNames,
+
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
+
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		ReviewCounts:  activity.ReviewCounts,
+		ReviewsList:   activity.Reviews,
+		CreatedAt:     activity.CreatedAt,
+	}, nil
+}
+
+// ValidateFile onwards are utility functions
+
 func ValidateFile(fileHeader *multipart.FileHeader) (bool, error) {
 	// open the uploaded file
 
@@ -592,318 +1248,6 @@ func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) 
 	return uniqueImgName, fPath, nil
 }
 
-func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context) (*models.CreateActivityResp, error) {
-	if form == nil {
-		return nil, ErrBadRequest
-	}
-
-	var user gormModel.User
-	if result := s.Database.First(&user, form.UserId); result.Error != nil {
-		return nil, ErrInvalidCreateUser
-	}
-
-	if form.Title == "" {
-		fmt.Println("create_activity err: ", ErrNullTitle) // TODO: write to log instead
-		return nil, ErrNullTitle
-	}
-
-	var activitySearch gormModel.Activity
-	if result := s.Database.Where("Title = ?", form.Title).First(&activitySearch); result.RowsAffected > 0 {
-		fmt.Println("create_activity err: ", ErrActivityAlreadyExists) // TODO: write to log instead
-		return nil, ErrActivityAlreadyExists
-	}
-
-	var imgNames []string
-	var imgPaths []string
-	var failedImages []string
-	if form.Image != nil {
-		for i := 0; i < len(form.Image); i++ {
-			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
-			if saveErr != nil {
-				failedImages = append(failedImages, form.Image[i].Filename)
-				continue
-			}
-			imgNames = append(imgNames, uniqueImgName)
-			imgPaths = append(imgPaths, fpath)
-		}
-	}
-
-	// add activity to database
-	activity := gormModel.Activity{
-		UserID:        form.UserId,
-		Title:         form.Title,
-		AverageRating: form.Rating,
-		Paid:          form.Paid,
-		Category:      form.Category,
-		Description:   form.Description,
-		Longitude:     form.Longitude,
-		Latitude:      form.Latitude,
-		OpeningTimes:  packCreateOpeningTimes(form),
-		ImageNames:    imgNames,
-
-		// system settings
-		InactiveCount: 0,
-		InactiveFlag:  false,
-		ReviewCounts:  0,
-		ReviewIds:     []int64{},
-	}
-
-	if result := s.Database.Model(&activity).Create(&activity); result.Error != nil {
-		fmt.Println("create_activity err: ", result.Error) // TODO: write to log instead
-		// if result cannot be saved, removeName all saved images
-		for i := 0; i < len(imgPaths); i++ {
-			err := os.Remove(imgPaths[i])
-			if err != nil { // TODO: write to log instead
-				fmt.Println("create_activity error deleting image file: ", err)
-			}
-		}
-		return nil, result.Error
-	}
-
-	// if no error, return success response
-	return &models.CreateActivityResp{
-		ActivityId:     activity.ID,
-		CreatedAt:      activity.CreatedAt,
-		ImageSaveFails: failedImages,
-	}, nil
-}
-
-func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context) (*models.UpdateActivityResp, error) {
-	if form == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, form.ActivityId); result.Error != nil || result.RowsAffected == 0 {
-		return nil, ErrInvalidActivityID
-	}
-
-	// see if the user id matches the activity's user id
-	if activity.UserID != form.UserId {
-		return nil, ErrInvalidUpdateUser
-	}
-
-	if form.Title == "" {
-		return nil, ErrNullTitle
-	}
-
-	var imgNames = activity.ImageNames
-	var imgPaths []string
-	var failedImages []string
-	if form.Image != nil {
-		for i := 0; i < len(form.Image); i++ {
-			uniqueImgName, fpath, saveErr := SaveFile(form.Image[i], c, ActivityImageFolder)
-			if saveErr != nil {
-				failedImages = append(failedImages, form.Image[i].Filename)
-				continue
-			}
-			imgNames = append(imgNames, uniqueImgName)
-			imgPaths = append(imgPaths, fpath)
-		}
-	}
-
-	// update activity and save to database
-	activity.Title = form.Title
-	activity.AverageRating = form.Rating
-	activity.Paid = form.Paid
-	activity.Category = form.Category
-	activity.Description = form.Description
-	activity.Longitude = form.Longitude
-	activity.Latitude = form.Latitude
-	activity.ImageNames = imgNames
-	activity.OpeningTimes = packUpdateOpeningTimes(form)
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		for i := 0; i < len(imgPaths); i++ {
-			err := os.Remove(imgPaths[i])
-			if err != nil { // TODO: write to log instead
-				fmt.Println("create_activity error deleting image file: ", err)
-			}
-		}
-		fmt.Println("update_activity err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-	// if no error, return success response
-	return &models.UpdateActivityResp{
-		ActivityId:     activity.ID,
-		UpdatedAt:      activity.UpdatedAt,
-		ImageSaveFails: failedImages,
-	}, nil
-}
-
-// TODO: IMPT: this function is not safe for concurrent access, we should implement a lock
-func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*models.GetActivityResp, error) {
-	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil, ErrNotAllowed
-		}
-		return nil, err
-	}
-	uid, err := strconv.ParseInt(userId, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	// assert that user has not made a review before for this activity
-	review := gormModel.Review{
-		Title:       req.Title,
-		Description: req.Description,
-		UserId:      uid,
-		ActivityId:  req.ActivityId,
-		Rating:      req.Rating,
-	}
-	if res := s.Database.Create(&review); res.Error != nil {
-		// i'll just assume its a violation error here, but its not necessarily the case
-		return nil, ErrUserAlreadyCreatedReview
-	}
-
-	// fetch activity
-	var activity gormModel.Activity
-	result := s.Database.First(&activity, req.ActivityId)
-	if result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-	if result.RowsAffected == 0 {
-		return nil, ErrActivityNotFound
-	}
-
-	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
-	activity.ReviewCounts++
-	activity.AverageRating = newAvg
-	activity.ReviewIds = append(activity.ReviewIds, review.ID)
-	if res := s.Database.Save(&activity); res.Error != nil {
-		return nil, ErrDatabase
-	}
-
-	var reviews []gormModel.Review
-	var ids []int64
-	for _, id := range activity.ReviewIds {
-		ids = append(ids, id)
-	}
-	if len(activity.ReviewIds) > 0 {
-		if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
-			return nil, ErrDatabase
-		}
-	}
-
-	parsedReview := make([]*models.Reviews, 0)
-	for _, review := range reviews {
-		parsedReview = append(parsedReview, &models.Reviews{
-			Id:          review.ID,
-			UserId:      review.UserId,
-			ActivityId:  review.ActivityId,
-			Title:       review.Title,
-			Description: review.Description,
-			Rating:      review.Rating,
-		})
-	}
-
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AverageRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   parsedReview,
-		CreatedAt:     activity.CreatedAt,
-	}, nil
-}
-
-func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-
-	var reviews []gormModel.Review
-	var ids []int64
-	for _, id := range activity.ReviewIds {
-		ids = append(ids, id)
-	}
-	if len(activity.ReviewIds) > 0 {
-		if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
-			return nil, ErrDatabase
-		}
-	}
-
-	parsedReview := make([]*models.Reviews, 0)
-	for _, review := range reviews {
-		parsedReview = append(parsedReview, &models.Reviews{
-			Id:          review.ID,
-			UserId:      review.UserId,
-			ActivityId:  review.ActivityId,
-			Title:       review.Title,
-			Description: review.Description,
-			Rating:      review.Rating,
-		})
-	}
-
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AverageRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   parsedReview,
-		CreatedAt:     activity.CreatedAt,
-	}, nil
-}
-
 func Paginate(r *models.SearchActivityReq) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		page := r.PageNumber
@@ -924,112 +1268,7 @@ func Paginate(r *models.SearchActivityReq) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-	var activities []gormModel.Activity
-
-	result := s.Database.Where("title ILIKE ? AND inactive_flag = ?", "%"+req.SearchText+"%", "0").Order("created_at desc").Scopes(Paginate(req)).Find(&activities)
-	// if activity cannot be found by given ID, return error
-	if result.Error != nil {
-		return nil, ErrNoSearchFail
-	}
-
-	// one more level of filtering by times allowed
-	// only enforced if specified
-	filteredAct := make([]*models.ActivitySummary, 0)
-	if len(req.Times) > 0 {
-		for _, act := range activities {
-			ok := true
-			for _, time := range req.Times {
-				if !(time.StartTimeOffset >= int(act.OpeningTimes[time.Day]) && time.EndTimeOffset <= int(act.OpeningTimes[time.Day+7])) {
-					ok = false
-					break
-				}
-			}
-			imageUrl := ""
-			if len(act.ImageNames) > 0 {
-				imageUrl = act.ImageNames[0]
-			}
-			if ok {
-				filteredAct = append(filteredAct, &models.ActivitySummary{
-					Id:            act.ID,
-					Name:          act.Title,
-					Description:   act.Description,
-					AverageRating: float64(act.AverageRating),
-					Categories:    act.Category,
-					ImageUrl:      imageUrl,
-				})
-			}
-		}
-	} else {
-		for _, act := range activities {
-			imageUrl := ""
-			if len(act.ImageNames) > 0 {
-				imageUrl = act.ImageNames[0]
-			}
-			filteredAct = append(filteredAct, &models.ActivitySummary{
-				Id:            act.ID,
-				Name:          act.Title,
-				Description:   act.Description,
-				AverageRating: float64(act.AverageRating),
-				Categories:    act.Category,
-				ImageUrl:      imageUrl,
-			})
-		}
-	}
-
-	return &models.SearchActivityResp{
-		Activities:   filteredAct,
-		NumOfResults: len(filteredAct),
-	}, nil
-}
-
-func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*models.InactivateActivityResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
-		return nil, ErrInvalidActivityID
-	}
-
-	reportHistory := &gormModel.ReportHistory{
-		UserId:     req.UserId,
-		ActivityId: req.ActivityId,
-		Reason:     req.Reason,
-	}
-	if result := s.Database.Create(&reportHistory); result.Error != nil {
-		return nil, ErrAlreadyReported
-	}
-
-	//TODO: put invalid threshold into global variable?
-	invalidThreshold := 10
-
-	activity.InactiveCount++
-	if activity.InactiveCount >= invalidThreshold {
-		activity.InactiveFlag = true
-	}
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("inactivate_activity err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-
-	return &models.InactivateActivityResp{
-		ActivityId:    activity.ID,
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		UpdatedAt:     activity.UpdatedAt,
-	}, nil
-}
-
-func searchName(s []string, name string) int {
+func SearchName(s []string, name string) int {
 	i := 0
 	for ; i < len(s); i++ {
 		if s[i] == name {
@@ -1039,57 +1278,11 @@ func searchName(s []string, name string) int {
 	return i
 }
 
-// assuming image order doesn't matter
-func removeName(s []string, i int) []string {
+// RemoveName of image by replacing the to be removed value with the last element. assuming image order doesn't matter
+func RemoveName(s []string, i int) []string {
 	if i > len(s) {
 		return s
 	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
-}
-
-func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*models.DeleteActivityImageResp, error) {
-	if req == nil {
-		return nil, ErrBadRequest
-	}
-
-	// find the activity in database
-	var activity gormModel.Activity
-
-	// if activity cannot be found by given ID, return error
-	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
-		return nil, ErrInvalidActivityID
-	}
-
-	// see if the user id matches the activity's user id
-	if activity.UserID != req.UserId {
-		return nil, ErrInvalidUpdateUser
-	}
-
-	idx := searchName(activity.ImageNames, req.ImageName)
-	fmt.Println(idx)
-	if idx >= len(activity.ImageNames) {
-		return nil, ErrImageNoMatch
-	}
-	err := os.Remove(filepath.Join(ImageRoot, ActivityImageFolder, req.ImageName))
-	if err != nil {
-		fmt.Println("image delete unsuccessful, ", err)
-		activity.ImageNames = removeName(activity.ImageNames, idx)
-		if result := s.Database.Save(&activity); result.Error != nil {
-			fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
-			return nil, result.Error
-		}
-		return nil, ErrImageNotFound
-	}
-
-	activity.ImageNames = removeName(activity.ImageNames, idx)
-
-	if result := s.Database.Save(&activity); result.Error != nil {
-		fmt.Println("delete_image err: ", result.Error) // TODO: write to log instead
-		return nil, result.Error
-	}
-	return &models.DeleteActivityImageResp{
-		ActivityId: activity.ID,
-		DeletedAt:  activity.UpdatedAt,
-	}, nil
 }

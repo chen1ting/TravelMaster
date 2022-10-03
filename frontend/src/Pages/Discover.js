@@ -44,6 +44,12 @@ import StarRatings from "react-star-ratings";
 import { ArrowLeftIcon, ArrowRightIcon } from "@chakra-ui/icons";
 import { getActivitiesByFilter, sendCreateActivityReq } from "../api/api";
 import { SearchIcon } from "@chakra-ui/icons";
+import AsyncSelect from "react-select/async";
+import Geocode from "react-geocode";
+import { apiKey } from "../common/common";
+
+Geocode.setApiKey(apiKey);
+Geocode.setRegion("sg");
 
 const Discover = () => {
   const navigate = useNavigate();
@@ -304,6 +310,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
   const [cats, setCats] = useState(new Set());
   const [picture, setPicture] = useState(null);
   const [isPaid, setIsPaid] = useState(false);
+  const [loc, setLoc] = useState({});
 
   const daysList = [
     "Sunday",
@@ -326,7 +333,8 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
       cats,
       desc,
       picture,
-      hours
+      hours,
+      loc
     );
     onClose();
     if (data == null) {
@@ -340,6 +348,21 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
       navigate(`/activity/${data.activity_id}`);
     }
   };
+
+  const loadOptions = (inputValue, callback) =>
+    Geocode.fromAddress(inputValue).then(
+      (response) => {
+        callback(
+          response.results.map((res) => ({
+            value: res.geometry.location,
+            label: res.formatted_address,
+          }))
+        );
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
 
   return (
     <ModalContent>
@@ -406,10 +429,16 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
           ))}
         </FormControl>
 
-        {/* THIS IS A TODO for geosearch */}
         <FormControl isRequired mt={4}>
           <FormLabel>Location</FormLabel>
-          <Input placeholder="Enter the location of the event" />
+          <Box color="black">
+            <AsyncSelect
+              onChange={(opt) => {
+                setLoc(opt.value);
+              }}
+              loadOptions={loadOptions}
+            />
+          </Box>
         </FormControl>
 
         <FormControl isRequired mt={4}>
