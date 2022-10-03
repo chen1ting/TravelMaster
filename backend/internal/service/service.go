@@ -1,6 +1,8 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/chen1ting/TravelMaster/internal/models"
 	"github.com/chen1ting/TravelMaster/internal/server"
 	"github.com/gin-gonic/gin"
@@ -91,6 +93,66 @@ func (s *Service) ValidateToken(c *gin.Context) {
 	c.JSON(http.StatusOK, validateTokenResp)
 }
 
+func (s *Service) GenerateItinerary(c *gin.Context) {
+	generateItineraryReq := &models.GenerateItineraryRequest{}
+	if err := c.ShouldBindJSON(generateItineraryReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	generateItineraryResp, err := s.server.GenerateItinerary(c, generateItineraryReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, generateItineraryResp)
+}
+
+func (s *Service) GetItinerary(c *gin.Context) {
+	getItineraryReq := &models.GetItineraryRequest{}
+	if err := c.ShouldBindJSON(getItineraryReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	getItineraryResp, err := s.server.GetItinerary(c, getItineraryReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, getItineraryResp)
+}
+
+func (s *Service) UpdateItinerary(c *gin.Context) {
+	saveItineraryReq := &models.SaveItineraryRequest{}
+	if err := c.ShouldBindJSON(saveItineraryReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	saveItineraryResp, err := s.server.SaveItinerary(c, saveItineraryReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, saveItineraryResp)
+}
+
+func (s *Service) GetItineraries(c *gin.Context) {
+	getItinerariesReq := &models.GetItinerariesRequest{}
+	if err := c.ShouldBindJSON(getItinerariesReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	getItinerariesResp, err := s.server.GetItineraries(c, getItinerariesReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, getItinerariesResp)
+}
+
 func (s *Service) UpdateProfile(c *gin.Context) {
 	updateProfileReq := &models.UpdateProfileReq{}
 	if err := c.ShouldBindJSON(&updateProfileReq); err != nil {
@@ -145,6 +207,7 @@ func (s *Service) CreateActivity(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	createActivityResp, err := s.server.CreateActivity(createActivityForm, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
