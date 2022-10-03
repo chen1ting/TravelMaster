@@ -30,7 +30,8 @@ const sendCreateActivityReq = async (
   cats,
   desc,
   pic,
-  hours
+  hours,
+  loc
 ) => {
   const formData = new FormData();
   formData.append("user_id", uid);
@@ -42,9 +43,9 @@ const sendCreateActivityReq = async (
   }
 
   formData.append("description", desc);
-  formData.append("longitude", 100); // TODO
-  formData.append("latitude", 100);
   formData.append("image", pic);
+  formData.append("longitude", parseFloat(loc.lng));
+  formData.append("latitude", parseFloat(loc.lat));
 
   const days = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
   for (let i = 0; i < days.length; i++) {
@@ -272,7 +273,7 @@ const getItinerary = async (
       ++idx;
     }
   }
-  console.log(timeBins);
+
   setTimeBins(timeBins);
   setItineraryMap(itineraryMap);
   setTimeBinsCopy([...timeBins]);

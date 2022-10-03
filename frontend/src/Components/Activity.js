@@ -29,6 +29,7 @@ import {
   GoogleMap,
   Marker,
 } from "react-google-maps";
+import { apiKey } from "../common/common";
 
 const Activity = () => {
   const { id } = useParams();
@@ -162,8 +163,7 @@ const Activity = () => {
           <Box display="flex" justifyContent="center" my="12">
             <MyMapComponent
               isMarkerShown
-              // TODO: api key is hardcoded here, take note
-              googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH5ccwom9VK1HcDBWucl6t5h4B0AS5yDw&v=3.exp&libraries=geometry,drawing,places"
+              googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=3.exp&libraries=geometry,drawing,places`}
               loadingElement={<div style={{ height: `100%` }} />}
               containerElement={
                 <div style={{ height: `500px`, width: "700px" }} />
@@ -352,11 +352,13 @@ const ReviewCard = ({ rev }) => {
 };
 
 const MyMapComponent = withScriptjs(
-  withGoogleMap((props) => (
-    <GoogleMap defaultZoom={8} defaultCenter={props.latLng}>
-      {props.isMarkerShown && <Marker position={props.latLng} />}
-    </GoogleMap>
-  ))
+  withGoogleMap((props) => {
+    return (
+      <GoogleMap defaultZoom={15} defaultCenter={props.latLng}>
+        {props.isMarkerShown && <Marker position={props.latLng} />}
+      </GoogleMap>
+    );
+  })
 );
 
 export default Activity;
