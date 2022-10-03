@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NavBar from "./Components/NavBar";
 import { ChakraProvider } from "@chakra-ui/react";
 import {
@@ -31,6 +31,10 @@ import Activity from "./Components/Activity";
 
 function App() {
   const [imageUrl, setImageUrl] = useState("");
+
+  useEffect(() => {
+    setImageUrl(window.sessionStorage.getItem("avatar_file_name"));
+  }, []);
 
   return (
     <ChakraProvider>

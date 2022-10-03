@@ -1,9 +1,10 @@
 package models
 
 import (
-	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 	"mime/multipart"
 	"time"
+
+	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 )
 
 type LoginReq struct {
@@ -209,11 +210,20 @@ type GetActivityResp struct {
 	SunOpeningTime  int `json:"sun_opening_time"`
 	SunClosingTime  int `json:"sun_closing_time"`
 
-	InactiveCount int                `json:"inactive_count"`
-	InactiveFlag  bool               `json:"inactive_flag"`
-	ReviewCounts  int                `json:"review_counts"`
-	ReviewsList   []gormModel.Review `json:"review_list"`
-	CreatedAt     time.Time          `json:"created_at"`
+	InactiveCount int        `json:"inactive_count"`
+	InactiveFlag  bool       `json:"inactive_flag"`
+	ReviewCounts  int        `json:"review_counts"`
+	ReviewsList   []*Reviews `json:"review_list"`
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
+type Reviews struct {
+	Id          int64   `json:"id"`
+	UserId      int64   `json:"user_id"`
+	ActivityId  int64   `json:"activity_id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Rating      float32 `json:"rating"`
 }
 
 type SearchActivityReq struct {

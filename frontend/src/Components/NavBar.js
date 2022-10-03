@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import {
-    Flex,
-    Box,
-    Text,
-    useColorModeValue,
-    Menu,
-    MenuButton,
-    Button,
-    Avatar,
-    MenuList,
-    MenuItem,
-    Image
-} from '@chakra-ui/react';
-import {useNavigate} from "react-router-dom";
-import TMLogo from '../Components/TMLogo.png';
+  Flex,
+  Box,
+  Text,
+  useColorModeValue,
+  Menu,
+  MenuButton,
+  Button,
+  Avatar,
+  MenuList,
+  MenuItem,
+  Image,
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import TMLogo from "../Components/TMLogo.png";
 import { sendLogoutReq } from "../api/api";
 
 const paddingSpace = "20px";
@@ -43,20 +43,26 @@ const Header = ({ imageUrl, setImageUrl }) => {
   const navigate = useNavigate();
   const [show] = useState(false);
 
-    return (
-        <Flex
-            // mb={4}
-            p={2}
-            as="nav"
-            alignItems="center"
-            justify="space-between"
-            w="100%"
-            bg="cornflowerblue"
-            h="11vh"
-        >
-            <Box w="200px" p="-1" paddingLeft={paddingSpace}>
-                <Image src={TMLogo} boxSize="24" />
-            </Box>
+  return (
+    <Flex
+      // mb={4}
+      p={2}
+      as="nav"
+      alignItems="center"
+      justify="space-between"
+      w="100%"
+      bg="cornflowerblue"
+      h="11vh"
+    >
+      <Box
+        w="200px"
+        p="-1"
+        paddingLeft={paddingSpace}
+        cursor="pointer"
+        onClick={() => navigate("/")}
+      >
+        <Image src={TMLogo} boxSize="24" />
+      </Box>
 
       <Box
         display={{ base: show ? "block" : "none", md: "block" }}

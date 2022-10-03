@@ -787,9 +787,6 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, ErrActivityNotFound
 	}
-	if result.RowsAffected == 0 {
-		return nil, ErrActivityNotFound
-	}
 
 	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
 	activity.ReviewCounts++
@@ -798,32 +795,17 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 		return nil, ErrDatabase
 	}
 
-	/*
-
-		var reviews []gormModel.Review
-		var ids []int64
-		for _, id := range activity.ReviewIds {
-			ids = append(ids, id)
-		}
-		if len(activity.ReviewIds) > 0 {
-			if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
-				return nil, ErrDatabase
-			}
-		}
-
-		parsedReview := make([]*models.Reviews, 0)
-
-		for _, review := range reviews {
-			parsedReview = append(parsedReview, &models.Reviews{
-				Id:          review.ID,
-				UserId:      review.UserId,
-				ActivityId:  review.ActivityId,
-				Title:       review.Title,
-				Description: review.Description,
-				Rating:      review.Rating,
-			})
-		}
-	*/
+	parsedReviews := make([]*models.Reviews, 0)
+	for _, review := range activity.Reviews {
+		parsedReviews = append(parsedReviews, &models.Reviews{
+			Id:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
+	}
 
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
@@ -854,7 +836,7 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   parsedReviews,
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
@@ -870,6 +852,18 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		return nil, ErrActivityNotFound
 	}
 
+	parsedReviews := make([]*models.Reviews, 0)
+	for _, review := range activity.Reviews {
+		parsedReviews = append(parsedReviews, &models.Reviews{
+			Id:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
+	}
+
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
@@ -899,7 +893,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   parsedReviews,
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
@@ -1138,6 +1132,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		activity.ReviewCounts++
 		activity.AverageRating = newAvg
 		review.Title = req.Title
+		review.Description = req.Description
 		review.Rating = req.NewRating
 		if result := s.Database.Save(&review); result.Error != nil {
 			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
@@ -1149,7 +1144,23 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		return nil, ErrDatabase
 	}
 
-	fmt.Println(activity.AverageRating)
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
+	parsedReviews := make([]*models.Reviews, 0)
+	for _, review := range activity.Reviews {
+		parsedReviews = append(parsedReviews, &models.Reviews{
+			Id:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
+	}
+
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
@@ -1179,7 +1190,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   parsedReviews,
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
