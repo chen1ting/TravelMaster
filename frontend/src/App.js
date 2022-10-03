@@ -42,7 +42,7 @@ function App() {
           <Route path="signup" element={<SignUp setImageUrl={setImageUrl} />} />
           <Route path="welcome" element={<Welcome />} />
           <Route path="activitydescription" element={<ActivityDescription />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<Profile imageUrl={imageUrl} />} />
           {/* <Route path="createactivity" element={<CreateActivity/>}/> */}
           <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />

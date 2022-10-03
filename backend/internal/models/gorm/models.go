@@ -13,8 +13,12 @@ type User struct {
 	Email      string         `gorm:"unique;column:email"`
 	Password   string         `gorm:"column:password"`
 	Interests  pq.StringArray `gorm:"type:text[];column:interests"`
+	AboutMe    string         `gorm:"column:about_me"`
 	AvatarName string         `gorm:"column:avatar_name"`
+	Activities []Activity     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Reviews    []Review       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type Activity struct {
@@ -22,8 +26,9 @@ type Activity struct {
 	ID            int64          `gorm:"primaryKey;column:id"`
 	UserID        int64          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:user_id"`
 	Title         string         `gorm:"unique;not null;type:varchar(100);default:null;column:title"`
-	AverageRating float32        `gorm:"column:rating"`
-	Paid          bool           `gorm:"column:paid"`
+	AuthorRating  float32        `gorm:"column:author_rating; default:0.0"`
+	AverageRating float32        `gorm:"column:average_rating; default:0.0"`
+	Paid          bool           `gorm:"column:paid; default:false"`
 	Category      pq.StringArray `gorm:"type:text[];column:category"`
 	Description   string         `gorm:"column:description"`
 	Longitude     float32        `gorm:"gorm:longitude; default:-180.1"`
@@ -32,10 +37,10 @@ type Activity struct {
 	OpeningTimes  pq.Int32Array  `gorm:"type:int[];column:opening_times"`
 
 	// System fields
-	InactiveCount int           `gorm:"column:inactive_count"`
-	InactiveFlag  bool          `gorm:"column:inactive_flag"`
-	ReviewCounts  int           `gorm:"column:review_counts"`
-	ReviewIds     pq.Int64Array `gorm:"type:int[];column:review_ids"`
+	InactiveCount int      `gorm:"column:inactive_count; default: 0"`
+	InactiveFlag  bool     `gorm:"column:inactive_flag; default:false"`
+	ReviewCounts  int      `gorm:"column:review_counts; default:0"`
+	Reviews       []Review `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	UserReports   []User `gorm:"many2many:user_reports"`
@@ -53,10 +58,10 @@ type Itinerary struct {
 
 type Review struct {
 	ID          int64   `gorm:"primaryKey;column:id"`
-	Title       string  `gorm:"column:title"`
-	Description string  `gorm:"column:description"`
 	UserId      int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to User id
 	ActivityId  int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to Activity id
+	Title       string  `gorm:"column:title"`
+	Description string  `gorm:"column:description"`
 	Rating      float32 `gorm:"column:rating"`
 }
 
