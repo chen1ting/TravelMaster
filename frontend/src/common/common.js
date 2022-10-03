@@ -1,6 +1,6 @@
 // common util functions
 import { validateToken } from "../api/api";
-import { apiKey } from "../api/apiKey"
+// import { apiKey } from "../api/apiKey"
 
 // use this function in a useEffect hook to trigger redirect to homepage
 // if a user has to be logged in first
@@ -17,5 +17,7 @@ const validSessionGuard = async (navigate, pathIfNotOk, pathIfOk) => {
     navigate(pathIfOk);
   }
 };
+
+const apiKey = "AIzaSyBH5ccwom9VK1HcDBWucl6t5h4B0AS5yDw";
 
 export { validSessionGuard, apiKey };
