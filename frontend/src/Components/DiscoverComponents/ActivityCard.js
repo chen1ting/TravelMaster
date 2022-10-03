@@ -17,7 +17,7 @@ const ActivityCard = (activityID, title, rating, paidActivity, activityCategory,
             >
                 <Link
                     onClick={() => {
-                        navigate("frontend/src/Pages/ActivityDescription"); // Change this
+                        navigate('/activitydescription'); // Change this
                     }}
                 >{title}</Link>
             </Box>
@@ -40,7 +40,7 @@ const ActivityCard = (activityID, title, rating, paidActivity, activityCategory,
                 <Box as='span' ml='2' color='gray.600' fontSize='sm' href="reviews">
                     <Link
                         onClick={() => {
-                            navigate("frontend/src/Pages/Reviews"); // Change this
+                            navigate('/reviews'); // Change this
                         }}
                     >Activity Reviews</Link>
                 </Box>
