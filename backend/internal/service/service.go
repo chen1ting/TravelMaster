@@ -6,7 +6,6 @@ import (
 	"github.com/chen1ting/TravelMaster/internal/models"
 	"github.com/chen1ting/TravelMaster/internal/server"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type ServiceInf interface {
@@ -199,6 +198,25 @@ func (s *Service) UpdateAvatar(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, createActivityResp)
+}
+
+func (s *Service) AddReview(c *gin.Context) {
+	addReviewReq := &models.AddReviewReq{}
+	if err := c.ShouldBindJSON(addReviewReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	addReviewResp, err := s.server.AddReview(c, addReviewReq)
+	if err != nil {
+		if err == server.ErrUserAlreadyCreatedReview {
+			c.JSON(http.StatusMethodNotAllowed, err)
+			return
+		}
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, addReviewResp)
 }
 
 func (s *Service) CreateActivity(c *gin.Context) {

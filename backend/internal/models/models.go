@@ -1,7 +1,6 @@
 package models
 
 import (
-	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 	"mime/multipart"
 	"time"
 )
@@ -183,8 +182,46 @@ type GetActivityReq struct {
 }
 
 type GetActivityResp struct {
-	Activity    gormModel.Activity `json:"activity"`
-	RetrievedAt time.Time          `json:"retrieved_at"`
+	ActivityId  int64    `json:"activity_id"`
+	Title       string   `json:"title"`
+	Rating      float32  `json:"rating_score"`
+	Paid        bool     `json:"paid"`
+	Category    []string `json:"category"`
+	Description string   `json:"description"`
+	Longitude   float32  `json:"longitude"`
+	Latitude    float32  `json:"latitude"`
+	ImageNames  []string `json:"image_names"`
+
+	// fields for opening & closing hours
+	MonOpeningTime  int `json:"mon_opening_time"`
+	MonClosingTime  int `json:"mon_closing_time"`
+	TueOpeningTime  int `json:"tue_opening_time"`
+	TueClosingTime  int `json:"tue_closing_time"`
+	WedOpeningTime  int `json:"wed_opening_time"`
+	WedClosingTime  int `json:"wed_closing_time"`
+	ThurOpeningTime int `json:"thur_opening_time"`
+	ThurClosingTime int `json:"thur_closing_time"`
+	FriOpeningTime  int `json:"fri_opening_time"`
+	FriClosingTime  int `json:"fri_closing_time"`
+	SatOpeningTime  int `json:"sat_opening_time"`
+	SatClosingTime  int `json:"sat_closing_time"`
+	SunOpeningTime  int `json:"sun_opening_time"`
+	SunClosingTime  int `json:"sun_closing_time"`
+
+	InactiveCount int        `json:"inactive_count"`
+	InactiveFlag  bool       `json:"inactive_flag"`
+	ReviewCounts  int        `json:"review_counts"`
+	ReviewsList   []*Reviews `json:"review_list"`
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
+type Reviews struct {
+	Id          int64   `json:"id"`
+	UserId      int64   `json:"user_id"`
+	ActivityId  int64   `json:"activity_id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Rating      float32 `json:"rating"`
 }
 
 type SearchActivityReq struct {
@@ -237,7 +274,9 @@ type UpdateActivityResp struct {
 }
 
 type InactivateActivityReq struct {
-	ActivityId int `json:"activity_id"`
+	ActivityId int64  `json:"activity_id"`
+	UserId     int64  `json:"user_id"`
+	Reason     string `json:"reason"`
 }
 
 type InactivateActivityResp struct {
@@ -305,4 +344,12 @@ type GetItinerariesRequest struct {
 
 type GetItinerariesResponse struct {
 	Itineraries []*Itinerary `json:"itineraries"`
+}
+
+type AddReviewReq struct {
+	SessionToken string  `json:"session_token"`
+	ActivityId   int64   `json:"activity_id"`
+	Title        string  `json:"title"`
+	Description  string  `json:"description"`
+	Rating       float32 `json:"rating"`
 }
