@@ -241,7 +241,9 @@ type UpdateActivityResp struct {
 }
 
 type InactivateActivityReq struct {
-	ActivityId int `json:"activity_id"`
+	ActivityId int64  `json:"activity_id"`
+	UserId     int64  `json:"user_id"`
+	Reason     string `json:"reason"`
 }
 
 type InactivateActivityResp struct {

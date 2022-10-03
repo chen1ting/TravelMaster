@@ -39,7 +39,7 @@ var (
 	ErrInvalidCreateUser        = errors.New("user id doesn't exists")
 	ErrInvalidUpdateUser        = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail             = errors.New("searchName failed")
-	ErrParsingResultFail        = errors.New("cannot parse result")
+	ErrAlreadyReported          = errors.New("user has already reported the activity")
 	ErrUnknownFileType          = errors.New("unknown file type uploaded")
 	ErrImageNoMatch             = errors.New("image not found in the list of the activity")
 	ErrImageNotFound            = errors.New("image not found on server, removed file name in the database")
@@ -997,6 +997,15 @@ func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*mod
 	// if activity cannot be found by given ID, return error
 	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
 		return nil, ErrInvalidActivityID
+	}
+
+	reportHistory := &gormModel.ReportHistory{
+		UserId:     req.UserId,
+		ActivityId: req.ActivityId,
+		Reason:     req.Reason,
+	}
+	if result := s.Database.Create(&reportHistory); result.Error != nil {
+		return nil, ErrAlreadyReported
 	}
 
 	//TODO: put invalid threshold into global variable?
