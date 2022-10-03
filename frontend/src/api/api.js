@@ -49,7 +49,7 @@ const sendCreateActivityReq = async (
   const days = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
   for (let i = 0; i < days.length; i++) {
     formData.append(`${days[i]}_opening_time`, hours[i]);
-    formData.append(`${days[i]}_closing_time`, hours[i] + 7);
+    formData.append(`${days[i]}_closing_time`, hours[i + 7]);
   }
 
   const rawResponse = await fetch(ENDPOINT + "/create-activity", {

@@ -17,11 +17,18 @@ import {
   Avatar,
   Input,
   Button,
+  Divider,
 } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getActivityById, addReview, fetchUserInfo } from "../api/api";
 import StarRatings from "react-star-ratings";
+import {
+  withScriptjs,
+  withGoogleMap,
+  GoogleMap,
+  Marker,
+} from "react-google-maps";
 
 const Activity = () => {
   const { id } = useParams();
@@ -30,9 +37,31 @@ const Activity = () => {
   const [isError, setIsError] = useState(false);
   const [act, setActivity] = useState(null);
 
+  const [clicks, setClicks] = React.useState([]);
+  const [zoom, setZoom] = React.useState(3); // initial zoom
+  const [center, setCenter] = React.useState({
+    lat: 0,
+    lng: 0,
+  });
+  const onIdle = (m) => {
+    console.log("onIdle");
+    setZoom(m.getZoom());
+    setCenter(m.getCenter().toJSON());
+  };
+
+  const onClick = (e) => {
+    // avoid directly mutating state
+    console.log(e.latLng);
+    setClicks([...clicks, e.latLng]);
+  };
+
   useEffect(() => {
     getActivityById(id, setActivity, setIsLoading);
   }, []);
+
+  const render = (status) => {
+    return <h1>{status}</h1>;
+  };
 
   const daysList = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
 
@@ -49,7 +78,7 @@ const Activity = () => {
             py="10"
             columnGap="10%"
           >
-            <Box>
+            <Box py="8">
               <Image
                 w="600px"
                 h="350px"
@@ -86,7 +115,7 @@ const Activity = () => {
                   name="rating"
                   starSpacing="3px"
                 />
-                <Text mt="1px">({act.rating_score})</Text>
+                <Text mt="2px">{act.review_counts} review(s)</Text>
               </Box>
             </Box>
             <Box>
@@ -130,6 +159,21 @@ const Activity = () => {
             </Box>
           </Box>
 
+          <Box display="flex" justifyContent="center" my="12">
+            <MyMapComponent
+              isMarkerShown
+              // TODO: api key is hardcoded here, take note
+              googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH5ccwom9VK1HcDBWucl6t5h4B0AS5yDw&v=3.exp&libraries=geometry,drawing,places"
+              loadingElement={<div style={{ height: `100%` }} />}
+              containerElement={
+                <div style={{ height: `500px`, width: "700px" }} />
+              }
+              mapElement={<div style={{ height: `100%` }} />}
+              latLng={{ lat: act.latitude, lng: act.longitude }}
+            />
+          </Box>
+
+          <Divider mt="12" mb="16" />
           <Reviews
             reviews={act.review_list}
             aid={act.activity_id}
@@ -250,7 +294,7 @@ const Reviews = ({ reviews, aid, setActivity }) => {
         </Box>
       </Box>
       {reviews.length === 0 ? (
-        <Box>
+        <Box my="6">
           <Heading>No reviews posted yet. Be the first!</Heading>
         </Box>
       ) : (
@@ -306,5 +350,13 @@ const ReviewCard = ({ rev }) => {
     </Box>
   );
 };
+
+const MyMapComponent = withScriptjs(
+  withGoogleMap((props) => (
+    <GoogleMap defaultZoom={8} defaultCenter={props.latLng}>
+      {props.isMarkerShown && <Marker position={props.latLng} />}
+    </GoogleMap>
+  ))
+);
 
 export default Activity;

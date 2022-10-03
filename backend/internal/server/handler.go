@@ -956,6 +956,7 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 			ok := true
 			for _, time := range req.Times {
 				if !(time.StartTimeOffset >= int(act.OpeningTimes[time.Day]) && time.EndTimeOffset <= int(act.OpeningTimes[time.Day+7])) {
+					fmt.Println("not ok: ", time.StartTimeOffset, int(act.OpeningTimes[time.Day]), time.EndTimeOffset, int(act.OpeningTimes[time.Day+7]))
 					ok = false
 					break
 				}
