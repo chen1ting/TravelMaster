@@ -295,19 +295,49 @@ func (s *Service) SearchActivity(c *gin.Context) {
 	c.JSON(http.StatusOK, searchActivityResp)
 }
 
-func (s *Service) ReportInactiveActivity(c *gin.Context) {
-	inactivateActivityReq := &models.InactivateActivityReq{}
-	if err := c.ShouldBindJSON(&inactivateActivityReq); err != nil {
+func (s *Service) IncrementInactiveCount(c *gin.Context) {
+	incrementInactiveCountReq := &models.IncrementInactiveCountReq{}
+	if err := c.ShouldBindJSON(&incrementInactiveCountReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	inactivateActivityResp, err := s.server.ReportInactiveActivity(inactivateActivityReq)
+	inactivateActivityResp, err := s.server.IncrementInactiveCount(incrementInactiveCountReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusAccepted, inactivateActivityResp)
+}
+
+func (s *Service) DecrementInactiveCount(c *gin.Context) {
+	decrementInactiveCountReq := &models.DecrementInactiveCountReq{}
+	if err := c.ShouldBindJSON(&decrementInactiveCountReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	inactivateActivityResp, err := s.server.DecrementInactiveCount(decrementInactiveCountReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, inactivateActivityResp)
+}
+
+func (s *Service) HasUserReported(c *gin.Context) {
+	hasUserInactivatedReq := &models.HasUserInactivatedReq{}
+	if err := c.ShouldBindJSON(&hasUserInactivatedReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	hasUserInactivatedResp, err := s.server.CheckInactiveFlag(hasUserInactivatedReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, hasUserInactivatedResp)
 }
 
 func (s *Service) DeleteActivityImage(c *gin.Context) {
