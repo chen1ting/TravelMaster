@@ -23,6 +23,46 @@ const sendSignupReq = async (user, pass, email, pic) => {
   return content;
 };
 
+const sendCreateActivityReq = async (
+  uid,
+  title,
+  isPaid,
+  cats,
+  desc,
+  pic,
+  hours
+) => {
+  const formData = new FormData();
+  formData.append("user_id", uid);
+  formData.append("title", title);
+  formData.append("rating_score", 0);
+  formData.append("paid", isPaid);
+  formData.append("category", cats);
+  formData.append("description", desc);
+  formData.append("longitude", 100); // TODO
+  formData.append("latitude", 100);
+  formData.append("image", pic);
+
+  const days = ["sun", "mon", "tue", "wed", "thur", "fri"];
+  for (let i = 0; i < days.length; i++) {
+    formData.append(`${days[i]}_opening_time`, hours[i]);
+    formData.append(`${days[i]}_closing_time`, hours[i] + 7);
+  }
+
+  const rawResponse = await fetch(ENDPOINT + "/create-activity", {
+    method: "POST",
+    // headers: { "Content-Type": "multipart/form-data" },
+    body: formData,
+  });
+
+  if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+  const content = await rawResponse.json();
+  return content;
+};
+
 const sendLogoutReq = async (session_token) => {
   const rawResponse = await fetch(ENDPOINT + "/logout", {
     method: "POST",
@@ -322,4 +362,5 @@ export {
   saveItineraryChanges,
   sendLogoutReq,
   getItisByUser,
+  sendCreateActivityReq,
 };
