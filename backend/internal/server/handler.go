@@ -1120,8 +1120,12 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 	}
 	activity.ReviewCounts--
 	activity.AverageRating = newAvg
-	if req.Delete {
-		s.Database.Delete(&review)
+	if req.Delete == true {
+		err := s.Database.Model(&activity).Association("Reviews").Delete(&review)
+		if err != nil {
+			return nil, ErrDatabase
+		}
+		s.Database.Unscoped().Delete(&review)
 	} else {
 		newAvg = (float32(activity.ReviewCounts)*activity.AverageRating + req.NewRating) / float32(activity.ReviewCounts+1)
 		activity.ReviewCounts++
