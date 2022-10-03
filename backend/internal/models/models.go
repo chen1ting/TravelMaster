@@ -1,9 +1,10 @@
 package models
 
 import (
-	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 	"mime/multipart"
 	"time"
+
+	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 )
 
 type LoginReq struct {
@@ -194,26 +195,25 @@ type GetActivityResp struct {
 	ImageNames  []string `json:"image_names"`
 
 	// fields for opening & closing hours
-	MonOpeningTime  int `json:"mon_opening_time"`
-	MonClosingTime  int `json:"mon_closing_time"`
-	TueOpeningTime  int `json:"tue_opening_time"`
-	TueClosingTime  int `json:"tue_closing_time"`
-	WedOpeningTime  int `json:"wed_opening_time"`
-	WedClosingTime  int `json:"wed_closing_time"`
-	ThurOpeningTime int `json:"thur_opening_time"`
-	ThurClosingTime int `json:"thur_closing_time"`
-	FriOpeningTime  int `json:"fri_opening_time"`
-	FriClosingTime  int `json:"fri_closing_time"`
-	SatOpeningTime  int `json:"sat_opening_time"`
-	SatClosingTime  int `json:"sat_closing_time"`
-	SunOpeningTime  int `json:"sun_opening_time"`
-	SunClosingTime  int `json:"sun_closing_time"`
-
-	InactiveCount int       `json:"inactive_count"`
-	InactiveFlag  bool      `json:"inactive_flag"`
-	ReviewCounts  int       `json:"review_counts"`
-	ReviewsList   []*Review `json:"review_list"`
-	CreatedAt     time.Time `json:"created_at"`
+	MonOpeningTime  int       `json:"mon_opening_time"`
+	MonClosingTime  int       `json:"mon_closing_time"`
+	TueOpeningTime  int       `json:"tue_opening_time"`
+	TueClosingTime  int       `json:"tue_closing_time"`
+	WedOpeningTime  int       `json:"wed_opening_time"`
+	WedClosingTime  int       `json:"wed_closing_time"`
+	ThurOpeningTime int       `json:"thur_opening_time"`
+	ThurClosingTime int       `json:"thur_closing_time"`
+	FriOpeningTime  int       `json:"fri_opening_time"`
+	FriClosingTime  int       `json:"fri_closing_time"`
+	SatOpeningTime  int       `json:"sat_opening_time"`
+	SatClosingTime  int       `json:"sat_closing_time"`
+	SunOpeningTime  int       `json:"sun_opening_time"`
+	SunClosingTime  int       `json:"sun_closing_time"`
+	InactiveCount   int       `json:"inactive_count"`
+	InactiveFlag    bool      `json:"inactive_flag"`
+	ReviewCounts    int       `json:"review_counts"`
+	ReviewsList     []*Review `json:"review_list"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 type Review struct {
@@ -336,7 +336,7 @@ type UpdateReviewReq struct {
 	Delete      bool    `json:"delete"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
-	NewRating   float32 `json:"new_rating" binding:"required"`
+	NewRating   float32 `json:"new_rating"`
 }
 
 type SaveItineraryRequest struct {

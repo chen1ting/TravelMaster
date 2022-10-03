@@ -18,10 +18,25 @@ import {
   Input,
   Button,
   Divider,
+  IconButton,
 } from "@chakra-ui/react";
+import {
+  CheckIcon,
+  CloseIcon,
+  DeleteIcon,
+  EditIcon,
+  WarningIcon,
+} from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getActivityById, addReview, fetchUserInfo } from "../api/api";
+import {
+  getActivityById,
+  addReview,
+  fetchUserInfo,
+  sendUpdateReview,
+  getHasUserReported,
+  sendToggleReportReq,
+} from "../api/api";
 import StarRatings from "react-star-ratings";
 import {
   withScriptjs,
@@ -50,19 +65,18 @@ const Activity = () => {
     setCenter(m.getCenter().toJSON());
   };
 
-  const onClick = (e) => {
-    // avoid directly mutating state
-    console.log(e.latLng);
-    setClicks([...clicks, e.latLng]);
+  const [reported, setReported] = useState(false);
+
+  const toggleReportInactive = async () => {
+    setReported((prev) => !prev);
+    sendToggleReportReq(id, uid, "", reported);
   };
 
+  const uid = window.sessionStorage.getItem("uid");
   useEffect(() => {
     getActivityById(id, setActivity, setIsLoading);
+    getHasUserReported(id, uid, setReported);
   }, []);
-
-  const render = (status) => {
-    return <h1>{status}</h1>;
-  };
 
   const daysList = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
 
@@ -77,11 +91,11 @@ const Activity = () => {
             justifyContent="center"
             mt="12"
             py="10"
-            columnGap="10%"
+            columnGap="32"
           >
             <Box py="8">
               <Image
-                w="600px"
+                maxW="400px"
                 h="350px"
                 src={`http://localhost:8080/activity-images/${act.image_names[0]}`}
                 alt={act.title}
@@ -118,8 +132,16 @@ const Activity = () => {
                 />
                 <Text mt="2px">{act.review_counts} review(s)</Text>
               </Box>
+              <Button
+                mt="8"
+                leftIcon={<WarningIcon />}
+                colorScheme={reported ? "teal" : "red"}
+                onClick={toggleReportInactive}
+              >
+                {reported ? "Remove inactive report" : "Report inactive"}
+              </Button>
             </Box>
-            <Box>
+            <Box maxW="700px">
               <Heading>{act.title}</Heading>
               <Text my="7">{act.description}</Text>
               <TableContainer>
@@ -300,7 +322,12 @@ const Reviews = ({ reviews, aid, setActivity }) => {
       ) : (
         <Box>
           {reviews.map((rev) => (
-            <ReviewCard key={rev.id} rev={rev} />
+            <ReviewCard
+              key={rev.id}
+              aid={aid}
+              rev={rev}
+              setActivity={setActivity}
+            />
           ))}
         </Box>
       )}
@@ -308,44 +335,179 @@ const Reviews = ({ reviews, aid, setActivity }) => {
   );
 };
 
-const ReviewCard = ({ rev }) => {
+const ReviewCard = ({ aid, rev, setActivity }) => {
   const [avatar, setAvatar] = useState("");
   const [username, setUsername] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editRating, setEditRating] = useState(0);
+  const [editDesc, setEditDesc] = useState("");
+  const [notifMsg, setNotifMsg] = useState("");
+  const [isError, setIsError] = useState(false);
+
+  const uid = window.sessionStorage.getItem("uid");
 
   useEffect(() => {
     fetchUserInfo(rev.user_id, setAvatar, setUsername);
   }, [rev.user_id]);
 
+  const updateReview = async (deleteFlag) => {
+    setEditMode(false);
+    await sendUpdateReview(
+      rev.id,
+      aid,
+      uid,
+      deleteFlag,
+      editTitle,
+      editDesc,
+      editRating,
+      setNotifMsg,
+      setIsError,
+      setActivity
+    );
+  };
+
   return (
-    <Box
-      display="flex"
-      justifyContent="flex-start"
-      alignItems="center"
-      columnGap="10"
-      borderTop="1px solid white"
-      my="4"
-      py="4"
-      borderBottom="1px solid white"
-    >
-      <Box pt="5">
-        <Avatar src={`http://localhost:8080/avatars/${avatar}`} />
-        <Text my="2">{username}</Text>
-      </Box>
-      <Box display="flex" flexDir="column" rowGap="2">
-        <Heading size="lg">{rev.title}</Heading>
-        <StarRatings
-          starHoverColor="#F6E05E"
-          starRatedColor="#F6E05E"
-          starDimension="18px"
-          rating={rev.rating}
-          numberOfStars={5}
-          name="rating"
-          isAggregateRating
-          starSpacing="2px"
-        />
-        <Text mt="4" w="500px">
-          {rev.description}
-        </Text>
+    <Box py="5">
+      {notifMsg && (
+        <Box
+          px="6"
+          py="2"
+          borderRadius="13px"
+          bgColor={isError ? "tomato" : "limegreen"}
+        >
+          <Text fontSize="xl">{notifMsg}</Text>
+        </Box>
+      )}
+      <Box
+        display="flex"
+        justifyContent="flex-start"
+        alignItems="center"
+        columnGap="10"
+        borderTop="1px solid white"
+        my="4"
+        py="4"
+        borderBottom="1px solid white"
+      >
+        <Box pt="5">
+          <Avatar src={`http://localhost:8080/avatars/${avatar}`} />
+          <Text my="2">{username}</Text>
+        </Box>
+        <Box display="flex" justifyContent="space-between" w="60vw">
+          <Box display="flex" flexDir="column" rowGap="2">
+            {editMode ? (
+              <Input
+                type="text"
+                size="lg"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            ) : (
+              <Heading size="lg">{rev.title}</Heading>
+            )}
+            {editMode ? (
+              <Box
+                display="flex"
+                justifyContent="flex-start"
+                alignItems="center"
+                columnGap="4"
+              >
+                <Text>Rating: </Text>
+                <StarRatings
+                  starHoverColor="#F6E05E"
+                  starRatedColor="#F6E05E"
+                  starDimension="18px"
+                  rating={editRating}
+                  numberOfStars={5}
+                  name="rating"
+                  isAggregateRating
+                  changeRating={(rating) => setEditRating(rating)}
+                  starSpacing="2px"
+                />
+              </Box>
+            ) : (
+              <StarRatings
+                starHoverColor="#F6E05E"
+                starRatedColor="#F6E05E"
+                starDimension="18px"
+                rating={rev.rating}
+                numberOfStars={5}
+                name="rating"
+                isAggregateRating
+                starSpacing="2px"
+              />
+            )}
+            {editMode ? (
+              <Textarea
+                w="500px"
+                h="200px"
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+              />
+            ) : (
+              <Text mt="4" w="500px">
+                {rev.description}
+              </Text>
+            )}
+          </Box>
+
+          <Box display="flex" justifyContent="center" alignItems="center">
+            {editMode ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                columnGap="5"
+                ml="7"
+              >
+                <Button
+                  colorScheme="green"
+                  leftIcon={<CheckIcon />}
+                  onClick={() => updateReview(false)}
+                >
+                  Save
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  leftIcon={<CloseIcon />}
+                  onClick={() => {
+                    setEditMode(false);
+                    setEditTitle("");
+                    setEditRating(0);
+                    setEditDesc("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            ) : (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                columnGap="5"
+              >
+                <IconButton
+                  colorScheme="teal"
+                  aria-label="edit review"
+                  icon={<EditIcon />}
+                  onClick={() => {
+                    setEditMode(true);
+                    setEditTitle(rev.title);
+                    setEditRating(rev.rating);
+                    setEditDesc(rev.description);
+                  }}
+                />
+                <IconButton
+                  colorScheme="red"
+                  aria-label="delete review"
+                  icon={<DeleteIcon />}
+                  onClick={() => updateReview(true)}
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

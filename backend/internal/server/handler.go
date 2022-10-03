@@ -762,9 +762,6 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, ErrActivityNotFound
 	}
-	if result.RowsAffected == 0 {
-		return nil, ErrActivityNotFound
-	}
 
 	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
 	activity.ReviewCounts++
@@ -772,33 +769,6 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 	if res := s.Database.Save(&activity); res.Error != nil {
 		return nil, ErrDatabase
 	}
-
-	/*
-
-		var reviews []gormModel.Review
-		var ids []int64
-		for _, id := range activity.ReviewIds {
-			ids = append(ids, id)
-		}
-		if len(activity.ReviewIds) > 0 {
-			if res := s.Database.Where("id IN ?", ids).Find(&reviews); res.Error != nil {
-				return nil, ErrDatabase
-			}
-		}
-
-		parsedReview := make([]*models.Reviews, 0)
-
-		for _, review := range reviews {
-			parsedReview = append(parsedReview, &models.Reviews{
-				Id:          review.ID,
-				UserId:      review.UserId,
-				ActivityId:  review.ActivityId,
-				Title:       review.Title,
-				Description: review.Description,
-				Rating:      review.Rating,
-			})
-		}
-	*/
 
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
@@ -1139,10 +1109,6 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		return nil, ErrBadRequest
 	}
 
-	if req.Title == "" || req.NewRating < 0 {
-		return nil, ErrNullReview
-	}
-
 	var review gormModel.Review
 	// find review in the database by review id
 	if result := s.Database.Where("id=? AND user_id=? AND activity_id=?", req.ReviewId, req.UserId, req.ActivityId).Find(&review); result.RowsAffected == 0 {
@@ -1174,24 +1140,25 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		newAvg = (float32(activity.ReviewCounts)*activity.AverageRating + req.NewRating) / float32(activity.ReviewCounts+1)
 		activity.ReviewCounts++
 		activity.AverageRating = newAvg
-		// save changes to activity table
-		if res := s.Database.Save(&activity); res.Error != nil {
+		review.Title = req.Title
+		review.Description = req.Description
+		review.Rating = req.NewRating
+		if result := s.Database.Save(&review); result.Error != nil {
+			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
 			return nil, ErrDatabase
 		}
-		review.Title = req.Title
-		review.Rating = req.NewRating
-		review.Description = req.Description
 	}
 
-	if result := s.Database.Save(&review); result.Error != nil {
-		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("save activity err: ", result.Error) // TODO: write to log instead
 		return nil, ErrDatabase
 	}
 
+	// if activity cannot be found by given ID, return error
 	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil || result.RowsAffected == 0 {
 		return nil, ErrActivityNotFound
 	}
-	
+
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
