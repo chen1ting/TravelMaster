@@ -35,12 +35,7 @@ const ActivityDescription = () =>{
                 <ActivityCard />
             </GridItem>
             <GridItem colSpan={5} bg='lightcyan' justify = 'center' alignContent='center'>
-            <h1>
-                <font size={6}>
-                    Activity Description
-                    {ActivityCard.title}
-                </font>
-            </h1>
+                Activity Description
             </GridItem>
             <GridItem colSpan={7} bg='azure'>
                 View Activities Similar to this
