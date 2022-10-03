@@ -1,6 +1,7 @@
 package models
 
 import (
+	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 	"mime/multipart"
 	"time"
 )
@@ -208,20 +209,11 @@ type GetActivityResp struct {
 	SunOpeningTime  int `json:"sun_opening_time"`
 	SunClosingTime  int `json:"sun_closing_time"`
 
-	InactiveCount int        `json:"inactive_count"`
-	InactiveFlag  bool       `json:"inactive_flag"`
-	ReviewCounts  int        `json:"review_counts"`
-	ReviewsList   []*Reviews `json:"review_list"`
-	CreatedAt     time.Time  `json:"created_at"`
-}
-
-type Reviews struct {
-	Id          int64   `json:"id"`
-	UserId      int64   `json:"user_id"`
-	ActivityId  int64   `json:"activity_id"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Rating      float32 `json:"rating"`
+	InactiveCount int                `json:"inactive_count"`
+	InactiveFlag  bool               `json:"inactive_flag"`
+	ReviewCounts  int                `json:"review_counts"`
+	ReviewsList   []gormModel.Review `json:"review_list"`
+	CreatedAt     time.Time          `json:"created_at"`
 }
 
 type SearchActivityReq struct {
@@ -297,34 +289,29 @@ type DeleteActivityImageResp struct {
 	DeletedAt  time.Time `json:"deleted_at"`
 }
 
-type CreateReviewReq struct {
-	ActivityId int64   `json:"activity_id"`
-	UserId     int64   `json:"user_id"`
-	Rating     float32 `json:"rating"`
-	Review     string  `json:"review"`
-}
+/*
+	type CreateReviewReq struct {
+		ActivityId int64   `json:"activity_id"`
+		UserId     int64   `json:"user_id"`
+		Rating     float32 `json:"rating"`
+		Review     string  `json:"review"`
+	}
 
-type CreateReviewResp struct {
-	ReviewId      int64     `json:"review_id"`
-	CreatedAt     time.Time `json:"created_at"`
-	ReviewCounts  int       `json:"review_counts"`
-	AverageRating float32   `json:"average_rating"`
-}
-
+	type CreateReviewResp struct {
+		ReviewId      int64     `json:"review_id"`
+		CreatedAt     time.Time `json:"created_at"`
+		ReviewCounts  int       `json:"review_counts"`
+		AverageRating float32   `json:"average_rating"`
+	}
+*/
 type UpdateReviewReq struct {
-	ReviewId   int64   `json:"review_id"`
-	ActivityId int64   `json:"activity_id"`
-	UserId     int64   `json:"user_id"`
-	Delete     bool    `json:"delete"`
-	Review     string  `json:"review"`
-	Rating     float32 `json:"rating"`
-}
-
-type UpdateReviewResp struct {
-	ReviewId      int64     `json:"review_id"`
-	UpdatedAt     time.Time `json:"Updated_at"`
-	ReviewCounts  int       `json:"activity_review_counts"`
-	AverageRating float32   `json:"activity_average_rating"`
+	ReviewId    int64   `json:"review_id"`
+	ActivityId  int64   `json:"activity_id"`
+	UserId      int64   `json:"user_id"`
+	Delete      bool    `json:"delete"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	NewRating   float32 `json:"new_rating" binding:"required"`
 }
 
 type SaveItineraryRequest struct {
@@ -351,5 +338,5 @@ type AddReviewReq struct {
 	ActivityId   int64   `json:"activity_id"`
 	Title        string  `json:"title"`
 	Description  string  `json:"description"`
-	Rating       float32 `json:"rating"`
+	Rating       float32 `json:"rating"  binding:"required"`
 }

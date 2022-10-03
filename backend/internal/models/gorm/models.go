@@ -26,9 +26,9 @@ type Activity struct {
 	ID            int64          `gorm:"primaryKey;column:id"`
 	UserID        int64          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:user_id"`
 	Title         string         `gorm:"unique;not null;type:varchar(100);default:null;column:title"`
-	AuthorRating  float32        `gorm:"column:author_rating"`
-	AverageRating float32        `gorm:"column:average_rating"`
-	Paid          bool           `gorm:"column:paid"`
+	AuthorRating  float32        `gorm:"column:author_rating; default:0.0"`
+	AverageRating float32        `gorm:"column:average_rating; default:0.0"`
+	Paid          bool           `gorm:"column:paid; default:false"`
 	Category      pq.StringArray `gorm:"type:text[];column:category"`
 	Description   string         `gorm:"column:description"`
 	Longitude     float32        `gorm:"gorm:longitude; default:-180.1"`

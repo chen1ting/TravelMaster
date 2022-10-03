@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/chen1ting/TravelMaster/internal/models"
@@ -209,10 +210,10 @@ func (s *Service) AddReview(c *gin.Context) {
 	addReviewResp, err := s.server.AddReview(c, addReviewReq)
 	if err != nil {
 		if err == server.ErrUserAlreadyCreatedReview {
-			c.JSON(http.StatusMethodNotAllowed, err)
+			c.JSON(http.StatusMethodNotAllowed, err.Error())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -310,6 +311,7 @@ func (s *Service) DeleteActivityImage(c *gin.Context) {
 	c.JSON(http.StatusAccepted, deleteActivityImageResp)
 }
 
+/*
 func (s *Service) CreateReview(c *gin.Context) {
 	createReviewReq := &models.CreateReviewReq{}
 	if err := c.ShouldBindJSON(&createReviewReq); err != nil {
@@ -323,7 +325,7 @@ func (s *Service) CreateReview(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, createReviewResp)
-}
+}*/
 
 func (s *Service) UpdateReview(c *gin.Context) {
 	updateReviewReq := &models.UpdateReviewReq{}
@@ -331,11 +333,12 @@ func (s *Service) UpdateReview(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	updateReviewResp, err := s.server.UpdateReview(updateReviewReq)
+	getActivityResp, err := s.server.UpdateReview(updateReviewReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Println(getActivityResp)
 
-	c.JSON(http.StatusAccepted, updateReviewResp)
+	c.JSON(http.StatusAccepted, getActivityResp)
 }

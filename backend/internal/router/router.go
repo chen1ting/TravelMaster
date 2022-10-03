@@ -24,6 +24,7 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/get-itineraries", service.GetItineraries)
 	r.POST("/create-activity", service.CreateActivity)
 	r.POST("/add-review", service.AddReview)
+	r.POST("/update-review", service.UpdateReview)
 	r.POST("/get-activity", service.GetActivity)
 	r.POST("/search-activity", service.SearchActivity)
 	r.POST("/update-activity", service.UpdateActivity)
@@ -31,7 +32,6 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.Use(static.Serve("/activity-images", static.LocalFile("./assets/activity_images", true)))
 	r.Use(static.Serve("/avatars", static.LocalFile("./assets/avatars", true)))
 	r.DELETE("/delete-activity-image", service.DeleteActivityImage)
-	r.POST("/create-review", service.CreateReview)
-	r.POST("/update-review", service.UpdateReview)
+	//r.POST("/create-review", service.CreateReview)
 
 }
