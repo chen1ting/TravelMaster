@@ -336,13 +336,13 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
     fetchUserInfo(rev.user_id, setAvatar, setUsername);
   }, [rev.user_id]);
 
-  const updateReview = async () => {
+  const updateReview = async (deleteFlag) => {
     setEditMode(false);
     await sendUpdateReview(
       rev.id,
       aid,
       uid,
-      false,
+      deleteFlag,
       editTitle,
       editDesc,
       editRating,
@@ -447,7 +447,7 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
                 <Button
                   colorScheme="green"
                   leftIcon={<CheckIcon />}
-                  onClick={updateReview}
+                  onClick={() => updateReview(false)}
                 >
                   Save
                 </Button>
@@ -486,6 +486,7 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
                   colorScheme="red"
                   aria-label="delete review"
                   icon={<DeleteIcon />}
+                  onClick={() => updateReview(true)}
                 />
               </Box>
             )}

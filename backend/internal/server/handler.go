@@ -1100,10 +1100,6 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		return nil, ErrBadRequest
 	}
 
-	if req.Title == "" || req.NewRating < 0 {
-		return nil, ErrNullReview
-	}
-
 	var review gormModel.Review
 	// find review in the database by review id
 	if result := s.Database.Where("id=? AND user_id=? AND activity_id=?", req.ReviewId, req.UserId, req.ActivityId).Find(&review); result.RowsAffected == 0 {

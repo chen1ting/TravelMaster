@@ -321,7 +321,7 @@ type UpdateReviewReq struct {
 	Delete      bool    `json:"delete"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
-	NewRating   float32 `json:"new_rating" binding:"required"`
+	NewRating   float32 `json:"new_rating"`
 }
 
 type SaveItineraryRequest struct {
