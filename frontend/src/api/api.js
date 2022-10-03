@@ -37,13 +37,16 @@ const sendCreateActivityReq = async (
   formData.append("title", title);
   formData.append("rating_score", 0);
   formData.append("paid", isPaid);
-  formData.append("category", cats);
+  for (var it = cats.values(), val = null; (val = it.next().value); ) {
+    formData.append("category", val);
+  }
+
   formData.append("description", desc);
   formData.append("longitude", 100); // TODO
   formData.append("latitude", 100);
   formData.append("image", pic);
 
-  const days = ["sun", "mon", "tue", "wed", "thur", "fri"];
+  const days = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
   for (let i = 0; i < days.length; i++) {
     formData.append(`${days[i]}_opening_time`, hours[i]);
     formData.append(`${days[i]}_closing_time`, hours[i] + 7);
@@ -77,6 +80,26 @@ const sendLogoutReq = async (session_token) => {
     return null;
   }
   const content = await rawResponse.json();
+  return content;
+};
+
+const getActivityById = async (activityId, setActivity, setIsLoading) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-activity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      activity_id: parseInt(activityId),
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    setIsLoading(false);
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+  const content = await rawResponse.json();
+  setActivity(content);
+  setIsLoading(false);
   return content;
 };
 
@@ -352,6 +375,36 @@ const getItisByUser = async (session_token, setItis) => {
   setItis(content.itineraries);
 };
 
+const addReview = async (
+  session_token,
+  aid,
+  title,
+  desc,
+  stars,
+  setActivity
+) => {
+  const rawResponse = await fetch(ENDPOINT + "/add-review", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+      activity_id: aid,
+      title: title,
+      description: desc,
+      rating: stars,
+    }),
+  });
+
+  if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return rawResponse.status;
+  }
+
+  const content = await rawResponse.json();
+  setActivity(content);
+  return 201;
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -363,4 +416,6 @@ export {
   sendLogoutReq,
   getItisByUser,
   sendCreateActivityReq,
+  getActivityById,
+  addReview,
 };

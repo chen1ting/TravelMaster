@@ -32,20 +32,29 @@ type Activity struct {
 	OpeningTimes  pq.Int32Array  `gorm:"type:int[];column:opening_times"`
 
 	// System fields
-	InactiveCount int    `gorm:"column:inactive_count"`
-	InactiveFlag  bool   `gorm:"column:inactive_flag"`
-	ReviewCounts  int    `gorm:"column:review_counts"`
-	ReviewIds     string `gorm:"column:review_ids"`
+	InactiveCount int           `gorm:"column:inactive_count"`
+	InactiveFlag  bool          `gorm:"column:inactive_flag"`
+	ReviewCounts  int           `gorm:"column:review_counts"`
+	ReviewIds     pq.Int64Array `gorm:"type:int[];column:review_ids"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
 
 type Itinerary struct {
 	ID               int64          `gorm:"primaryKey;column:id"`
-	Name             string         `goorm:"column:name"`
-	OwnedByUserId    int64          `goorm:"column:owned_by_user_id"` // TODO: Foreign key to User id
-	Segments         datatypes.JSON `goorm:"type:jsonb;column:segments"`
-	StartTime        int64          `goorm:"column:start_time"`
-	EndTime          int64          `goorm:"column:end_time"`
-	NumberOfSegments int            `goorm:"column:num_of_segments"`
+	Name             string         `gorm:"column:name"`
+	OwnedByUserId    int64          `gorm:"column:owned_by_user_id"` // TODO: Foreign key to User id
+	Segments         datatypes.JSON `gorm:"type:jsonb;column:segments"`
+	StartTime        int64          `gorm:"column:start_time"`
+	EndTime          int64          `gorm:"column:end_time"`
+	NumberOfSegments int            `gorm:"column:num_of_segments"`
+}
+
+type Review struct {
+	ID          int64   `gorm:"primaryKey;column:id"`
+	Title       string  `gorm:"column:title"`
+	Description string  `gorm:"column:description"`
+	UserId      int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to User id
+	ActivityId  int64   `gorm:"uniqueIndex:unique_review"` // TODO: Foreign key to Activity id
+	Rating      float32 `gorm:"column:rating"`
 }

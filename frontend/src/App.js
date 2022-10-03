@@ -14,11 +14,10 @@ import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from "./Pages/ActivityDescription";
+
 import Profile from "./Pages/Profile";
 
-
-import CreateActivity from './Pages/CreateActivity';
-
+import CreateActivity from "./Pages/CreateActivity";
 
 import CreateItinerary from "./Pages/CreateItinerary";
 
@@ -27,6 +26,8 @@ import CreateReviews from "./Pages/CreateReviews";
 import Itineraries from "./Components/ProfileSubPages/Itineraries";
 import Bookings from "./Components/ProfileSubPages/Bookings";
 import Itinerary from "./Components/Itinerary";
+
+import Activity from "./Components/Activity";
 
 function App() {
   const [imageUrl, setImageUrl] = useState("");
@@ -42,10 +43,11 @@ function App() {
           <Route path="welcome" element={<Welcome />} />
           <Route path="activitydescription" element={<ActivityDescription />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="createactivity" element={<CreateActivity/>}/>
+          {/* <Route path="createactivity" element={<CreateActivity/>}/> */}
           <Route path="itineraries" element={<Itineraries />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="edit-itinerary/:id" element={<Itinerary />} />
+          <Route path="activity/:id" element={<Activity />} />
           <Route path="" element={<SignIn setImageUrl={setImageUrl} />} />
           <Route path="createitinerary" element={<CreateItinerary />} />
 
@@ -54,7 +56,6 @@ function App() {
       </Router>
     </ChakraProvider>
   );
-
 }
 
 export default App;
