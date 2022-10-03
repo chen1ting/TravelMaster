@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import {useNavigate} from "react-router-dom";
 import TMLogo from '../Components/TMLogo.png';
+import { sendLogoutReq } from "../api/api";
 
 const paddingSpace = "20px";
 
