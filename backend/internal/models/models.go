@@ -340,3 +340,12 @@ type AddReviewReq struct {
 	Description  string  `json:"description"`
 	Rating       float32 `json:"rating"  binding:"required"`
 }
+
+type GetUserInfoReq struct {
+	UserId int64 `json:"user_id"`
+}
+
+type GetUserInfoResp struct {
+	Username  string `json:"username"`
+	AvatarUrl string `json:"avatar_url"`
+}

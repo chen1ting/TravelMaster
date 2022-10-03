@@ -219,6 +219,21 @@ func (s *Service) AddReview(c *gin.Context) {
 	c.JSON(http.StatusCreated, addReviewResp)
 }
 
+func (s *Service) GetUserInfo(c *gin.Context) {
+	req := &models.GetUserInfoReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resp, err := s.server.GetUserInfo(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func (s *Service) CreateActivity(c *gin.Context) {
 	createActivityForm := &models.CreateActivityForm{}
 	if err := c.ShouldBind(&createActivityForm); err != nil {
