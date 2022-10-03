@@ -38,6 +38,7 @@ import {
   Td,
   TableCaption,
   TableContainer,
+  Textarea,
 } from "@chakra-ui/react";
 import StarRatings from "react-star-ratings";
 import { ArrowLeftIcon, ArrowRightIcon } from "@chakra-ui/icons";
@@ -79,14 +80,15 @@ const Discover = () => {
       {isLoading ? (
         <Text>Loading...</Text>
       ) : (
-        <Box w="100%" mb="56">
+        <Box w="100%" mb="32" mt="3">
           <Box
-            py="7"
+            pt="7"
             display="flex"
             justifyContent="flex-start"
-            bgColor="blue.500"
+            ml="10%"
+            // bgColor="blue.50s0"
           >
-            <Box ml="16%">
+            <Box>
               <Heading size="3xl">Discover</Heading>
               <Text>Your next adventure is waiting for you.</Text>
             </Box>
@@ -187,6 +189,7 @@ const Discover = () => {
           >
             {activities.map((act) => (
               <Box
+                w="1200px"
                 display="flex"
                 justifyContent="center"
                 onClick={() => {
@@ -223,6 +226,8 @@ const Discover = () => {
                     rowGap="2"
                     ml="16"
                     minW="400px"
+                    maxW="300px"
+                    flexWrap="wrap"
                   >
                     <Heading mt="2" fontSize="25">
                       {act.name}
@@ -232,6 +237,8 @@ const Discover = () => {
                       display="flex"
                       alignItems="center"
                       columnGap="2"
+                      flexWrap="wrap"
+                      rowGap="2"
                     >
                       {act.categories.map((cat) => (
                         <Badge variant="outline" colorScheme="green">
@@ -329,7 +336,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
     } else {
       setNotifMsg("Succesfully created activity");
       setIsError(false);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate(`/activity/${data.activity_id}`);
     }
   };
@@ -349,7 +356,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
 
         <FormControl isRequired mt={4}>
           <FormLabel>Activity Description</FormLabel>
-          <Input
+          <Textarea
             placeholder="Enter a brief description of the activity"
             onChange={(e) => setDesc(e.target.value)}
           />
