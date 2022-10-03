@@ -30,7 +30,8 @@ const sendCreateActivityReq = async (
   cats,
   desc,
   pic,
-  hours
+  hours,
+  loc
 ) => {
   const formData = new FormData();
   formData.append("user_id", uid);
@@ -42,14 +43,14 @@ const sendCreateActivityReq = async (
   }
 
   formData.append("description", desc);
-  formData.append("longitude", 100); // TODO
-  formData.append("latitude", 100);
   formData.append("image", pic);
+  formData.append("longitude", parseFloat(loc.lng));
+  formData.append("latitude", parseFloat(loc.lat));
 
   const days = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
   for (let i = 0; i < days.length; i++) {
     formData.append(`${days[i]}_opening_time`, hours[i]);
-    formData.append(`${days[i]}_closing_time`, hours[i] + 7);
+    formData.append(`${days[i]}_closing_time`, hours[i + 7]);
   }
 
   const rawResponse = await fetch(ENDPOINT + "/create-activity", {
@@ -204,10 +205,11 @@ const getItinerary = async (
 
   const content = await rawResponse.json();
   const itinerary = content.itinerary;
-  if (itinerary.number_of_segments === 0) {
-    setNotifMsg("Failed to generate an itinerary :(");
-    return null;
-  }
+  // if (itinerary.number_of_segments === 0) {
+  //   setNotifMsg("Failed to generate an itinerary :(");
+  //   setIsLoading(false);
+  //   return null;
+  // }
   setItineraryResp(itinerary);
 
   // TODO: some heavylifting work here
@@ -271,7 +273,7 @@ const getItinerary = async (
       ++idx;
     }
   }
-  console.log(timeBins);
+
   setTimeBins(timeBins);
   setItineraryMap(itineraryMap);
   setTimeBinsCopy([...timeBins]);
@@ -405,6 +407,26 @@ const addReview = async (
   return 201;
 };
 
+const fetchUserInfo = async (uid, setAvatar, setUsername) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-user-info", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: uid,
+    }),
+  });
+
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return rawResponse.status;
+  }
+
+  const content = await rawResponse.json();
+  setAvatar(content.avatar_url);
+  setUsername(content.username);
+  return 200;
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -418,4 +440,5 @@ export {
   sendCreateActivityReq,
   getActivityById,
   addReview,
+  fetchUserInfo,
 };
