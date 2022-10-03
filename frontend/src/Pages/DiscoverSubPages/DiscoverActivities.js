@@ -48,6 +48,9 @@ const DiscoverActivities = () => {
 
 
                 <Center>
+
+
+
                     <Input
                         m={4}
                         w={'50%'}

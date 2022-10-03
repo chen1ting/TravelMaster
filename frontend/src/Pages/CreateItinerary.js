@@ -26,9 +26,9 @@ const fields_width = '52.5%';
 
 const CreateItinerary = () => {
     const [descriptionlocation, setDescriptionLocation] = useState('');
-    const [addressevent, setAddressEvent] = useState('');
-    const [descriptionevent, setDescriptionEvent] = useState('');
-    const [eventname, setEventName] = useState('');
+    const [addressactivity, setAddressActivity] = useState('');
+    const [descriptionactivity, setDescriptionActivity] = useState('');
+    const [activityname, setActivityname] = useState('');
     const [visitdatestart, setVisitDateStart] = useState('');
     const [visitdateend, setVisitDateEnd] = useState('');
     const navigate = useNavigate();
@@ -43,21 +43,21 @@ const CreateItinerary = () => {
         // and also password validation regex
         var bad =
             descriptionlocation === "" ||
-            addressevent === "" ||
-            descriptionevent === "" ||
-            eventname === "" ||
+            addressactivity === "" ||
+            descriptionactivity === "" ||
+            activityname === "" ||
             visitdatestart === "" ||
             visitdateend === "";
         setShowError(bad);
         if (bad) {
             if (descriptionlocation === "") {
                 setErrMsg("A valid description location is required.");
-            } else if (addressevent === "") {
-                setErrMsg("A valid event address is required.");
-            } else if (descriptionevent === "") {
-                setErrMsg("A valid event description is required.");
-            } else if (eventname === "") {
-                setErrMsg("A valid event name is required.");
+            } else if (addressactivity === "") {
+                setErrMsg("A valid activity address is required.");
+            } else if (descriptionactivity === "") {
+                setErrMsg("A valid activity description is required.");
+            } else if (activityname === "") {
+                setErrMsg("A valid activity name is required.");
             } else if (visitdatestart === "") {
                 setErrMsg("A valid start date is required.");
             } else {
@@ -67,7 +67,7 @@ const CreateItinerary = () => {
         }
         setErrMsg(""); // always clear after
 
-        const data = await sendCreateItineraryReq(descriptionlocation, addressevent, descriptionevent, eventname, visitdatestart, visitdateend);
+        const data = await sendCreateItineraryReq(descriptionlocation, addressactivity, descriptionactivity, activityname, visitdatestart, visitdateend);
         if (data == null) {
             setShowError(true);
             setErrMsg("Sorry, something went wrong on our side.");
@@ -172,8 +172,8 @@ const CreateItinerary = () => {
                         w={fields_width}
                         bgColor={'whitesmoke'}
                         type="text"
-                        placeholder="Name of Event"
-                        onChange={(e) => setEventName(e.target.value)}
+                        placeholder="Name of Activity"
+                        onChange={(e) => setActivityname(e.target.value)}
                     ></Input>
                     <Checkbox>Is it Free?</Checkbox>
                 </VStack>
@@ -206,18 +206,18 @@ const CreateItinerary = () => {
                                 ></Input>
                             </HStack>
                             <HStack spacing='86px'>
-                                <Text fontSize='xl'>Address of Event</Text>
+                                <Text fontSize='xl'>Address of Activity</Text>
                                 <Input
                                     m={4}
                                     w={"96"}
                                     bgColor={'whitesmoke'}
                                     type="text"
                                     placeholder=""
-                                    onChange={(e) => setAddressEvent(e.target.value)}
+                                    onChange={(e) => setAddressActivity(e.target.value)}
                                 ></Input>
                             </HStack>
                             <HStack spacing='54px'>
-                                <Text fontSize='xl'>Description of Event</Text>
+                                <Text fontSize='xl'>Description of Activity</Text>
                                 <Input
                                     m={4}
                                     w={"96"}
@@ -225,7 +225,7 @@ const CreateItinerary = () => {
                                     bgColor={'whitesmoke'}
                                     type="text"
                                     placeholder=""
-                                    onChange={(e) => setDescriptionEvent(e.target.value)}
+                                    onChange={(e) => setDescriptionActivity(e.target.value)}
                                 ></Input>
                             </HStack>
                         </Stack>
