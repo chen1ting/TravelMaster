@@ -16,10 +16,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v9"
-	"gorm.io/gorm"
-
 	"github.com/google/uuid"
 
 	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
@@ -207,7 +203,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 		return nil, err
 	}
 
-	// retrieve all activites
+	// retrieve all activities
 	var activities []gormModel.Activity
 	if err := s.Database.Find(&activities).Error; err != nil {
 		return nil, ErrDatabase
@@ -234,7 +230,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 				InactiveCount: act.InactiveCount,
 				InactiveFlag:  act.InactiveFlag,
 				ReviewCounts:  act.ReviewCounts,
-				ReviewIds:     act.ReviewIds,
+				Reviews:       act.Reviews,
 				CreatedAt:     act.CreatedAt,
 				UpdatedAt:     act.UpdatedAt,
 			})
@@ -274,7 +270,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			})
 			hr += h + 2 // 2h gap between every activity
 			x += int64((h + 2) * 60 * 60)
-		} else if hr >= 9 { // 10 PM or later, fast forward to 8 AM next day
+		} else if hr >= 9 { // 10 PM or later, fast-forward to 8 AM next day
 			ff := 7 - hr + 12
 			hr = 7
 			x += int64(ff * 60 * 60)
@@ -387,12 +383,12 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 	for _, act := range choices {
 		opening := int(act.OpeningTimes[day])
 		closing := int(act.OpeningTimes[day+7])
-		//fmt.Println("DEUBG choice: ", act, day, hr, used)
+		//fmt.Println("DEBUG choice: ", act, day, hr, used)
 		if hr < opening || hr > closing || used[act.ID] {
 			continue
 		}
 		actTime := min(2, closing-hr)
-		if actTime == 0 { // act time must at least an hr long
+		if actTime == 0 { // act time must at least an hour long
 			continue
 		}
 		imageUrl := ""
@@ -944,7 +940,7 @@ func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReview
 		ReviewId:      review.ID,
 		CreatedAt:     review.CreatedAt,
 		ReviewCounts:  activity.ReviewCounts,
-		AverageRating: activity.AvgReviewRating,
+		AverageRating: activity.AverageRating,
 	}, nil
 }
 
@@ -979,7 +975,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReview
 			ReviewId:      req.ReviewId,
 			UpdatedAt:     time.Now(),
 			ReviewCounts:  activity.ReviewCounts,
-			AverageRating: activity.AvgReviewRating,
+			AverageRating: activity.AverageRating,
 		}, nil
 	}
 
@@ -998,47 +994,11 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.UpdateReview
 		ReviewId:      review.ID,
 		UpdatedAt:     review.UpdatedAt,
 		ReviewCounts:  activity.ReviewCounts,
-		AverageRating: activity.AvgReviewRating,
+		AverageRating: activity.AverageRating,
 	}, nil
 }
 
 // ValidateFile onwards are utility functions
-
-func getValidTime(hhmm int) int {
-	hour := hhmm / 100
-	min := hhmm % 100
-	if 0 <= hour && hour < 24 && 0 <= min && min < 60 {
-		return hhmm
-	}
-	return -1
-}
-
-func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
-	var opening []int32
-	opening = append(opening,
-		int32(getValidTime(createForm.SunOpeningTime)), int32(getValidTime(createForm.SunClosingTime)),
-		int32(getValidTime(createForm.MonOpeningTime)), int32(getValidTime(createForm.MonClosingTime)),
-		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.TueClosingTime)),
-		int32(getValidTime(createForm.WedOpeningTime)), int32(getValidTime(createForm.WedClosingTime)),
-		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.ThurClosingTime)),
-		int32(getValidTime(createForm.FriOpeningTime)), int32(getValidTime(createForm.FriClosingTime)),
-		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SatClosingTime)))
-	return opening
-}
-
-// to use getDay function, use idx/2
-func packUpdateOpeningTimes(updateForm *models.UpdateActivityForm) []int32 {
-	var opening []int32
-	opening = append(opening,
-		int32(getValidTime(updateForm.SunOpeningTime)), int32(getValidTime(updateForm.SunClosingTime)),
-		int32(getValidTime(updateForm.MonOpeningTime)), int32(getValidTime(updateForm.MonClosingTime)),
-		int32(getValidTime(updateForm.TueOpeningTime)), int32(getValidTime(updateForm.TueClosingTime)),
-		int32(getValidTime(updateForm.WedOpeningTime)), int32(getValidTime(updateForm.WedClosingTime)),
-		int32(getValidTime(updateForm.ThurOpeningTime)), int32(getValidTime(updateForm.ThurClosingTime)),
-		int32(getValidTime(updateForm.FriOpeningTime)), int32(getValidTime(updateForm.FriClosingTime)),
-		int32(getValidTime(updateForm.SatOpeningTime)), int32(getValidTime(updateForm.SatClosingTime)))
-	return opening
-}
 
 func ValidateFile(fileHeader *multipart.FileHeader) (bool, error) {
 	// open the uploaded file
@@ -1132,7 +1092,7 @@ func SearchName(s []string, name string) int {
 	return i
 }
 
-// assuming image order doesn't matter
+// RemoveName of image by replacing the to be removed value with the last element. assuming image order doesn't matter
 func RemoveName(s []string, i int) []string {
 	if i > len(s) {
 		return s
@@ -1145,16 +1105,16 @@ func (s *Server) UpdateAverageReview(activity *gormModel.Activity, add bool, rat
 	//update the average rating of the activity if the new review is correctly saved
 	var totalRating float32
 	if add {
-		totalRating = activity.AvgReviewRating * float32(activity.ReviewCounts)
+		totalRating = activity.AverageRating * float32(activity.ReviewCounts)
 		totalRating += rating
 		activity.ReviewCounts++
 	} else {
-		totalRating = activity.AvgReviewRating * float32(activity.ReviewCounts)
+		totalRating = activity.AverageRating * float32(activity.ReviewCounts)
 		totalRating -= rating
 		activity.ReviewCounts--
 	}
 
-	activity.AvgReviewRating = totalRating / float32(activity.ReviewCounts)
+	activity.AverageRating = totalRating / float32(activity.ReviewCounts)
 	if result := s.Database.Save(&activity); result.Error != nil {
 		fmt.Println("create_review: ", result.Error) // TODO: write to log instead
 		return result.Error
