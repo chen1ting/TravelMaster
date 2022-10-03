@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	ErrUserNotExist             = errors.New("user not exist")
 	ErrUserAlreadyCreatedReview = errors.New("user already created review for the activity")
 	ErrNotAllowed               = errors.New("user is not allowed to perform this action")
 	ErrGenericServerError       = errors.New("generic server error")
@@ -261,8 +262,8 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			activity, h := randomAndIsOpen(actMap["food"], day, hr, used)
 			if activity == nil { // no food activity somehow...
 				fmt.Printf("WARN: no food activity for start time: %d\n", x)
-				hr += 2
-				x += int64(2 * 60 * 60)
+				hr += 1
+				x += int64(60 * 60)
 				continue
 			}
 			segments = append(segments, &models.Segment{
@@ -272,7 +273,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			})
 			hr += h + 2 // 2h gap between every activity
 			x += int64((h + 2) * 60 * 60)
-		} else if hr >= 9 { // 10 PM or later, fast forward to 8 AM next day
+		} else if hr >= 21 { // 10 PM or later, fast forward to 8 AM next day
 			ff := 7 - hr + 12
 			hr = 7
 			x += int64(ff * 60 * 60)
@@ -310,8 +311,8 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			}
 			if !ok {
 				fmt.Printf("WARN: no planned activity for start time: %d\n", x)
-				hr += 2
-				x += int64(2 * 60 * 60)
+				hr += 1
+				x += int64(60 * 60)
 			}
 		}
 	}
@@ -732,6 +733,16 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 		UpdatedAt:      activity.UpdatedAt,
 		ImageSaveFails: failedImages,
 	}, nil
+}
+
+func (s *Server) GetUserInfo(ctx context.Context, req *models.GetUserInfoReq) (*models.GetUserInfoResp, error) {
+	var user gormModel.User
+	if res := s.Database.First(&user, req.UserId); res.Error != nil {
+		// TODO: for now assume user not exist, and not some db conn/query issue
+		return nil, ErrUserNotExist
+	}
+
+	return &models.GetUserInfoResp{Username: user.Username, AvatarUrl: user.AvatarName}, nil
 }
 
 // TODO: IMPT: this function is not safe for concurrent access, we should implement a lock
