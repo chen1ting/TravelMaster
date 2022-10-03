@@ -19,23 +19,23 @@ type User struct {
 
 type Activity struct {
 	// Basic information on the activity
-	ID            int64          `gorm:"primaryKey;column:id"`
-	UserID        int64          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:user_id"`
-	Title         string         `gorm:"unique;not null;type:varchar(100);default:null;column:title"`
-	AverageRating float32        `gorm:"column:rating"`
-	Paid          bool           `gorm:"column:paid"`
-	Category      pq.StringArray `gorm:"type:text[];column:category"`
-	Description   string         `gorm:"column:description"`
-	Longitude     float32        `gorm:"gorm:longitude; default:-180.1"`
-	Latitude      float32        `gorm:"gorm:latitude; default:-90.1"`
-	ImageNames    pq.StringArray `gorm:"type:text[];column:image_name"`
-	OpeningTimes  pq.Int32Array  `gorm:"type:int[];column:opening_times"`
+	ID     int64  `gorm:"primaryKey;column:id"`
+	UserID int64  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:user_id"`
+	Title  string `gorm:"unique;not null;type:varchar(100);default:null;column:title"`
+	//AverageRating float32        `gorm:"column:rating"` // this is to be calculated on runtime
+	Paid         bool           `gorm:"column:paid"`
+	Category     pq.StringArray `gorm:"type:text[];column:category"`
+	Description  string         `gorm:"column:description"`
+	Longitude    float32        `gorm:"gorm:longitude; default:-180.1"`
+	Latitude     float32        `gorm:"gorm:latitude; default:-90.1"`
+	ImageNames   pq.StringArray `gorm:"type:text[];column:image_name"`
+	OpeningTimes pq.Int32Array  `gorm:"type:int[];column:opening_times"`
 
 	// System fields
-	InactiveCount int    `gorm:"column:inactive_count"`
-	InactiveFlag  bool   `gorm:"column:inactive_flag"`
-	ReviewCounts  int    `gorm:"column:review_counts"`
-	ReviewIds     string `gorm:"column:review_ids"`
+	InactiveCount int           `gorm:"column:inactive_count"`
+	InactiveFlag  bool          `gorm:"column:inactive_flag"`
+	ReviewCounts  int           `gorm:"column:review_counts"`
+	ReviewIds     pq.Int64Array `gorm:"column:review_ids"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
