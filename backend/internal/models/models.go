@@ -209,11 +209,20 @@ type GetActivityResp struct {
 	SunOpeningTime  int `json:"sun_opening_time"`
 	SunClosingTime  int `json:"sun_closing_time"`
 
-	InactiveCount int                `json:"inactive_count"`
-	InactiveFlag  bool               `json:"inactive_flag"`
-	ReviewCounts  int                `json:"review_counts"`
-	ReviewsList   []gormModel.Review `json:"review_list"`
-	CreatedAt     time.Time          `json:"created_at"`
+	InactiveCount int       `json:"inactive_count"`
+	InactiveFlag  bool      `json:"inactive_flag"`
+	ReviewCounts  int       `json:"review_counts"`
+	ReviewsList   []*Review `json:"review_list"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type Review struct {
+	ID          int64   `json:"id"`
+	UserId      int64   `json:"user_id"`     // TODO: Foreign key to User id
+	ActivityId  int64   `json:"activity_id"` // TODO: Foreign key to Activity id
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Rating      float32 `json:"rating"`
 }
 
 type SearchActivityReq struct {
@@ -265,17 +274,33 @@ type UpdateActivityResp struct {
 	ImageSaveFails []string  `json:"failed_images"`
 }
 
-type InactivateActivityReq struct {
-	ActivityId int64  `json:"activity_id"`
-	UserId     int64  `json:"user_id"`
+// inactivate and reactivate request share the same response
+type IncrementInactiveCountReq struct {
+	ActivityId int64  `json:"activity_id" binding:"required"`
+	UserId     int64  `json:"user_id" binding:"required"`
 	Reason     string `json:"reason"`
 }
 
-type InactivateActivityResp struct {
+type DecrementInactiveCountReq struct {
+	ActivityId int64 `json:"activity_id" binding:"required"`
+	UserId     int64 `json:"user_id" binding:"required"`
+}
+
+type ChangeInactiveCountResp struct {
 	ActivityId    int64     `json:"activity_id"`
 	InactiveCount int       `json:"inactive_count"`
 	InactiveFlag  bool      `json:"inactive_flag"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type HasUserInactivatedReq struct {
+	ActivityId int64 `json:"activity_id" binding:"required"`
+	UserId     int64 `json:"user_id" binding:"required"`
+}
+
+type HasUserInactivatedResp struct {
+	Reported  bool      `json:"reported"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type DeleteActivityImageReq struct {

@@ -40,6 +40,7 @@ var (
 	ErrUserNotFound             = errors.New("user id doesn't exists")
 	ErrNullReview               = errors.New("review content cannot be empty")
 	ErrReviewNotFound           = errors.New("review not found")
+	ErrReportNotFound           = errors.New("report not found")
 	ErrInvalidUpdateUser        = errors.New("user id doesn't match the activity's user id")
 	ErrNoSearchFail             = errors.New("search Name failed")
 	ErrAlreadyReported          = errors.New("user has already reported the activity")
@@ -50,6 +51,7 @@ var (
 	ImageRoot                   = filepath.Join(CWD, "assets")
 	ActivityImageFolder         = "activity_images"
 	AvatarFolder                = "avatars"
+	InvalidThreshold            = 10
 )
 
 func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.SignupResp, error) {
@@ -274,7 +276,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			})
 			hr += h + 2 // 2h gap between every activity
 			x += int64((h + 2) * 60 * 60)
-		} else if hr >= 21 { // 10 PM or later, fast forward to 8 AM next day
+		} else if hr >= 21 { // 10 PM or later, fast-forward to 8 AM next day
 			ff := 7 - hr + 12
 			hr = 7
 			x += int64(ff * 60 * 60)
@@ -503,33 +505,6 @@ func getValidTime(hhmm int) int {
 		return hhmm
 	}
 	return -1
-}
-
-func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
-	var opening []int32
-	opening = append(opening, int32(getValidTime(createForm.SunOpeningTime)),
-		int32(getValidTime(createForm.MonOpeningTime)),
-		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
-		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.FriOpeningTime)),
-		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunClosingTime)),
-		int32(getValidTime(createForm.MonClosingTime)), int32(getValidTime(createForm.TueClosingTime)),
-		int32(getValidTime(createForm.WedClosingTime)), int32(getValidTime(createForm.ThurClosingTime)),
-		int32(getValidTime(createForm.FriClosingTime)), int32(getValidTime(createForm.SatClosingTime)),
-	)
-	return opening
-}
-
-func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
-	var opening []int32
-	opening = append(opening, int32(getValidTime(updateReq.SunOpeningTime)),
-		int32(getValidTime(updateReq.MonOpeningTime)),
-		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
-		int32(getValidTime(updateReq.ThurOpeningTime)), int32(getValidTime(updateReq.FriOpeningTime)),
-		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunClosingTime)),
-		int32(getValidTime(updateReq.MonClosingTime)), int32(getValidTime(updateReq.TueClosingTime)),
-		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
-		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)))
-	return opening
 }
 
 func (s *Server) UpdateProfile(req *models.UpdateProfileReq) (*models.UpdateProfileResp, error) {
@@ -854,7 +829,7 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   ParseReviewList(activity.Reviews),
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
@@ -899,7 +874,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   ParseReviewList(activity.Reviews),
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
@@ -967,7 +942,7 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 	}, nil
 }
 
-func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*models.InactivateActivityResp, error) {
+func (s *Server) IncrementInactiveCount(req *models.IncrementInactiveCountReq) (*models.ChangeInactiveCountResp, error) {
 	if req == nil {
 		return nil, ErrBadRequest
 	}
@@ -989,11 +964,8 @@ func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*mod
 		return nil, ErrAlreadyReported
 	}
 
-	//TODO: put invalid threshold into global variable?
-	invalidThreshold := 10
-
 	activity.InactiveCount++
-	if activity.InactiveCount >= invalidThreshold {
+	if activity.InactiveCount >= InvalidThreshold {
 		activity.InactiveFlag = true
 	}
 
@@ -1002,11 +974,72 @@ func (s *Server) ReportInactiveActivity(req *models.InactivateActivityReq) (*mod
 		return nil, result.Error
 	}
 
-	return &models.InactivateActivityResp{
+	return &models.ChangeInactiveCountResp{
 		ActivityId:    activity.ID,
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		UpdatedAt:     activity.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) DecrementInactiveCount(req *models.DecrementInactiveCountReq) (*models.ChangeInactiveCountResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var activity gormModel.Activity
+
+	// if activity cannot be found by given ID, return error
+	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
+		return nil, ErrActivityNotFound
+	}
+	// delete history
+	var reportHistory gormModel.ReportHistory
+	if result := s.Database.Where("user_id=? AND activity_id = ?", req.UserId, req.ActivityId).Find(&reportHistory); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrReportNotFound
+	}
+	if err := s.Database.Unscoped().Model(&activity).Association("UserReports").Delete(&reportHistory); err != nil {
+		fmt.Println(err.Error())
+		return nil, ErrDatabase
+	}
+	// if succeeded, delete activity
+	activity.InactiveCount--
+	if activity.InactiveCount < InvalidThreshold {
+		activity.InactiveFlag = false
+	}
+
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("inactivate_activity err: ", result.Error) // TODO: write to log instead
+		return nil, ErrDatabase
+	}
+
+	return &models.ChangeInactiveCountResp{
+		ActivityId:    activity.ID,
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		UpdatedAt:     activity.UpdatedAt,
+	}, nil
+}
+
+func (s *Server) CheckInactiveFlag(req *models.HasUserInactivatedReq) (*models.HasUserInactivatedResp, error) {
+	if req == nil {
+		return nil, ErrBadRequest
+	}
+
+	// find the activity in database
+	var reportHistory gormModel.ReportHistory
+
+	if result := s.Database.Where("user_id=? AND activity_id = ?", req.UserId, req.ActivityId).Find(&reportHistory); result.Error != nil || result.RowsAffected == 0 {
+		return &models.HasUserInactivatedResp{
+			UpdatedAt: time.Now(),
+			Reported:  false,
+		}, nil
+	}
+
+	return &models.HasUserInactivatedResp{
+		UpdatedAt: time.Now(),
+		Reported:  true,
 	}, nil
 }
 
@@ -1141,19 +1174,24 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		newAvg = (float32(activity.ReviewCounts)*activity.AverageRating + req.NewRating) / float32(activity.ReviewCounts+1)
 		activity.ReviewCounts++
 		activity.AverageRating = newAvg
-		review.Title = req.Title
-		review.Rating = req.NewRating
-		if result := s.Database.Save(&review); result.Error != nil {
-			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+		// save changes to activity table
+		if res := s.Database.Save(&activity); res.Error != nil {
 			return nil, ErrDatabase
 		}
+		review.Title = req.Title
+		review.Rating = req.NewRating
+		review.Description = req.Description
 	}
-	// save changes to activity table
-	if res := s.Database.Save(&activity); res.Error != nil {
+
+	if result := s.Database.Save(&review); result.Error != nil {
+		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
 		return nil, ErrDatabase
 	}
 
-	fmt.Println(activity.AverageRating)
+	if result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity); result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+	
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
@@ -1183,7 +1221,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		InactiveCount: activity.InactiveCount,
 		InactiveFlag:  activity.InactiveFlag,
 		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   activity.Reviews,
+		ReviewsList:   ParseReviewList(activity.Reviews),
 		CreatedAt:     activity.CreatedAt,
 	}, nil
 }
@@ -1289,4 +1327,46 @@ func RemoveName(s []string, i int) []string {
 	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func ParseReviewList(reviewList []gormModel.Review) []*models.Review {
+	parsedReview := make([]*models.Review, 0)
+	for _, review := range reviewList {
+		parsedReview = append(parsedReview, &models.Review{
+			ID:          review.ID,
+			UserId:      review.UserId,
+			ActivityId:  review.ActivityId,
+			Title:       review.Title,
+			Description: review.Description,
+			Rating:      review.Rating,
+		})
+	}
+	return parsedReview
+}
+
+func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
+	var opening []int32
+	opening = append(opening, int32(getValidTime(createForm.SunOpeningTime)),
+		int32(getValidTime(createForm.MonOpeningTime)),
+		int32(getValidTime(createForm.TueOpeningTime)), int32(getValidTime(createForm.WedOpeningTime)),
+		int32(getValidTime(createForm.ThurOpeningTime)), int32(getValidTime(createForm.FriOpeningTime)),
+		int32(getValidTime(createForm.SatOpeningTime)), int32(getValidTime(createForm.SunClosingTime)),
+		int32(getValidTime(createForm.MonClosingTime)), int32(getValidTime(createForm.TueClosingTime)),
+		int32(getValidTime(createForm.WedClosingTime)), int32(getValidTime(createForm.ThurClosingTime)),
+		int32(getValidTime(createForm.FriClosingTime)), int32(getValidTime(createForm.SatClosingTime)),
+	)
+	return opening
+}
+
+func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
+	var opening []int32
+	opening = append(opening, int32(getValidTime(updateReq.SunOpeningTime)),
+		int32(getValidTime(updateReq.MonOpeningTime)),
+		int32(getValidTime(updateReq.TueOpeningTime)), int32(getValidTime(updateReq.WedOpeningTime)),
+		int32(getValidTime(updateReq.ThurOpeningTime)), int32(getValidTime(updateReq.FriOpeningTime)),
+		int32(getValidTime(updateReq.SatOpeningTime)), int32(getValidTime(updateReq.SunClosingTime)),
+		int32(getValidTime(updateReq.MonClosingTime)), int32(getValidTime(updateReq.TueClosingTime)),
+		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
+		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)))
+	return opening
 }
