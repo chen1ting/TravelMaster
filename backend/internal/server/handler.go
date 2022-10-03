@@ -1149,8 +1149,8 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		}
 	}
 
-	if result := s.Database.Save(&review); result.Error != nil {
-		fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
+	if result := s.Database.Save(&activity); result.Error != nil {
+		fmt.Println("save activity err: ", result.Error) // TODO: write to log instead
 		return nil, ErrDatabase
 	}
 

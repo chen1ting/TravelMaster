@@ -443,6 +443,7 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
                 justifyContent="center"
                 alignItems="center"
                 columnGap="5"
+                ml="7"
               >
                 <Button
                   colorScheme="green"
