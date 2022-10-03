@@ -20,7 +20,13 @@ import {
   Divider,
   IconButton,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import {
+  CheckIcon,
+  CloseIcon,
+  DeleteIcon,
+  EditIcon,
+  WarningIcon,
+} from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -28,6 +34,8 @@ import {
   addReview,
   fetchUserInfo,
   sendUpdateReview,
+  getHasUserReported,
+  sendToggleReportReq,
 } from "../api/api";
 import StarRatings from "react-star-ratings";
 import {
@@ -57,19 +65,18 @@ const Activity = () => {
     setCenter(m.getCenter().toJSON());
   };
 
-  const onClick = (e) => {
-    // avoid directly mutating state
-    console.log(e.latLng);
-    setClicks([...clicks, e.latLng]);
+  const [reported, setReported] = useState(false);
+
+  const toggleReportInactive = async () => {
+    setReported((prev) => !prev);
+    sendToggleReportReq(id, uid, "", reported);
   };
 
+  const uid = window.sessionStorage.getItem("uid");
   useEffect(() => {
     getActivityById(id, setActivity, setIsLoading);
+    getHasUserReported(id, uid, setReported);
   }, []);
-
-  const render = (status) => {
-    return <h1>{status}</h1>;
-  };
 
   const daysList = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
 
@@ -125,6 +132,14 @@ const Activity = () => {
                 />
                 <Text mt="2px">{act.review_counts} review(s)</Text>
               </Box>
+              <Button
+                mt="8"
+                leftIcon={<WarningIcon />}
+                colorScheme={reported ? "teal" : "red"}
+                onClick={toggleReportInactive}
+              >
+                {reported ? "Remove inactive report" : "Report inactive"}
+              </Button>
             </Box>
             <Box maxW="700px">
               <Heading>{act.title}</Heading>

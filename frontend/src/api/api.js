@@ -468,6 +468,47 @@ const sendUpdateReview = async (
   setIsError(false);
 };
 
+const getHasUserReported = async (aid, uid, setReported) => {
+  const rawResponse = await fetch(ENDPOINT + "/has-user-reported", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      activity_id: parseInt(aid),
+      user_id: parseInt(uid),
+    }),
+  });
+
+  const content = await rawResponse.json();
+  if (rawResponse.status !== 202) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return;
+  }
+
+  setReported(content.reported);
+};
+
+const sendToggleReportReq = async (aid, uid, reason, reported) => {
+  const rawResponse = await fetch(
+    ENDPOINT +
+      (reported ? "/decrement-inactive-flag" : "/increment-inactive-flag"),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        activity_id: parseInt(aid),
+        user_id: parseInt(uid),
+        reason: reason,
+      }),
+    }
+  );
+
+  // const content = await rawResponse.json();
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return;
+  }
+};
+
 export {
   sendSignupReq,
   validateToken,
@@ -483,4 +524,6 @@ export {
   addReview,
   fetchUserInfo,
   sendUpdateReview,
+  getHasUserReported,
+  sendToggleReportReq,
 };
