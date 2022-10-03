@@ -32,13 +32,7 @@ const Profile = ({ imageUrl }) => {
                 </Box>
             </GridItem>
             <GridItem area={'about'} bg={'lightskyblue'}>
-                <Box
-                    mt={'10%'}
-                    ml={'10%'}
-                    mr={'10%'}>
-                    <Text fontWeight='bold'>About you</Text>
-                    !!! Add about you here !!!
-                </Box>
+
             </GridItem>
             <GridItem area={'tabs'}>
                 <Tabs isFitted variant='enclosed'>
