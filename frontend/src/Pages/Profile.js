@@ -1,9 +1,10 @@
-import {Box, Grid, GridItem, Tab, TabList, TabPanel, TabPanels, Tabs, Text} from "@chakra-ui/react";
+import {Avatar, Box, Grid, GridItem, Tab, TabList, TabPanel, TabPanels, Tabs, Text} from "@chakra-ui/react";
 import ActivityFeed from "../Components/ProfileSubPages/ActivityFeed";
 import Itineraries from "../Components/ProfileSubPages/Itineraries";
 import Bookings from "../Components/ProfileSubPages/Bookings";
 
-const Profile = () => {
+const Profile = ({ imageUrl }) => {
+    const user = window.sessionStorage.getItem("username");
     return (
         <Grid
             templateAreas={`'icon username username'
@@ -17,15 +18,17 @@ const Profile = () => {
             <GridItem area={'icon'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}
                      textAlign={"center"}>
-                    {/*Add user icon here*/}
-                    Icon
+                    <Avatar
+                        size={"md"}
+                        src={"http://localhost:8080/avatars/" + imageUrl}
+                    />
                 </Box>
 
             </GridItem>
             <GridItem area={'username'}>
                 <Box position={'relative'} top={'50%'} left={'50%'} transform={'translate(-50%,-50%)'}>
                     {/*Add username here*/}
-                    <Text fontSize='4xl'>Username123</Text>
+                    <Text fontSize='4xl'>{user}</Text>
                 </Box>
             </GridItem>
             <GridItem area={'about'} bg={'lightskyblue'}>
