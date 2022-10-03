@@ -1112,7 +1112,6 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 	}
 
 	// user update
-	fmt.Println(float32(activity.ReviewCounts)*activity.AverageRating - review.Rating)
 	var newAvg float32
 	if activity.ReviewCounts-1 == 0 {
 		newAvg = 0
@@ -1121,7 +1120,6 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 	}
 	activity.ReviewCounts--
 	activity.AverageRating = newAvg
-	fmt.Println(newAvg)
 	if req.Delete {
 		s.Database.Delete(&review)
 	} else {
@@ -1134,8 +1132,6 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
 			return nil, ErrDatabase
 		}
-
-		fmt.Println(newAvg)
 	}
 	// save changes to activity table
 	if res := s.Database.Save(&activity); res.Error != nil {
