@@ -3,6 +3,7 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useState } from "react";
+import { ENDPOINT } from "../api/api";
 import {
   FormControl,
   FormLabel,
@@ -221,7 +222,7 @@ const Discover = () => {
                       borderRadius="30px"
                       w="400px"
                       h="300px"
-                      src={`http://localhost:8080/activity-images/${act.image_url}`}
+                      src={`${ENDPOINT}/activity-images/${act.image_url}`}
                       alt={act.name}
                     />
                   </Box>

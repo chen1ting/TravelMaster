@@ -1,7 +1,8 @@
 import sha256 from "crypto-js/sha256";
 
 // TODO: change to read from env
-const ENDPOINT = "http://localhost:8080";
+// const ENDPOINT = "http://0.0.0.0:8080";
+const ENDPOINT = process.env.REACT_APP_ENDPOINT;
 
 const sendSignupReq = async (user, pass, email, pic) => {
   const formData = new FormData();
@@ -509,7 +510,34 @@ const sendToggleReportReq = async (aid, uid, reason, reported) => {
   }
 };
 
+const getUserActivities = async (
+  uid,
+  setIsLoading,
+  setActivities,
+  setReviews
+) => {
+  setIsLoading(true);
+  const rawResponse = await fetch(ENDPOINT + "/get-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: parseInt(uid),
+    }),
+  });
+
+  setIsLoading(false);
+  if (rawResponse.status !== 200) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return;
+  }
+
+  const content = await rawResponse.json();
+  setActivities(content.user.Activities);
+  setReviews(content.user.Reviews);
+};
+
 export {
+  ENDPOINT,
   sendSignupReq,
   validateToken,
   sendLoginReq,
@@ -526,4 +554,5 @@ export {
   sendUpdateReview,
   getHasUserReported,
   sendToggleReportReq,
+  getUserActivities,
 };

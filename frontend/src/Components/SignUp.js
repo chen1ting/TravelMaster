@@ -76,10 +76,10 @@ const SignUp = ({ setImageUrl }) => {
   }
 
   return (
-    <Box display="flex" justifyContent="center" h="94vh" bg="blue.300">
+    <Box display="flex" justifyContent="center" h="94vh" bgColor="gray.500">
       <Box
         minW={{ base: "500px", lg: "50%" }}
-        bgColor="blue.600"
+        bgColor="gray.600"
         display="flex"
         alignItems="center"
         flexDir="column"

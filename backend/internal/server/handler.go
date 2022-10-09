@@ -262,7 +262,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 	for x <= y {
 		if (hr >= 7 && hr <= 8) || (hr >= 11 && hr <= 12) || (hr >= 6 && hr <= 7) { // breakfast, lunch, time
 			// randomly select a food activity that is open at that time
-			activity, h := randomAndIsOpen(actMap["food"], day, hr, used)
+			activity, h := randomAndIsOpen(actMap["FOOD AND BEVERAGE"], day, hr, used)
 			if activity == nil { // no food activity somehow...
 				fmt.Printf("WARN: no food activity for start time: %d\n", x)
 				hr += 1
