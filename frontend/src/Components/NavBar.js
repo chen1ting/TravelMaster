@@ -12,6 +12,7 @@ import {
   MenuItem,
   Image,
 } from "@chakra-ui/react";
+import { ENDPOINT } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import TMLogo from "../Components/TMLogo.png";
 import { sendLogoutReq } from "../api/api";
@@ -91,10 +92,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
                 paddingLeft={"14px"}
               >
                 {/* Replace src with user image url, with the default as current image*/}
-                <Avatar
-                  size={"md"}
-                  src={"http://localhost:8080/avatars/" + imageUrl}
-                />
+                <Avatar size={"md"} src={`${ENDPOINT}/avatars/` + imageUrl} />
               </MenuButton>
 
               {imageUrl ? (

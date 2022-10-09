@@ -14,7 +14,7 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 
 	r.POST("/signup", service.SignupView)
 	r.POST("/login", service.LoginView)
-	//r.POST("/get-user-info", service.GetUserInfo)	// same function as GetProfile
+	r.POST("/get-user-info", service.GetUserInfo) // same function as GetProfile
 	r.POST("/get-profile", service.GetProfile)
 	r.POST("/update-profile", service.UpdateProfile)
 	r.POST("/update-avatar", service.UpdateAvatar)

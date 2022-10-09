@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { validSessionGuard } from "../common/common";
 import {
+  ENDPOINT,
   getItinerary,
   getActivitiesByFilter,
   saveItineraryChanges,
@@ -355,10 +356,7 @@ const TimeCell = (
                   filter="auto"
                   brightness="90%"
                   objectFit="cover"
-                  src={
-                    "http://localhost:8080/activity-images/" +
-                    activity.image_url
-                  }
+                  src={`${ENDPOINT}/activity-images/` + activity.image_url}
                   alt={activity.name}
                   cursor="pointer"
                   _hover={{
@@ -421,10 +419,7 @@ const PopoverWrapper = ({
             {activity ? (
               <Box py="4" px="2">
                 <Image
-                  src={
-                    "http://localhost:8080/activity-images/" +
-                    activity.image_url
-                  }
+                  src={`{ENDPOINT/activity-images/` + activity.image_url}
                   alt={activity.name}
                   mb="4"
                 />
@@ -565,7 +560,7 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
               mt="4"
               h="150px"
               w="full"
-              src={"http://localhost:8080/activity-images" + act.image_url}
+              src={`${ENDPOINT}/activity-images` + act.image_url}
               alt={act.name}
             />
 

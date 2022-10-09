@@ -1,0 +1,45 @@
+# Use postgres/example user/password credentials
+version: "3.1"
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: travelmaster
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  be:
+    image: eesketit/cz3002-backend
+    environment:
+      APP_ENV: production
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    restart: on-failure
+    volumes:
+      - ./config_prod.yml:/app/config_prod.yml
+
+  fe:
+    image: eesketit/cz3002-frontend
+    depends_on:
+      - be
+    ports:
+      - "80:3000"
+    restart: on-failure
+
+volumes:
+  pgdata:

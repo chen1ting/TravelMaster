@@ -20,6 +20,7 @@ import {
   Divider,
   IconButton,
 } from "@chakra-ui/react";
+
 import {
   CheckIcon,
   CloseIcon,
@@ -30,6 +31,7 @@ import {
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
+  ENDPOINT,
   getActivityById,
   addReview,
   fetchUserInfo,
@@ -97,7 +99,7 @@ const Activity = () => {
               <Image
                 maxW="400px"
                 h="350px"
-                src={`http://localhost:8080/activity-images/${act.image_names[0]}`}
+                src={`${ENDPOINT}/activity-images/${act.image_names[0]}`}
                 alt={act.title}
                 borderRadius="20px"
               />
@@ -270,7 +272,7 @@ const Reviews = ({ reviews, aid, setActivity }) => {
           mt="1"
           mr="4"
           ml="2"
-          src={`http://localhost:8080/avatars/${window.sessionStorage.getItem(
+          src={`${ENDPOINT}/avatars/${window.sessionStorage.getItem(
             "avatar_file_name"
           )}`}
         />
@@ -390,7 +392,7 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
         borderBottom="1px solid white"
       >
         <Box pt="5">
-          <Avatar src={`http://localhost:8080/avatars/${avatar}`} />
+          <Avatar src={`${ENDPOINT}/avatars/${avatar}`} />
           <Text my="2">{username}</Text>
         </Box>
         <Box display="flex" justifyContent="space-between" w="60vw">
@@ -450,63 +452,64 @@ const ReviewCard = ({ aid, rev, setActivity }) => {
               </Text>
             )}
           </Box>
-
-          <Box display="flex" justifyContent="center" alignItems="center">
-            {editMode ? (
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                columnGap="5"
-                ml="7"
-              >
-                <Button
-                  colorScheme="green"
-                  leftIcon={<CheckIcon />}
-                  onClick={() => updateReview(false)}
+          {rev.user_id === parseInt(uid) && (
+            <Box display="flex" justifyContent="center" alignItems="center">
+              {editMode ? (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  columnGap="5"
+                  ml="7"
                 >
-                  Save
-                </Button>
-                <Button
-                  colorScheme="blue"
-                  leftIcon={<CloseIcon />}
-                  onClick={() => {
-                    setEditMode(false);
-                    setEditTitle("");
-                    setEditRating(0);
-                    setEditDesc("");
-                  }}
+                  <Button
+                    colorScheme="green"
+                    leftIcon={<CheckIcon />}
+                    onClick={() => updateReview(false)}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    colorScheme="blue"
+                    leftIcon={<CloseIcon />}
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditTitle("");
+                      setEditRating(0);
+                      setEditDesc("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
+              ) : (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  columnGap="5"
                 >
-                  Cancel
-                </Button>
-              </Box>
-            ) : (
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                columnGap="5"
-              >
-                <IconButton
-                  colorScheme="teal"
-                  aria-label="edit review"
-                  icon={<EditIcon />}
-                  onClick={() => {
-                    setEditMode(true);
-                    setEditTitle(rev.title);
-                    setEditRating(rev.rating);
-                    setEditDesc(rev.description);
-                  }}
-                />
-                <IconButton
-                  colorScheme="red"
-                  aria-label="delete review"
-                  icon={<DeleteIcon />}
-                  onClick={() => updateReview(true)}
-                />
-              </Box>
-            )}
-          </Box>
+                  <IconButton
+                    colorScheme="teal"
+                    aria-label="edit review"
+                    icon={<EditIcon />}
+                    onClick={() => {
+                      setEditMode(true);
+                      setEditTitle(rev.title);
+                      setEditRating(rev.rating);
+                      setEditDesc(rev.description);
+                    }}
+                  />
+                  <IconButton
+                    colorScheme="red"
+                    aria-label="delete review"
+                    icon={<DeleteIcon />}
+                    onClick={() => updateReview(true)}
+                  />
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>
