@@ -12,6 +12,7 @@ require (
 	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
+	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 	gorm.io/datatypes v1.0.7
 	gorm.io/driver/postgres v1.3.9
 	gorm.io/gorm v1.23.8
