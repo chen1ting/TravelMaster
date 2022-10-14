@@ -16,11 +16,11 @@ const sendSignupReq = async (user, pass, email, pic) => {
     body: formData,
   });
 
+  const content = await rawResponse.json();
   if (rawResponse.status !== 201) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
-    return null;
   }
-  const content = await rawResponse.json();
+
   return content;
 };
 
@@ -536,6 +536,26 @@ const getUserActivities = async (
   setReviews(content.user.Reviews);
 };
 
+const submitFeedback = async (session_token, feedbackMsg, followUp) => {
+  const rawResponse = await fetch(ENDPOINT + "/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+      feedback_msg: feedbackMsg,
+      follow_up: followUp,
+    }),
+  });
+
+  if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  return content;
+};
+
 export {
   ENDPOINT,
   sendSignupReq,
@@ -555,4 +575,5 @@ export {
   getHasUserReported,
   sendToggleReportReq,
   getUserActivities,
+  submitFeedback,
 };
