@@ -110,7 +110,7 @@ const Activity = () => {
                 alignItems="center"
                 columnGap="2"
               >
-                {act.category.map((cat) => (
+                {act.categories.map((cat) => (
                   <Badge variant="outline" colorScheme="green">
                     {cat}
                   </Badge>
@@ -527,3 +527,5 @@ const MyMapComponent = withScriptjs(
 );
 
 export default Activity;
+
+export { ReviewCard };

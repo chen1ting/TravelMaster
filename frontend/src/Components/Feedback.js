@@ -26,15 +26,16 @@ const Feedback = () => {
       feedbackMsg,
       followUp
     );
+
     if (data == null) {
       setAfterSubmitMsg(
         "Sorry, something went wrong creating your feedback. Please try again later."
       );
     } else {
       setAfterSubmitMsg(
-        `Your feedback has been collected. ${
+        `Your feedback has been collected. ✅ ${
           followUp
-            ? "As requested, we will follow up with your feedback within 3 business days"
+            ? "As requested, we will follow up with your feedback within 3 business days."
             : ""
         }`
       );
@@ -44,7 +45,7 @@ const Feedback = () => {
   if (afterSubmitMsg) {
     return (
       <Box mt="16" textAlign="center">
-        <Text>{afterSubmitMsg}</Text>
+        <Text fontSize="lg">{afterSubmitMsg}</Text>
       </Box>
     );
   }
@@ -75,7 +76,7 @@ const Feedback = () => {
           onChange={(e) => setFeedbackMsg(e.target.value)}
         />
 
-        <Box my="8" display="flex" columnGap="5">
+        <Box my="8" display="flex" columnGap="16">
           <Text>
             Would you like us to follow up with you via email regarding your
             feedback?

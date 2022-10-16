@@ -40,7 +40,7 @@ const sendCreateActivityReq = async (
   formData.append("rating_score", 0);
   formData.append("paid", isPaid);
   for (var it = cats.values(), val = null; (val = it.next().value); ) {
-    formData.append("category", val);
+    formData.append("categories", val);
   }
 
   formData.append("description", desc);
@@ -532,8 +532,8 @@ const getUserActivities = async (
   }
 
   const content = await rawResponse.json();
-  setActivities(content.user.Activities);
-  setReviews(content.user.Reviews);
+  setActivities(content.activities);
+  setReviews(content.reviews);
 };
 
 const submitFeedback = async (session_token, feedbackMsg, followUp) => {
@@ -556,6 +556,22 @@ const submitFeedback = async (session_token, feedbackMsg, followUp) => {
   return content;
 };
 
+const fetchProfile = async (uid, setReviews, setActivities, setIsLoading) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: uid,
+    }),
+  });
+
+  const content = await rawResponse.json();
+  console.log(content);
+  setReviews(content.reviews);
+  setActivities(content.activities);
+  setIsLoading(false);
+};
+
 export {
   ENDPOINT,
   sendSignupReq,
@@ -576,4 +592,5 @@ export {
   sendToggleReportReq,
   getUserActivities,
   submitFeedback,
+  fetchProfile,
 };
