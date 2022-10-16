@@ -3,8 +3,6 @@ package models
 import (
 	"mime/multipart"
 	"time"
-
-	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 )
 
 type LoginReq struct {
@@ -51,7 +49,6 @@ type ValidateTokenResp struct {
 	UserId int64 `json:"user_id"`
 }
 
-// TODO: allow change of usernames?
 type UpdateProfileReq struct {
 	UserId    int64    `json:"user_id"`
 	AboutMe   string   `json:"about_me"`
@@ -68,8 +65,17 @@ type GetProfileReq struct {
 }
 
 type GetProfileResp struct {
-	User        gormModel.User `json:"user"`
-	RetrievedAt time.Time      `json:"retrieved_at"`
+	// User        gormModel.User `json:"user"`
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	// Interests   []string           `json:"interests"`
+	AboutMe     string             `json:"about_me"`
+	AvatarName  string             `json:"avatar_name"`
+	Activities  []*GetActivityResp `json:"activities"`
+	Reviews     []*Review          `json:"reviews"`
+	CreatedAt   time.Time          `json:"created_at"`
+	RetrievedAt time.Time          `json:"retrieved_at"`
 }
 
 type UpdateAvatarForm struct {
@@ -218,8 +224,8 @@ type GetActivityResp struct {
 
 type Review struct {
 	ID          int64   `json:"id"`
-	UserId      int64   `json:"user_id"`     // TODO: Foreign key to User id
-	ActivityId  int64   `json:"activity_id"` // TODO: Foreign key to Activity id
+	UserId      int64   `json:"user_id"`
+	ActivityId  int64   `json:"activity_id"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
 	Rating      float32 `json:"rating"`
