@@ -122,7 +122,7 @@ type ActivitySummary struct {
 	Description   string   `json:"description"`
 	AverageRating float64  `json:"average_rating"` // to nearest .5 out of 5
 	Categories    []string `json:"categories"`
-	ImageUrl      string   `json:"image_url"`
+	ImageNames      []string   `json:"image_names"`
 }
 
 type GetItineraryRequest struct {
@@ -154,7 +154,7 @@ type CreateActivityForm struct {
 	Title    string   `form:"title"`
 	Rating   float32  `form:"rating_score"`
 	Paid     bool     `form:"paid"`
-	Category []string `form:"category"` // issue: form binding for string not working as expected
+	Categories []string `form:"categories"` // issue: form binding for string not working as expected
 	// please send in a json style list of string
 	Description string  `form:"description"`
 	Longitude   float32 `form:"longitude"`
@@ -194,7 +194,7 @@ type GetActivityResp struct {
 	Title       string   `json:"title"`
 	Rating      float32  `json:"rating_score"`
 	Paid        bool     `json:"paid"`
-	Category    []string `json:"category"`
+	Categories    []string `json:"categories"`
 	Description string   `json:"description"`
 	Longitude   float32  `json:"longitude"`
 	Latitude    float32  `json:"latitude"`
@@ -250,7 +250,7 @@ type UpdateActivityForm struct {
 	Title       string   `form:"title"`
 	Rating      float32  `form:"rating_score"`
 	Paid        bool     `form:"paid"`
-	Category    []string `form:"category"`
+	Categories    []string `form:"categories"`
 	Description string   `form:"description"`
 	Longitude   float32  `form:"longitude"`
 	Latitude    float32  `form:"latitude"`

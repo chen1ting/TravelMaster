@@ -20,6 +20,7 @@ func InitRouting(r *gin.Engine, service *service.Service) {
 	r.POST("/update-avatar", service.UpdateAvatar)
 	r.POST("/logout", service.LogoutView)
 	r.POST("/validate-token", service.ValidateToken)
+	r.POST("/feedback", service.Feedback)
 
 	r.POST("/generate-itinerary", service.GenerateItinerary)
 	r.POST("/get-itinerary", service.GetItinerary)

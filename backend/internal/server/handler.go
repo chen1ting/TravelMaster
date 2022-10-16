@@ -226,7 +226,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 
 	actMap := make(map[string][]*gormModel.Activity)
 	for _, act := range activities {
-		for _, cat := range act.Category {
+		for _, cat := range act.Categories {
 			if actMap[cat] == nil {
 				actMap[cat] = make([]*gormModel.Activity, 0)
 			}
@@ -236,7 +236,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 				Title:         act.Title,
 				AverageRating: act.AverageRating,
 				Paid:          act.Paid,
-				Category:      act.Category,
+				Categories:      act.Categories,
 				Description:   act.Description,
 				Longitude:     act.Longitude,
 				Latitude:      act.Latitude,
@@ -416,8 +416,8 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 			Name:          act.Title,
 			Description:   act.Description,
 			AverageRating: float64(act.AverageRating),
-			Categories:    act.Category,
-			ImageUrl:      imageUrl,
+			Categories:    act.Categories,
+			ImageNames:      []string{imageUrl},
 		}, actTime
 	}
 
@@ -653,7 +653,7 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		Title:        form.Title,
 		Paid:         form.Paid,
 		AuthorRating: form.Rating,
-		Category:     form.Category,
+		Categories:     form.Categories,
 		Description:  form.Description,
 		Longitude:    form.Longitude,
 		Latitude:     form.Latitude,
@@ -722,7 +722,7 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 	activity.Title = form.Title
 	activity.AuthorRating = form.Rating
 	activity.Paid = form.Paid
-	activity.Category = form.Category
+	activity.Categories = form.Categories
 	activity.Description = form.Description
 	activity.Longitude = form.Longitude
 	activity.Latitude = form.Latitude
@@ -850,8 +850,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 					Name:          act.Title,
 					Description:   act.Description,
 					AverageRating: float64(act.AverageRating),
-					Categories:    act.Category,
-					ImageUrl:      imageUrl,
+					Categories:    act.Categories,
+					ImageNames:      []string{imageUrl},
 				})
 			}
 		}
@@ -866,8 +866,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 				Name:          act.Title,
 				Description:   act.Description,
 				AverageRating: float64(act.AverageRating),
-				Categories:    act.Category,
-				ImageUrl:      imageUrl,
+				Categories:    act.Categories,
+				ImageNames:      []string{imageUrl},
 			})
 		}
 	}
@@ -1237,7 +1237,7 @@ func ParseActivity(activity gormModel.Activity) *models.GetActivityResp {
 		Title:       activity.Title,
 		Rating:      activity.AverageRating,
 		Paid:        activity.Paid,
-		Category:    activity.Category,
+		Categories:    activity.Categories,
 		Description: activity.Description,
 		Longitude:   activity.Longitude,
 		Latitude:    activity.Latitude,

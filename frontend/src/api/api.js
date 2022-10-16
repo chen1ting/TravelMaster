@@ -16,11 +16,11 @@ const sendSignupReq = async (user, pass, email, pic) => {
     body: formData,
   });
 
+  const content = await rawResponse.json();
   if (rawResponse.status !== 201) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
-    return null;
   }
-  const content = await rawResponse.json();
+
   return content;
 };
 
@@ -40,7 +40,7 @@ const sendCreateActivityReq = async (
   formData.append("rating_score", 0);
   formData.append("paid", isPaid);
   for (var it = cats.values(), val = null; (val = it.next().value); ) {
-    formData.append("category", val);
+    formData.append("categories", val);
   }
 
   formData.append("description", desc);
@@ -532,8 +532,44 @@ const getUserActivities = async (
   }
 
   const content = await rawResponse.json();
-  setActivities(content.user.Activities);
-  setReviews(content.user.Reviews);
+  setActivities(content.activities);
+  setReviews(content.reviews);
+};
+
+const submitFeedback = async (session_token, feedbackMsg, followUp) => {
+  const rawResponse = await fetch(ENDPOINT + "/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_token: session_token,
+      feedback_msg: feedbackMsg,
+      follow_up: followUp,
+    }),
+  });
+
+  if (rawResponse.status !== 201) {
+    console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
+    return null;
+  }
+
+  const content = await rawResponse.json();
+  return content;
+};
+
+const fetchProfile = async (uid, setReviews, setActivities, setIsLoading) => {
+  const rawResponse = await fetch(ENDPOINT + "/get-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: uid,
+    }),
+  });
+
+  const content = await rawResponse.json();
+  console.log(content);
+  setReviews(content.reviews);
+  setActivities(content.activities);
+  setIsLoading(false);
 };
 
 export {
@@ -555,4 +591,6 @@ export {
   getHasUserReported,
   sendToggleReportReq,
   getUserActivities,
+  submitFeedback,
+  fetchProfile,
 };

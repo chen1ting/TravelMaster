@@ -58,9 +58,9 @@ const SignUp = ({ setImageUrl }) => {
     setErrMsg(""); // always clear after
 
     const data = await sendSignupReq(username, password, email, picture);
-    if (data == null) {
+    if (data && data.error != null) {
       setShowError(true);
-      setErrMsg("Sorry, something went wrong on our side.");
+      setErrMsg(data.error);
       return;
     }
 

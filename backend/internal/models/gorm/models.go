@@ -29,7 +29,7 @@ type Activity struct {
 	AuthorRating  float32        `gorm:"column:author_rating; default:0.0"`
 	AverageRating float32        `gorm:"column:average_rating; default:0.0"`
 	Paid          bool           `gorm:"column:paid; default:false"`
-	Category      pq.StringArray `gorm:"type:text[];column:category"`
+	Categories      pq.StringArray `gorm:"type:text[];column:category"`
 	Description   string         `gorm:"column:description"`
 	Longitude     float32        `gorm:"gorm:longitude; default:-180.1"`
 	Latitude      float32        `gorm:"gorm:latitude; default:-90.1"`

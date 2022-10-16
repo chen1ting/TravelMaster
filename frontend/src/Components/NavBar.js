@@ -76,6 +76,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
             {NavButton("Discover", "/discover")}
             {NavButton("Create an Itinerary", "/welcome")}
             {NavButton("Itineraries", "/itineraries")}
+            {NavButton("Feedback", "/feedback")}
             {/*{NavButton('Bookings', '/bookings')}*/}
           </Menu>
 
