@@ -384,3 +384,8 @@ func (s *Service) UpdateReview(c *gin.Context) {
 	}
 	c.JSON(http.StatusAccepted, getActivityResp)
 }
+
+// blank endpoint
+func (s *Service) Feedback(c *gin.Context) {
+	c.JSON(http.StatusCreated, gin.H{"message": "ok"})
+}
