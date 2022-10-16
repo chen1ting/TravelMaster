@@ -195,82 +195,7 @@ const Discover = () => {
             mt="5"
           >
             {activities.map((act) => (
-              <Box
-                w="1200px"
-                display="flex"
-                justifyContent="center"
-                onClick={() => {
-                  navigate(`/activity/${act.id}`);
-                }}
-              >
-                <Box
-                  cursor="pointer"
-                  filter="auto"
-                  brightness="90%"
-                  _hover={{
-                    brightness: "120%",
-                    backgroundColor: "#1A202C",
-                  }}
-                  border="1px solid white"
-                  borderRadius="15px"
-                  display="flex"
-                  justifyContent="space-around"
-                  my="3"
-                >
-                  <Box padding="5">
-                    <Image
-                      borderRadius="30px"
-                      w="400px"
-                      h="300px"
-                      src={`${ENDPOINT}/activity-images/${act.image_url}`}
-                      alt={act.name}
-                    />
-                  </Box>
-                  <Box
-                    p="5"
-                    display="flex"
-                    flexDir="column"
-                    rowGap="2"
-                    ml="16"
-                    minW="400px"
-                    maxW="300px"
-                    flexWrap="wrap"
-                  >
-                    <Heading mt="2" fontSize="25">
-                      {act.name}
-                    </Heading>
-                    <Box
-                      my="2"
-                      display="flex"
-                      alignItems="center"
-                      columnGap="2"
-                      flexWrap="wrap"
-                      rowGap="2"
-                    >
-                      {act.categories.map((cat) => (
-                        <Badge variant="outline" colorScheme="green">
-                          {cat}
-                        </Badge>
-                      ))}
-                    </Box>
-
-                    <Box display="flex" alignItems="center" columnGap="3">
-                      <StarRatings
-                        rating={act.average_rating}
-                        starRatedColor="#F6E05E"
-                        starDimension="20px"
-                        numberOfStars={5}
-                        name="rating"
-                        starSpacing="3px"
-                      />
-                      <Text mt="1px">({act.average_rating})</Text>
-                    </Box>
-                    <Text noOfLines="5" mt="8" fontSize="18">
-                      {act.description}
-                    </Text>
-                  </Box>
-                </Box>
-              </Box>
+              <ActivityCard act={act} navigate={navigate} />
             ))}
           </Box>
         </Box>
@@ -285,6 +210,87 @@ const Discover = () => {
           navigate={navigate}
         />
       </Modal>
+    </Box>
+  );
+};
+
+const ActivityCard = ({ act, navigate }) => {
+  return (
+    <Box
+      w="1200px"
+      display="flex"
+      justifyContent="center"
+      onClick={() => {
+        navigate(`/activity/${act.id}`);
+      }}
+    >
+      <Box
+        cursor="pointer"
+        filter="auto"
+        brightness="90%"
+        _hover={{
+          brightness: "120%",
+          backgroundColor: "#1A202C",
+        }}
+        border="1px solid white"
+        borderRadius="15px"
+        display="flex"
+        justifyContent="space-around"
+        my="3"
+      >
+        <Box padding="5">
+          <Image
+            borderRadius="30px"
+            w="400px"
+            h="300px"
+            src={`${ENDPOINT}/activity-images/${act.image_names[0]}`}
+            alt={act.name}
+          />
+        </Box>
+        <Box
+          p="5"
+          display="flex"
+          flexDir="column"
+          rowGap="2"
+          ml="16"
+          minW="400px"
+          maxW="300px"
+          flexWrap="wrap"
+        >
+          <Heading mt="2" fontSize="25">
+            {act.name}
+          </Heading>
+          <Box
+            my="2"
+            display="flex"
+            alignItems="center"
+            columnGap="2"
+            flexWrap="wrap"
+            rowGap="2"
+          >
+            {act.categories.map((cat) => (
+              <Badge variant="outline" colorScheme="green">
+                {cat}
+              </Badge>
+            ))}
+          </Box>
+
+          <Box display="flex" alignItems="center" columnGap="3">
+            <StarRatings
+              rating={act.average_rating}
+              starRatedColor="#F6E05E"
+              starDimension="20px"
+              numberOfStars={5}
+              name="rating"
+              starSpacing="3px"
+            />
+            <Text mt="1px">({act.average_rating})</Text>
+          </Box>
+          <Text noOfLines="5" mt="8" fontSize="18">
+            {act.description}
+          </Text>
+        </Box>
+      </Box>
     </Box>
   );
 };
@@ -519,3 +525,5 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
 };
 
 export default Discover;
+
+export { ActivityCard };

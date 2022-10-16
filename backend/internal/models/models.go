@@ -3,8 +3,6 @@ package models
 import (
 	"mime/multipart"
 	"time"
-
-	gormModel "github.com/chen1ting/TravelMaster/internal/models/gorm"
 )
 
 type LoginReq struct {
@@ -51,7 +49,6 @@ type ValidateTokenResp struct {
 	UserId int64 `json:"user_id"`
 }
 
-// TODO: allow change of usernames?
 type UpdateProfileReq struct {
 	UserId    int64    `json:"user_id"`
 	AboutMe   string   `json:"about_me"`
@@ -68,8 +65,17 @@ type GetProfileReq struct {
 }
 
 type GetProfileResp struct {
-	User        gormModel.User `json:"user"`
-	RetrievedAt time.Time      `json:"retrieved_at"`
+	// User        gormModel.User `json:"user"`
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	// Interests   []string           `json:"interests"`
+	AboutMe     string             `json:"about_me"`
+	AvatarName  string             `json:"avatar_name"`
+	Activities  []*GetActivityResp `json:"activities"`
+	Reviews     []*Review          `json:"reviews"`
+	CreatedAt   time.Time          `json:"created_at"`
+	RetrievedAt time.Time          `json:"retrieved_at"`
 }
 
 type UpdateAvatarForm struct {
@@ -116,7 +122,7 @@ type ActivitySummary struct {
 	Description   string   `json:"description"`
 	AverageRating float64  `json:"average_rating"` // to nearest .5 out of 5
 	Categories    []string `json:"categories"`
-	ImageUrl      string   `json:"image_url"`
+	ImageNames      []string   `json:"image_names"`
 }
 
 type GetItineraryRequest struct {
@@ -148,7 +154,7 @@ type CreateActivityForm struct {
 	Title    string   `form:"title"`
 	Rating   float32  `form:"rating_score"`
 	Paid     bool     `form:"paid"`
-	Category []string `form:"category"` // issue: form binding for string not working as expected
+	Categories []string `form:"categories"` // issue: form binding for string not working as expected
 	// please send in a json style list of string
 	Description string  `form:"description"`
 	Longitude   float32 `form:"longitude"`
@@ -188,7 +194,7 @@ type GetActivityResp struct {
 	Title       string   `json:"title"`
 	Rating      float32  `json:"rating_score"`
 	Paid        bool     `json:"paid"`
-	Category    []string `json:"category"`
+	Categories    []string `json:"categories"`
 	Description string   `json:"description"`
 	Longitude   float32  `json:"longitude"`
 	Latitude    float32  `json:"latitude"`
@@ -218,8 +224,8 @@ type GetActivityResp struct {
 
 type Review struct {
 	ID          int64   `json:"id"`
-	UserId      int64   `json:"user_id"`     // TODO: Foreign key to User id
-	ActivityId  int64   `json:"activity_id"` // TODO: Foreign key to Activity id
+	UserId      int64   `json:"user_id"`
+	ActivityId  int64   `json:"activity_id"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
 	Rating      float32 `json:"rating"`
@@ -244,7 +250,7 @@ type UpdateActivityForm struct {
 	Title       string   `form:"title"`
 	Rating      float32  `form:"rating_score"`
 	Paid        bool     `form:"paid"`
-	Category    []string `form:"category"`
+	Categories    []string `form:"categories"`
 	Description string   `form:"description"`
 	Longitude   float32  `form:"longitude"`
 	Latitude    float32  `form:"latitude"`

@@ -70,10 +70,15 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 		return nil, ErrUserAlreadyExists
 	}
 
-	//
-	uniqueImgName, fpath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
-	if saveErr != nil {
-		fmt.Println(saveErr) //TODO: log instead
+	//check  if there is file first
+	var uniqueImgName, fpath string
+	if form.Avatar != nil {
+		imgName, filepath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
+		if saveErr != nil {
+			fmt.Println(saveErr) //TODO: log instead
+		}
+		uniqueImgName = imgName
+		fpath = filepath
 	}
 
 	// attempt to save user to DB
@@ -87,7 +92,10 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 	if result := s.Database.Omit(clause.Associations).Create(&user); result.Error != nil { //s.Database.Model(&user).Create(&user)
 		err := os.Remove(fpath)
 		if err != nil { // TODO: write to log instead
-			fmt.Println("sign_up have error deleting avatar: ", err)
+			if err := os.Remove(fpath); err != nil {
+				fmt.Println("sign_up have error deleting avatar: ", err)
+				return nil, err
+			} // delete image
 		}
 		return nil, result.Error
 	}
@@ -97,6 +105,7 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 	if err := s.addNewUserSession(c, strconv.Itoa(int(user.ID)), sessionToken, 24*time.Hour); err != nil {
 		return nil, err
 	}
+	fmt.Println("reached here")
 
 	return &models.SignupResp{
 		UserId:       user.ID,
@@ -217,7 +226,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 
 	actMap := make(map[string][]*gormModel.Activity)
 	for _, act := range activities {
-		for _, cat := range act.Category {
+		for _, cat := range act.Categories {
 			if actMap[cat] == nil {
 				actMap[cat] = make([]*gormModel.Activity, 0)
 			}
@@ -227,7 +236,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 				Title:         act.Title,
 				AverageRating: act.AverageRating,
 				Paid:          act.Paid,
-				Category:      act.Category,
+				Categories:      act.Categories,
 				Description:   act.Description,
 				Longitude:     act.Longitude,
 				Latitude:      act.Latitude,
@@ -407,8 +416,8 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 			Name:          act.Title,
 			Description:   act.Description,
 			AverageRating: float64(act.AverageRating),
-			Categories:    act.Category,
-			ImageUrl:      imageUrl,
+			Categories:    act.Categories,
+			ImageNames:      []string{imageUrl},
 		}, actTime
 	}
 
@@ -531,8 +540,22 @@ func (s *Server) GetProfile(req *models.GetProfileReq) (*models.GetProfileResp, 
 		//if result := s.Database.First(&user, req.UserId); result.Error != nil {
 		return nil, ErrUserNotFound
 	}
+
+	// parse user activities into response
+	parsedActivities := make([]*models.GetActivityResp, 0)
+	for _, activity := range user.Activities {
+		parsedActivities = append(parsedActivities, ParseActivity(activity))
+	}
+
 	return &models.GetProfileResp{
-		User:        user,
+		ID:          user.ID,
+		Username:    user.Username,
+		Email:       user.Email,
+		AboutMe:     user.AboutMe,
+		AvatarName:  user.AvatarName,
+		Activities:  parsedActivities,
+		Reviews:     ParseReviewList(user.Reviews),
+		CreatedAt:   user.CreatedAt,
 		RetrievedAt: time.Now(),
 	}, nil
 }
@@ -564,9 +587,14 @@ func (s *Server) UpdateAvatar(form *models.UpdateAvatarForm, c *gin.Context) (*m
 		return nil, ErrMissingUserInfo
 	}
 	// if saveErr occurs, return nil
-	avatarName, avatarPath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
-	if saveErr != nil {
-		return nil, saveErr
+	var avatarName, avatarPath string
+	if form.Avatar != nil {
+		avaName, avaPath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
+		if saveErr != nil {
+			return nil, saveErr
+		}
+		avatarName = avaName
+		avatarPath = avaPath
 	}
 	user.AvatarName = avatarName
 	if result := s.Database.Save(&user); result.Error != nil {
@@ -625,11 +653,11 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		Title:        form.Title,
 		Paid:         form.Paid,
 		AuthorRating: form.Rating,
-		Category:     form.Category,
+		Categories:     form.Categories,
 		Description:  form.Description,
 		Longitude:    form.Longitude,
 		Latitude:     form.Latitude,
-		OpeningTimes: packCreateOpeningTimes(form),
+		OpeningTimes: PackCreateOpeningTimes(form),
 		ImageNames:   imgNames,
 	}
 	//if err := s.Database.Model(&user).Association("Activities").Append(&activity); err != nil {
@@ -694,12 +722,12 @@ func (s *Server) UpdateActivity(form *models.UpdateActivityForm, c *gin.Context)
 	activity.Title = form.Title
 	activity.AuthorRating = form.Rating
 	activity.Paid = form.Paid
-	activity.Category = form.Category
+	activity.Categories = form.Categories
 	activity.Description = form.Description
 	activity.Longitude = form.Longitude
 	activity.Latitude = form.Latitude
 	activity.ImageNames = imgNames
-	activity.OpeningTimes = packUpdateOpeningTimes(form)
+	activity.OpeningTimes = PackUpdateOpeningTimes(form)
 
 	if result := s.Database.Save(&activity); result.Error != nil {
 		for i := 0; i < len(imgPaths); i++ {
@@ -770,38 +798,7 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 		return nil, ErrDatabase
 	}
 
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AverageRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   ParseReviewList(activity.Reviews),
-		CreatedAt:     activity.CreatedAt,
-	}, nil
+	return ParseActivity(activity), nil
 }
 
 func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityResp, error) {
@@ -815,38 +812,7 @@ func (s *Server) GetActivity(req *models.GetActivityReq) (*models.GetActivityRes
 		return nil, ErrActivityNotFound
 	}
 
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AverageRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   ParseReviewList(activity.Reviews),
-		CreatedAt:     activity.CreatedAt,
-	}, nil
+	return ParseActivity(activity), nil
 }
 
 func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchActivityResp, error) {
@@ -884,8 +850,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 					Name:          act.Title,
 					Description:   act.Description,
 					AverageRating: float64(act.AverageRating),
-					Categories:    act.Category,
-					ImageUrl:      imageUrl,
+					Categories:    act.Categories,
+					ImageNames:      []string{imageUrl},
 				})
 			}
 		}
@@ -900,8 +866,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 				Name:          act.Title,
 				Description:   act.Description,
 				AverageRating: float64(act.AverageRating),
-				Categories:    act.Category,
-				ImageUrl:      imageUrl,
+				Categories:    act.Categories,
+				ImageNames:      []string{imageUrl},
 			})
 		}
 	}
@@ -1059,51 +1025,6 @@ func (s *Server) DeleteActivityImage(req *models.DeleteActivityImageReq) (*model
 
 }
 
-/*
-	func (s *Server) CreateReview(req *models.CreateReviewReq) (*models.CreateReviewResp, error) {
-		if req == nil {
-			return nil, ErrBadRequest
-		}
-
-		if req.Review == "" {
-			return nil, ErrNullReview
-		}
-
-		var user gormModel.User
-		// find the user in database
-		if result := s.Database.First(&user, req.UserId); result.Error != nil {
-			return nil, ErrUserNotFound
-		}
-
-		var activity gormModel.Activity
-		// if activity cannot be found by given ID, return error
-		if result := s.Database.First(&activity, req.ActivityId); result.Error != nil || result.RowsAffected == 0 {
-			return nil, ErrActivityNotFound
-		}
-
-		review := gormModel.Review{
-			UserId:      req.UserId,
-			ActivityId:  req.ActivityId,
-			Description: req.Review,
-			Rating:      req.Rating,
-		}
-		if result := s.Database.Save(&review); result.Error != nil {
-			fmt.Println("create_review err: ", result.Error) // TODO: write to log instead
-			return nil, result.Error
-		}
-
-		if err := s.UpdateAverageReview(&activity, true, req.Rating); err != nil {
-			return nil, err
-		}
-
-		return &models.CreateReviewResp{
-			ReviewId:      review.ID,
-			CreatedAt:     review.CreatedAt,
-			ReviewCounts:  activity.ReviewCounts,
-			AverageRating: activity.AverageRating,
-		}, nil
-	}
-*/
 func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityResp, error) {
 	if req == nil {
 		return nil, ErrBadRequest
@@ -1159,38 +1080,7 @@ func (s *Server) UpdateReview(req *models.UpdateReviewReq) (*models.GetActivityR
 		return nil, ErrActivityNotFound
 	}
 
-	return &models.GetActivityResp{
-		ActivityId:  activity.ID,
-		Title:       activity.Title,
-		Rating:      activity.AverageRating,
-		Paid:        activity.Paid,
-		Category:    activity.Category,
-		Description: activity.Description,
-		Longitude:   activity.Longitude,
-		Latitude:    activity.Latitude,
-		ImageNames:  activity.ImageNames,
-
-		MonOpeningTime:  int(activity.OpeningTimes[0]),
-		TueOpeningTime:  int(activity.OpeningTimes[1]),
-		WedOpeningTime:  int(activity.OpeningTimes[2]),
-		ThurOpeningTime: int(activity.OpeningTimes[3]),
-		FriOpeningTime:  int(activity.OpeningTimes[4]),
-		SatOpeningTime:  int(activity.OpeningTimes[5]),
-		SunOpeningTime:  int(activity.OpeningTimes[6]),
-		MonClosingTime:  int(activity.OpeningTimes[7]),
-		TueClosingTime:  int(activity.OpeningTimes[8]),
-		WedClosingTime:  int(activity.OpeningTimes[9]),
-		ThurClosingTime: int(activity.OpeningTimes[10]),
-		FriClosingTime:  int(activity.OpeningTimes[11]),
-		SatClosingTime:  int(activity.OpeningTimes[12]),
-		SunClosingTime:  int(activity.OpeningTimes[13]),
-
-		InactiveCount: activity.InactiveCount,
-		InactiveFlag:  activity.InactiveFlag,
-		ReviewCounts:  activity.ReviewCounts,
-		ReviewsList:   ParseReviewList(activity.Reviews),
-		CreatedAt:     activity.CreatedAt,
-	}, nil
+	return ParseActivity(activity), nil
 }
 
 // ValidateFile onwards are utility functions
@@ -1233,6 +1123,9 @@ func SaveFile(image *multipart.FileHeader, c *gin.Context, subDirectory string) 
 	_, err := ValidateFile(image)
 	if err != nil {
 		return "", "", err
+	}
+	if image == nil {
+		return "", "", errors.New("Cannot find file")
 	}
 	// create subfolder if it doesn't exist
 	fileDirectory := filepath.Join(ImageRoot, subDirectory)
@@ -1311,7 +1204,7 @@ func ParseReviewList(reviewList []gormModel.Review) []*models.Review {
 	return parsedReview
 }
 
-func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
+func PackCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
 	var opening []int32
 	opening = append(opening, int32(getValidTime(createForm.SunOpeningTime)),
 		int32(getValidTime(createForm.MonOpeningTime)),
@@ -1325,7 +1218,7 @@ func packCreateOpeningTimes(createForm *models.CreateActivityForm) []int32 {
 	return opening
 }
 
-func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
+func PackUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 	var opening []int32
 	opening = append(opening, int32(getValidTime(updateReq.SunOpeningTime)),
 		int32(getValidTime(updateReq.MonOpeningTime)),
@@ -1336,4 +1229,39 @@ func packUpdateOpeningTimes(updateReq *models.UpdateActivityForm) []int32 {
 		int32(getValidTime(updateReq.WedClosingTime)), int32(getValidTime(updateReq.ThurClosingTime)),
 		int32(getValidTime(updateReq.FriClosingTime)), int32(getValidTime(updateReq.SatClosingTime)))
 	return opening
+}
+
+func ParseActivity(activity gormModel.Activity) *models.GetActivityResp {
+	return &models.GetActivityResp{
+		ActivityId:  activity.ID,
+		Title:       activity.Title,
+		Rating:      activity.AverageRating,
+		Paid:        activity.Paid,
+		Categories:    activity.Categories,
+		Description: activity.Description,
+		Longitude:   activity.Longitude,
+		Latitude:    activity.Latitude,
+		ImageNames:  activity.ImageNames,
+
+		MonOpeningTime:  int(activity.OpeningTimes[0]),
+		TueOpeningTime:  int(activity.OpeningTimes[1]),
+		WedOpeningTime:  int(activity.OpeningTimes[2]),
+		ThurOpeningTime: int(activity.OpeningTimes[3]),
+		FriOpeningTime:  int(activity.OpeningTimes[4]),
+		SatOpeningTime:  int(activity.OpeningTimes[5]),
+		SunOpeningTime:  int(activity.OpeningTimes[6]),
+		MonClosingTime:  int(activity.OpeningTimes[7]),
+		TueClosingTime:  int(activity.OpeningTimes[8]),
+		WedClosingTime:  int(activity.OpeningTimes[9]),
+		ThurClosingTime: int(activity.OpeningTimes[10]),
+		FriClosingTime:  int(activity.OpeningTimes[11]),
+		SatClosingTime:  int(activity.OpeningTimes[12]),
+		SunClosingTime:  int(activity.OpeningTimes[13]),
+
+		InactiveCount: activity.InactiveCount,
+		InactiveFlag:  activity.InactiveFlag,
+		ReviewCounts:  activity.ReviewCounts,
+		ReviewsList:   ParseReviewList(activity.Reviews),
+		CreatedAt:     activity.CreatedAt,
+	}
 }

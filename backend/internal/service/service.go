@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/chen1ting/TravelMaster/internal/models"
@@ -43,6 +44,7 @@ func (s *Service) SignupView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Println(signupResp)
 
 	c.JSON(http.StatusCreated, signupResp)
 }
@@ -383,4 +385,9 @@ func (s *Service) UpdateReview(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusAccepted, getActivityResp)
+}
+
+// blank endpoint
+func (s *Service) Feedback(c *gin.Context) {
+	c.JSON(http.StatusCreated, gin.H{"message": "ok"})
 }

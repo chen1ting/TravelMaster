@@ -14,7 +14,7 @@ import SignUp from "./Components/SignUp";
 import Discover from "./Pages/Discover";
 import Reviews from "./Pages/Reviews";
 import ActivityDescription from "./Pages/ActivityDescription";
-
+import Feedback from "./Components/Feedback";
 import Profile from "./Pages/Profile";
 
 import CreateActivity from "./Pages/CreateActivity";
@@ -49,6 +49,7 @@ function App() {
           <Route path="profile" element={<Profile imageUrl={imageUrl} />} />
           {/* <Route path="createactivity" element={<CreateActivity/>}/> */}
           <Route path="itineraries" element={<Itineraries />} />
+          <Route path="feedback" element={<Feedback />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="edit-itinerary/:id" element={<Itinerary />} />
           <Route path="activity/:id" element={<Activity />} />
