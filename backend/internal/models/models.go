@@ -121,8 +121,11 @@ type ActivitySummary struct {
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
 	AverageRating float64  `json:"average_rating"` // to nearest .5 out of 5
+	
 	Categories    []string `json:"categories"`
 	ImageNames      []string   `json:"image_names"`
+
+	ReviewCounts    int       `json:"review_counts"`
 }
 
 type GetItineraryRequest struct {

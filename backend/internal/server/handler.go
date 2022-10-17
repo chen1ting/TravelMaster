@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -415,9 +416,10 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 			Id:            act.ID,
 			Name:          act.Title,
 			Description:   act.Description,
-			AverageRating: float64(act.AverageRating),
+			AverageRating: Round(float64(act.AverageRating), 0.05),
 			Categories:    act.Categories,
 			ImageNames:      []string{imageUrl},
+			ReviewCounts: act.ReviewCounts,
 		}, actTime
 	}
 
@@ -849,9 +851,10 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 					Id:            act.ID,
 					Name:          act.Title,
 					Description:   act.Description,
-					AverageRating: float64(act.AverageRating),
+					AverageRating: Round(float64(act.AverageRating), 0.05),
 					Categories:    act.Categories,
 					ImageNames:      []string{imageUrl},
+					ReviewCounts: act.ReviewCounts,
 				})
 			}
 		}
@@ -865,9 +868,10 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 				Id:            act.ID,
 				Name:          act.Title,
 				Description:   act.Description,
-				AverageRating: float64(act.AverageRating),
+				AverageRating: Round(float64(act.AverageRating), 0.05),
 				Categories:    act.Categories,
 				ImageNames:      []string{imageUrl},
+				ReviewCounts: act.ReviewCounts,
 			})
 		}
 	}
@@ -876,6 +880,10 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 		Activities:   filteredAct,
 		NumOfResults: len(filteredAct),
 	}, nil
+}
+
+func Round(x, unit float64) float64 {
+	return math.Round(x/unit) * unit
 }
 
 func (s *Server) IncrementInactiveCount(req *models.IncrementInactiveCountReq) (*models.ChangeInactiveCountResp, error) {
@@ -1235,7 +1243,7 @@ func ParseActivity(activity gormModel.Activity) *models.GetActivityResp {
 	return &models.GetActivityResp{
 		ActivityId:  activity.ID,
 		Title:       activity.Title,
-		Rating:      activity.AverageRating,
+		Rating:      float32(Round(float64(activity.AverageRating), 0.05)),
 		Paid:        activity.Paid,
 		Categories:    activity.Categories,
 		Description: activity.Description,
