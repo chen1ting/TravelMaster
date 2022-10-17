@@ -71,7 +71,7 @@ const Welcome = () => {
       justifyContent="flex-start"
       h="94vh"
     >
-      <Box mt="6%" textAlign="center">
+      <Box mt="2%" textAlign="center">
         <Heading size="2xl" fontWeight="2" my="5">
           Hi {user}!
         </Heading>
@@ -83,6 +83,7 @@ const Welcome = () => {
       {notifMsg && (
         <Box
           mt="3"
+          color={'white'}
           bgColor={isError ? "red.400" : "green.500"}
           py="2"
           px="6"
@@ -116,7 +117,7 @@ const Welcome = () => {
                 borderBottom="1px solid white"
                 p="2"
                 borderRadius="15px"
-                bgColor="gray.600"
+                bgColor="gray.200"
                 whiteSpace="nowrap"
               >
                 {startDateTime.toLocaleString()}
@@ -139,7 +140,7 @@ const Welcome = () => {
                 borderBottom="1px solid white"
                 p="2"
                 borderRadius="15px"
-                bgColor="gray.600"
+                bgColor="gray.200"
                 whiteSpace="nowrap"
               >
                 {endDateTime.toLocaleString()}
@@ -195,6 +196,7 @@ const Welcome = () => {
           <Text fontSize="18">Plan my itinerary!</Text>
         </Button>
       </Box>
+      <Box p={'1vh'}></Box>
     </Box>
   );
 };

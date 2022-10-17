@@ -126,7 +126,8 @@ const EditItinerary = () => {
             <Box
               px="5"
               py="3"
-              bgColor={isError ? "orange.400" : "green.400"}
+              color={'white'}
+              bgColor={isError ? "orange.500" : "green.400"}
               borderRadius="15px"
             >
               {notifMsg2}
@@ -205,7 +206,7 @@ const EditItinerary = () => {
               _hover={{
                 color:
                   curDate.getTime() === startDate.getTime()
-                    ? "gray"
+                    ? "gray.600"
                     : "blue.300",
               }}
               onClick={() => {
@@ -222,7 +223,7 @@ const EditItinerary = () => {
                 );
               }}
               color={
-                curDate.getTime() === startDate.getTime() ? "gray" : "white"
+                curDate.getTime() === startDate.getTime() ? "gray.300" : "black"
               }
             />
             <Text fontSize="18" fontWeight="600" style={{ userSelect: "none" }}>
@@ -238,7 +239,7 @@ const EditItinerary = () => {
               }
               _hover={{
                 color:
-                  curDate.getTime() === endDate.getTime() ? "gray" : "blue.300",
+                  curDate.getTime() === endDate.getTime() ? "gray.600" : "blue.300",
               }}
               onClick={() => {
                 if (curDate.getTime() === endDate.getTime()) {
@@ -253,11 +254,11 @@ const EditItinerary = () => {
                     )
                 );
               }}
-              color={curDate.getTime() === endDate.getTime() ? "gray" : "white"}
+              color={curDate.getTime() === endDate.getTime() ? "gray.300" : "black"}
             />
           </Box>
 
-          <Box my="6" py="6" pr="8" bgColor="gray.900">
+          <Box my="6" py="6" pr="8" bgColor="gray.200">
             {timeBins
               .slice(getStartIdx(), getStartIdx() + 24)
               .map((activity, index) =>
@@ -380,7 +381,7 @@ const TimeCell = (
               w="full"
               _hover={{
                 brightness: "120%",
-                backgroundColor: "#2F855A",
+                backgroundColor: "green.300",
               }}
             >
               <Text>Nothing here</Text>

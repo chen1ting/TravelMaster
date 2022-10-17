@@ -456,7 +456,7 @@ const sendUpdateReview = async (
 
   if (rawResponse.status !== 202) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
-    setNotifMsg("failed to save updated review");
+    setNotifMsg("Failed to save updated review");
     setIsError(true);
   } else {
     setNotifMsg("Review updated successfully!");

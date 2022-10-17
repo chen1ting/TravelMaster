@@ -223,7 +223,7 @@ const ActivityCard = ({ act, navigate }) => {
         brightness="90%"
         _hover={{
           brightness: "120%",
-          backgroundColor: "teal",
+          backgroundColor: "teal.300",
         }}
         border="1px solid white"
         borderRadius="15px"
@@ -342,7 +342,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
       setIsError(true);
       await new Promise((resolve) => setTimeout(resolve, 3000));
     } else {
-      setNotifMsg("Succesfully created activity");
+      setNotifMsg("Successfully created activity");
       setIsError(false);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate(`/activity/${data.activity_id}`);
