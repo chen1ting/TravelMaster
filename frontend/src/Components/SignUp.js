@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { validSessionGuard } from "../common/common";
-//import { useAuth } from '../lib/auth';
 import { sendSignupReq } from "../api/api";
 import {
   FormControl,

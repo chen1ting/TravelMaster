@@ -1,7 +1,5 @@
-import {useState} from 'react';
-//import { useAuth } from '../lib/auth';
 import {
-    FormControl, FormLabel, Button, Input, Box, Flex, Grid, GridItem, Image, Badge, Text, Stack, Spacer, HStack
+    Button, Box, Grid, GridItem, Image, Badge, Text, Stack, HStack
 } from '@chakra-ui/react';
 import {StarIcon} from "@chakra-ui/icons";
 import ReviewCard from "../Components/ReviewCard";

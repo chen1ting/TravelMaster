@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Flex,
   Box,
-  Text,
   useColorModeValue,
   Menu,
   MenuButton,

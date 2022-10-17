@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Box, Heading, Link, Text } from "@chakra-ui/react";
+import { Box, Heading, Text } from "@chakra-ui/react";
 
 const ItineraryCard = ({ it }) => {
   const navigate = useNavigate();

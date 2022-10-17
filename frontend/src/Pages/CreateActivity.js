@@ -1,25 +1,18 @@
 import {useState} from 'react';
-//import { useAuth } from '../lib/auth';
 import Geocode from "react-geocode";
 
 import {
-    FormControl, FormLabel, Button, Flex, Grid, GridItem,
-    AspectRatio,
+    Button, Flex, Grid, GridItem,
     Box,
-    BoxProps,
-    Container,
-    forwardRef,
-    Heading,
     Input,
     HStack,
     VStack,
     StackDivider,
     Stack,
     Text,
-    Checkbox, CheckboxGroup, Spacer
+    Checkbox, Spacer
 } from "@chakra-ui/react";
 
-import { motion, useAnimation } from "framer-motion";
 import { sendCreateActivityReq } from "../api/apiCreateActivity";
 import {useNavigate} from "react-router-dom";
 const fields_width = '52.5%';

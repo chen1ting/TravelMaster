@@ -13,7 +13,6 @@ import {
 import { ENDPOINT } from "../api/api";
 import ActivityFeed from "../Components/ProfileSubPages/ActivityFeed";
 import Itineraries from "../Components/ProfileSubPages/Itineraries";
-import Bookings from "../Components/ProfileSubPages/Bookings";
 import { useEffect, useState } from "react";
 import { getUserActivities } from "../api/api";
 

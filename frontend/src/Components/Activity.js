@@ -81,6 +81,15 @@ const Activity = () => {
   }, []);
 
   const daysList = ["sun", "mon", "tue", "wed", "thur", "fri", "sat"];
+  const repDays = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   return (
     <Box display="flex" justifyContent="center">
@@ -110,8 +119,8 @@ const Activity = () => {
                 alignItems="center"
                 columnGap="2"
               >
-                {act.categories.map((cat) => (
-                  <Badge variant="outline" colorScheme="green">
+                {act.categories && act.categories.map((cat) => (
+                  <Badge key={cat} variant="outline" colorScheme="green">
                     {cat}
                   </Badge>
                 ))}
@@ -156,7 +165,7 @@ const Activity = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {daysList.map((day) => {
+                    {daysList.map((day, i) => {
                       const open = new Date();
                       open.setHours(act[`${day}_opening_time`]);
                       open.setMinutes(0);
@@ -165,8 +174,8 @@ const Activity = () => {
                       close.setHours(act[`${day}_closing_time`]);
                       close.setMinutes(0);
                       return (
-                        <Tr>
-                          <Td>{day}</Td>
+                        <Tr key={repDays[i]}>
+                          <Td>{repDays[i]}</Td>
                           <Td>
                             {open.getHours().toString().padStart(2, "0")}:
                             {close.getMinutes().toString().padStart(2, "0")}
