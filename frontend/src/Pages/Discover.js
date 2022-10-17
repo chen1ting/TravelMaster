@@ -187,9 +187,10 @@ const Discover = () => {
             alignItems="center"
             mt="5"
           >
-            {activities && activities.map((act) => (
-              <ActivityCard act={act} navigate={navigate} />
-            ))}
+            {activities &&
+              activities.map((act) => (
+                <ActivityCard act={act} navigate={navigate} />
+              ))}
           </Box>
         </Box>
       )}
@@ -261,11 +262,12 @@ const ActivityCard = ({ act, navigate }) => {
             flexWrap="wrap"
             rowGap="2"
           >
-            {act.categories && act.categories.map((cat) => (
-              <Badge variant="outline" colorScheme="green">
-                {cat}
-              </Badge>
-            ))}
+            {act.categories &&
+              act.categories.map((cat) => (
+                <Badge variant="outline" colorScheme="green">
+                  {cat}
+                </Badge>
+              ))}
           </Box>
 
           <Box display="flex" alignItems="center" columnGap="3">
@@ -325,27 +327,56 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
     7, 7, 7, 7, 7, 7, 7, 22, 22, 22, 22, 22, 22, 22,
   ]); // day: i, open: i, close i+7
 
+  const [isOpen, setIsOpen] = useState([
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+  ]);
+
   const submitCreateActivityForm = async () => {
+    onClose();
+    const uid = window.sessionStorage.getItem("uid");
+    if (!uid) {
+      setNotifMsg("Create an account first to contribute an activity!");
+      setIsError(true);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      setNotifMsg("");
+      setIsError(false);
+      return;
+    }
+    const tmpHours = [...hours];
+    for (let i = 0; i < 7; i++) {
+      if (!isOpen[i]) {
+        tmpHours[i] = 25;
+        tmpHours[i + 7] = 25;
+      }
+    }
+
     const data = await sendCreateActivityReq(
-      window.sessionStorage.getItem("uid"),
+      uid,
       title,
       isPaid,
       cats,
       desc,
       picture,
-      hours,
+      tmpHours,
       loc
     );
-    onClose();
 
     if (data.error) {
       setNotifMsg(data.error);
       setIsError(true);
       await new Promise((resolve) => setTimeout(resolve, 3000));
+      setNotifMsg("");
+      setIsError(false);
     } else {
       setNotifMsg("Successfully created activity");
       setIsError(false);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 800));
       navigate(`/activity/${data.activity_id}`);
     }
   };
@@ -366,7 +397,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
     );
 
   return (
-    <ModalContent>
+    <ModalContent minW="600px">
       <ModalHeader>Create an activity</ModalHeader>
       <ModalCloseButton />
       <ModalBody pb={6}>
@@ -449,6 +480,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
               <Thead>
                 <Tr>
                   <Th>Day</Th>
+                  <Th>Is Open</Th>
                   <Th>Opening Time</Th>
                   <Th>Closing Time</Th>
                 </Tr>
@@ -466,39 +498,61 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
                     <Tr>
                       <Td>{day}</Td>
                       <Td>
-                        <DatePicker
-                          selected={open}
-                          onChange={(date) =>
-                            setHours((prev) =>
-                              prev.map((e, idx) =>
-                                idx === i ? date.getHours() : e
+                        <Checkbox
+                          colorScheme="green"
+                          isChecked={isOpen[i]}
+                          onChange={(e) =>
+                            setIsOpen((prev) =>
+                              prev.map((b, idx) =>
+                                idx === i ? e.target.checked : b
                               )
                             )
                           }
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={60}
-                          timeCaption="Time"
-                          dateFormat="h:mm aa"
                         />
                       </Td>
-                      <Td>
-                        <DatePicker
-                          selected={close}
-                          onChange={(date) =>
-                            setHours((prev) =>
-                              prev.map((e, idx) =>
-                                idx === i + 7 ? date.getHours() : e
-                              )
-                            )
-                          }
-                          showTimeSelect
-                          showTimeSelectOnly
-                          timeIntervals={60}
-                          timeCaption="Time"
-                          dateFormat="h:mm aa"
-                        />
-                      </Td>
+                      {isOpen[i] ? (
+                        <>
+                          <Td>
+                            <DatePicker
+                              selected={open}
+                              onChange={(date) =>
+                                setHours((prev) =>
+                                  prev.map((e, idx) =>
+                                    idx === i ? date.getHours() : e
+                                  )
+                                )
+                              }
+                              showTimeSelect
+                              showTimeSelectOnly
+                              timeIntervals={60}
+                              timeCaption="Time"
+                              dateFormat="h:mm aa"
+                            />
+                          </Td>
+                          <Td>
+                            <DatePicker
+                              selected={close}
+                              onChange={(date) =>
+                                setHours((prev) =>
+                                  prev.map((e, idx) =>
+                                    idx === i + 7 ? date.getHours() : e
+                                  )
+                                )
+                              }
+                              showTimeSelect
+                              showTimeSelectOnly
+                              timeIntervals={60}
+                              timeCaption="Time"
+                              dateFormat="h:mm aa"
+                            />
+                          </Td>
+                        </>
+                      ) : (
+                        <>
+                          <Td>-</Td>
+                          <Td>-</Td>
+                        </>
+                      )}
                     </Tr>
                   );
                 })}
