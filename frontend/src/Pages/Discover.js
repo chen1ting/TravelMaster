@@ -284,7 +284,7 @@ const ActivityCard = ({ act, navigate }) => {
               name="rating"
               starSpacing="3px"
             />
-            <Text mt="1px">({act.average_rating})</Text>
+            <Text mt="1px">({act.review_counts})</Text>
           </Box>
           <Text noOfLines="5" mt="8" fontSize="18">
             {act.description}
