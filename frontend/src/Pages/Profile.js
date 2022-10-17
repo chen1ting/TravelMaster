@@ -50,7 +50,7 @@ const Profile = ({ imageUrl }) => {
           transform={"translate(-50%,-50%)"}
           textAlign={"center"}
         >
-          <Avatar size={"2xl"} src={`${ENDPOINT}/avatars/` + imageUrl} />
+          <Avatar size={"xl"} src={`${ENDPOINT}/avatars/` + imageUrl} />
         </Box>
       </GridItem>
       <GridItem area={"username"}>

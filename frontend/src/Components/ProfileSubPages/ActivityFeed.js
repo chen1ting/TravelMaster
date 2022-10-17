@@ -16,7 +16,12 @@ const ActivityFeed = ({ isLoading, activities }) => {
           {activities &&
             activities.map((act) => (
               <ActivityCard
-                act={{ id: act.activity_id, ...act }}
+                act={{
+                  id: act.activity_id,
+                  name: act.title,
+                  average_rating: act.rating_score,
+                  ...act,
+                }}
                 navigate={navigate}
               />
             ))}
