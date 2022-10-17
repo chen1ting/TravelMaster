@@ -62,6 +62,11 @@ const Welcome = () => {
     "Luxurious",
     "Thrifty",
     "Shopping",
+    "Fun and Culture",
+    "Entertainment",
+    "Theme Park",
+    "Relaxing",
+    "Health and Wellness",
   ];
   return (
     <Box
@@ -83,7 +88,7 @@ const Welcome = () => {
       {notifMsg && (
         <Box
           mt="3"
-          color={'white'}
+          color={"white"}
           bgColor={isError ? "red.400" : "green.500"}
           py="2"
           px="6"
@@ -196,7 +201,7 @@ const Welcome = () => {
           <Text fontSize="18">Plan my itinerary!</Text>
         </Button>
       </Box>
-      <Box p={'1vh'}></Box>
+      <Box p={"1vh"}></Box>
     </Box>
   );
 };
