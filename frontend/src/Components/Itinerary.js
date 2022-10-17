@@ -562,6 +562,7 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
               src={`${ENDPOINT}/activity-images` + act.image_names[0]}
               alt={act.name}
             />
+
             <Heading mt="2" size="sm">
               {act.name}
             </Heading>
@@ -572,6 +573,7 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
                 </Badge>
               ))}
             </Box>
+
             <Box display="flex" alignItems="center" columnGap="3">
               <StarRatings
                 rating={act.average_rating}

@@ -337,8 +337,9 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
       loc
     );
     onClose();
-    if (data == null) {
-      setNotifMsg("Failed to create activity");
+
+    if (data.error) {
+      setNotifMsg(data.error);
       setIsError(true);
       await new Promise((resolve) => setTimeout(resolve, 3000));
     } else {

@@ -62,7 +62,6 @@ const sendCreateActivityReq = async (
 
   if (rawResponse.status !== 201) {
     console.log("resp: " + rawResponse.status); // TODO: might wanna return an err message to display here
-    return null;
   }
   const content = await rawResponse.json();
   return content;
