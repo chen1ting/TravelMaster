@@ -45,6 +45,7 @@ import {
   Marker,
 } from "react-google-maps";
 import { apiKey } from "../common/common";
+import { isLabelWithInternallyDisabledControl } from "@testing-library/user-event/dist/utils";
 
 const Activity = () => {
   const { id } = useParams();
@@ -117,11 +118,12 @@ const Activity = () => {
                 alignItems="center"
                 columnGap="2"
               >
-                {act.categories && act.categories.map((cat) => (
-                  <Badge key={cat} variant="outline" colorScheme="green">
-                    {cat}
-                  </Badge>
-                ))}
+                {act.categories &&
+                  act.categories.map((cat) => (
+                    <Badge key={cat} variant="outline" colorScheme="green">
+                      {cat}
+                    </Badge>
+                  ))}
               </Box>
               <Badge
                 my="4"
@@ -150,7 +152,7 @@ const Activity = () => {
                 {reported ? "Remove inactive report" : "Report inactive"}
               </Button>
             </Box>
-            <Box maxW="700px">
+            <Box maxW="800px">
               <Heading>{act.title}</Heading>
               <Text my="7">{act.description}</Text>
               <TableContainer>
@@ -172,17 +174,27 @@ const Activity = () => {
                       close.setHours(act[`${day}_closing_time`]);
                       close.setMinutes(0);
                       return (
-                        <Tr key={repDays[i]}>
-                          <Td>{repDays[i]}</Td>
-                          <Td>
-                            {open.getHours().toString().padStart(2, "0")}:
-                            {close.getMinutes().toString().padStart(2, "0")}
-                          </Td>
-                          <Td>
-                            {close.getHours().toString().padStart(2, "0")}:
-                            {close.getMinutes().toString().padStart(2, "0")}
-                          </Td>
-                        </Tr>
+                        <>
+                          {act[`${day}_opening_time`] === 25 ? (
+                            <Tr key={repDays[i]}>
+                              <Td>{repDays[i]}</Td>
+                              <Td>-</Td>
+                              <Td>-</Td>
+                            </Tr>
+                          ) : (
+                            <Tr key={repDays[i]}>
+                              <Td>{repDays[i]}</Td>
+                              <Td>
+                                {open.getHours().toString().padStart(2, "0")}:
+                                {close.getMinutes().toString().padStart(2, "0")}
+                              </Td>
+                              <Td>
+                                {close.getHours().toString().padStart(2, "0")}:
+                                {close.getMinutes().toString().padStart(2, "0")}
+                              </Td>
+                            </Tr>
+                          )}
+                        </>
                       );
                     })}
                   </Tbody>
@@ -274,56 +286,61 @@ const Reviews = ({ reviews, aid, setActivity }) => {
         </Text>
       )}
 
-      <Box display="flex" justifyContent="flex-start">
-        <Avatar
-          mt="1"
-          mr="4"
-          ml="2"
-          src={`${ENDPOINT}/avatars/${window.sessionStorage.getItem(
-            "avatar_file_name"
-          )}`}
-        />
-        <Box display="flex" flexDir="column" rowGap="5">
-          <Box display="flex" columnGap="10" alignItems="center">
-            <Input
-              w="300px"
-              size="lg"
-              type="text"
-              placeholder="Enter a title for your review"
-              onChange={(e) => setTitle(e.target.value)}
-              value={title}
-            />
-            <Box display="flex" alignItems="center" columnGap="2">
-              <Text fontSize="18">Rating: </Text>
-              <StarRatings
-                starHoverColor="#F6E05E"
-                starRatedColor="#F6E05E"
-                starDimension="25px"
-                rating={stars}
-                numberOfStars={5}
-                name="rating"
-                isAggregateRating
-                starSpacing="2px"
-                changeRating={(rating) => {
-                  setStars(rating);
-                }}
+      {window.sessionStorage.getItem("uid") ? (
+        <Box display="flex" justifyContent="flex-start">
+          <Avatar
+            mt="1"
+            mr="4"
+            ml="2"
+            src={`${ENDPOINT}/avatars/${window.sessionStorage.getItem(
+              "avatar_file_name"
+            )}`}
+          />
+          <Box display="flex" flexDir="column" rowGap="5">
+            <Box display="flex" columnGap="10" alignItems="center">
+              <Input
+                w="300px"
+                size="lg"
+                type="text"
+                placeholder="Enter a title for your review"
+                onChange={(e) => setTitle(e.target.value)}
+                value={title}
               />
+              <Box display="flex" alignItems="center" columnGap="2">
+                <Text fontSize="18">Rating: </Text>
+                <StarRatings
+                  starHoverColor="#F6E05E"
+                  starRatedColor="#F6E05E"
+                  starDimension="25px"
+                  rating={stars}
+                  numberOfStars={5}
+                  name="rating"
+                  isAggregateRating
+                  starSpacing="2px"
+                  changeRating={(rating) => {
+                    setStars(rating);
+                  }}
+                />
+              </Box>
+            </Box>
+            <Textarea
+              w="600px"
+              h="120px"
+              placeholder="Enter your review"
+              onChange={(e) => setDesc(e.target.value)}
+              value={desc}
+            />
+            <Box display="flex" justifyContent="flex-end">
+              <Button w="200px" colorScheme="green" onClick={submitReview}>
+                Submit
+              </Button>
             </Box>
           </Box>
-          <Textarea
-            w="600px"
-            h="120px"
-            placeholder="Enter your review"
-            onChange={(e) => setDesc(e.target.value)}
-            value={desc}
-          />
-          <Box display="flex" justifyContent="flex-end">
-            <Button w="200px" colorScheme="green" onClick={submitReview}>
-              Submit
-            </Button>
-          </Box>
         </Box>
-      </Box>
+      ) : (
+        <Text>Register for an account first to write a review.</Text>
+      )}
+
       {reviews.length === 0 ? (
         <Box my="6">
           <Heading>No reviews posted yet. Be the first!</Heading>
