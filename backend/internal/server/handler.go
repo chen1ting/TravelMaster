@@ -267,11 +267,10 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 	y := req.EndTime
 	segments := make([]*models.Segment, 0)
 	used := make(map[int64]bool)
-
 	for x <= y {
 		if (hr >= 7 && hr <= 8) || (hr >= 11 && hr <= 12) || (hr >= 6 && hr <= 7) { // breakfast, lunch, time
 			// randomly select a food activity that is open at that time
-			activity, h := randomAndIsOpen(actMap["FOOD AND BEVERAGE"], day, hr, used)
+			activity, h := randomAndIsOpen(actMap["Food and beverage"], day, hr, used)
 			if activity == nil { // no food activity somehow...
 				fmt.Printf("WARN: no food activity for start time: %d\n", x)
 				hr += 1
@@ -286,7 +285,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 			hr += h + 2 // 2h gap between every activity
 			x += int64((h + 2) * 60 * 60)
 		} else if hr >= 21 { // 10 PM or later, fast-forward to 8 AM next day
-			ff := 7 - hr + 12
+			ff := 7 + 24 - hr
 			hr = 7
 			x += int64(ff * 60 * 60)
 			day = (day + 1) % 7
@@ -302,6 +301,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 						ActivitySummary: activity,
 					})
 					hr += h + 2 // 2h gap between every activity
+					x += int64((h + 2) * 60 * 60)
 					break
 				}
 			}
@@ -317,6 +317,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 							ActivitySummary: activity,
 						})
 						hr += h + 2 // 2h gap between every activity
+						x += int64((h + 2) * 60 * 60)
 						break
 					}
 				}
@@ -398,7 +399,6 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 	for _, act := range choices {
 		opening := int(act.OpeningTimes[day])
 		closing := int(act.OpeningTimes[day+7])
-		//fmt.Println("DEBUG choice: ", act, day, hr, used)
 		if hr < opening || hr > closing || used[act.ID] {
 			continue
 		}

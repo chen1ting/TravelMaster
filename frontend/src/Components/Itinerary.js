@@ -356,7 +356,7 @@ const TimeCell = (
                   filter="auto"
                   brightness="90%"
                   objectFit="cover"
-                  src={`${ENDPOINT}/activity-images/` + activity.image_url}
+                  src={`${ENDPOINT}/activity-images/` + activity.image_names[0]}
                   alt={activity.name}
                   cursor="pointer"
                   _hover={{
@@ -419,14 +419,21 @@ const PopoverWrapper = ({
             {activity ? (
               <Box py="4" px="2">
                 <Image
-                  src={`{ENDPOINT/activity-images/` + activity.image_url}
+                  src={`${ENDPOINT}/activity-images/` + activity.image_names[0]}
                   alt={activity.name}
                   mb="4"
                 />
                 <Heading size="md">{activity.name}</Heading>
-                <Box my="2" display="flex" alignItems="center" columnGap="2">
+                <Box
+                  my="2"
+                  display="flex"
+                  alignItems="center"
+                  columnGap="2"
+                  flexWrap="wrap"
+                  rowGap="2"
+                >
                   {activity.categories.map((cat) => (
-                    <Badge variant="outline" colorScheme="green">
+                    <Badge key={cat} variant="outline" colorScheme="green">
                       {cat}
                     </Badge>
                   ))}
@@ -560,10 +567,9 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
               mt="4"
               h="150px"
               w="full"
-              src={`${ENDPOINT}/activity-images` + act.image_url}
+              src={`${ENDPOINT}/activity-images` + act.image_names[0]}
               alt={act.name}
             />
-
             <Heading mt="2" size="sm">
               {act.name}
             </Heading>
@@ -574,7 +580,6 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
                 </Badge>
               ))}
             </Box>
-
             <Box display="flex" alignItems="center" columnGap="3">
               <StarRatings
                 rating={act.average_rating}
