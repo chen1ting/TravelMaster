@@ -28,10 +28,6 @@ const DiscoverHotels = () => {
     const [value, setValue] = React.useState(2)
     const handleChange = (value) => setValue(value)
 
-    function onSubmit(e) {
-        e.preventDefault();
-    }
-
     return (
         <Grid
             templateAreas={`"inputDates inputTravellers"

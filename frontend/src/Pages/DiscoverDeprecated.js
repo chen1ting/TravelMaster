@@ -6,8 +6,8 @@ import {
     Text
 } from "@chakra-ui/react";
 import DiscoverActivities from "./DiscoverSubPages/DiscoverActivities";
-import DiscoverFlights from "./DiscoverSubPages/DiscoverFlights";
-import DiscoverHotels from "./DiscoverSubPages/DiscoverHotels";
+import DiscoverFlights from "./DiscoverSubPages/DiscoverFlightsDeprecated";
+import DiscoverHotels from "./DiscoverSubPages/DiscoverHotelsDeprecated";
 
 const DiscoverDeprecated = () => {
     return (

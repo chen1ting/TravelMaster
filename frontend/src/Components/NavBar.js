@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Flex,
   Box,
-  Text,
   useColorModeValue,
   Menu,
   MenuButton,
@@ -106,6 +105,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
                     py="1"
                     rounded="md"
                     _hover={{
+                      color: "white",
                       bg: "blue.400",
                       fontWeight: "bold",
                     }}
@@ -125,6 +125,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
                     py="1"
                     rounded="md"
                     _hover={{
+                      color: "white",
                       bg: "blue.400",
                       fontWeight: "bold",
                     }}
@@ -142,6 +143,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
                     py="1"
                     rounded="md"
                     _hover={{
+                      color: "white",
                       bg: "blue.400",
                       fontWeight: "bold",
                     }}
@@ -156,6 +158,7 @@ const Header = ({ imageUrl, setImageUrl }) => {
                     py="1"
                     rounded="md"
                     _hover={{
+                      color: "white",
                       bg: "blue.400",
                       fontWeight: "bold",
                     }}
