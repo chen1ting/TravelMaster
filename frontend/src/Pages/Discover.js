@@ -120,6 +120,11 @@ const Discover = () => {
                 placeholder="Search for an activity"
                 w="50%"
                 onChange={(e) => setSearchText(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    fetchActivities();
+                  }
+                }}
               />
               <Button ml="9" colorScheme="green" onClick={fetchActivities}>
                 Search
@@ -224,7 +229,7 @@ const ActivityCard = ({ act, navigate }) => {
         brightness="90%"
         _hover={{
           brightness: "120%",
-          backgroundColor: "teal.300",
+          backgroundColor: "gray.400",
         }}
         border="1px solid white"
         borderRadius="15px"
