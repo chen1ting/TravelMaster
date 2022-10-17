@@ -30,10 +30,6 @@ const DiscoverFlights = () => {
     const [value, setValue] = React.useState(2)
     const handleChange = (value) => setValue(value)
 
-    function onSubmit(e) {
-        e.preventDefault();
-    }
-
     return (
         <Grid
             templateAreas={`"inputLocation inputDates inputTravellers ticketTier"

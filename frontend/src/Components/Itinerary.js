@@ -15,20 +15,12 @@ import {
   Heading,
   Switch,
   Text,
-  FormControl,
   FormLabel,
   Image,
-  Tooltip,
   Button,
-  Spacer,
   Popover,
   Portal,
   PopoverContent,
-  PopoverHeader,
-  PopoverCloseButton,
-  PopoverBody,
-  PopoverFooter,
-  PopoverArrow,
   PopoverTrigger,
   Badge,
   Input,
@@ -39,7 +31,6 @@ import {
   ArrowRightIcon,
   CloseIcon,
   InfoIcon,
-  PlusSquareIcon,
 } from "@chakra-ui/icons";
 
 const EditItinerary = () => {
@@ -135,7 +126,8 @@ const EditItinerary = () => {
             <Box
               px="5"
               py="3"
-              bgColor={isError ? "orange.400" : "green.400"}
+              color={'white'}
+              bgColor={isError ? "orange.500" : "green.400"}
               borderRadius="15px"
             >
               {notifMsg2}
@@ -214,7 +206,7 @@ const EditItinerary = () => {
               _hover={{
                 color:
                   curDate.getTime() === startDate.getTime()
-                    ? "gray"
+                    ? "gray.600"
                     : "blue.300",
               }}
               onClick={() => {
@@ -231,7 +223,7 @@ const EditItinerary = () => {
                 );
               }}
               color={
-                curDate.getTime() === startDate.getTime() ? "gray" : "white"
+                curDate.getTime() === startDate.getTime() ? "gray.300" : "black"
               }
             />
             <Text fontSize="18" fontWeight="600" style={{ userSelect: "none" }}>
@@ -247,7 +239,7 @@ const EditItinerary = () => {
               }
               _hover={{
                 color:
-                  curDate.getTime() === endDate.getTime() ? "gray" : "blue.300",
+                  curDate.getTime() === endDate.getTime() ? "gray.600" : "blue.300",
               }}
               onClick={() => {
                 if (curDate.getTime() === endDate.getTime()) {
@@ -262,11 +254,11 @@ const EditItinerary = () => {
                     )
                 );
               }}
-              color={curDate.getTime() === endDate.getTime() ? "gray" : "white"}
+              color={curDate.getTime() === endDate.getTime() ? "gray.300" : "black"}
             />
           </Box>
 
-          <Box my="6" py="6" pr="8" bgColor="gray.900">
+          <Box my="6" py="6" pr="8" bgColor="gray.200">
             {timeBins
               .slice(getStartIdx(), getStartIdx() + 24)
               .map((activity, index) =>
@@ -389,7 +381,7 @@ const TimeCell = (
               w="full"
               _hover={{
                 brightness: "120%",
-                backgroundColor: "#2F855A",
+                backgroundColor: "green.300",
               }}
             >
               <Text>Nothing here</Text>
@@ -432,7 +424,7 @@ const PopoverWrapper = ({
                   flexWrap="wrap"
                   rowGap="2"
                 >
-                  {activity.categories.map((cat) => (
+                  {activity.categories && activity.categories.map((cat) => (
                     <Badge key={cat} variant="outline" colorScheme="green">
                       {cat}
                     </Badge>
@@ -561,7 +553,7 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
         </Box>
       )}
       <Box mb="6">
-        {activities.map((act) => (
+        {activities && activities.map((act) => (
           <Box my="3" borderBottom="1px solid white">
             <Image
               mt="4"
@@ -570,16 +562,18 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
               src={`${ENDPOINT}/activity-images` + act.image_names[0]}
               alt={act.name}
             />
+
             <Heading mt="2" size="sm">
               {act.name}
             </Heading>
             <Box my="2" display="flex" alignItems="center" columnGap="2">
-              {act.categories.map((cat) => (
+              {act.categories && act.categories.map((cat) => (
                 <Badge variant="outline" colorScheme="green">
                   {cat}
                 </Badge>
               ))}
             </Box>
+
             <Box display="flex" alignItems="center" columnGap="3">
               <StarRatings
                 rating={act.average_rating}

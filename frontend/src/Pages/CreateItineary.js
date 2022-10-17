@@ -1,12 +1,9 @@
 import {useState} from 'react';
 //import { useAuth } from '../lib/auth';
 import {
-    FormControl, FormLabel, Button, Flex, Grid, GridItem,
+    Button, Flex, Grid, GridItem,
     AspectRatio,
     Box,
-    BoxProps,
-    Container,
-    forwardRef,
     Heading,
     Input,
     HStack,
@@ -14,10 +11,10 @@ import {
     StackDivider,
     Stack,
     Text,
-    Checkbox, CheckboxGroup, Spacer
+    Checkbox, Spacer
 } from "@chakra-ui/react";
 
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 
 //import UploadImage from './src/Components/UploadImage';
 const fields_width = '52.5%';

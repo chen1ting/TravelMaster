@@ -1,26 +1,19 @@
 import {useState} from 'react';
-//import { useAuth } from '../lib/auth';
 import { sendCreateReviewReq } from "../api/apiCreateReviews";
 
 
 import {
-    FormControl, FormLabel, Button, Flex, Grid, GridItem,
-    AspectRatio,
+    Button, Flex, Grid, GridItem,
     Box,
-    BoxProps,
-    Container,
-    forwardRef,
-    Heading,
     Input,
     HStack,
     VStack,
     StackDivider,
     Stack,
     Text,
-    Checkbox, CheckboxGroup, Spacer
+    Spacer
 } from "@chakra-ui/react";
 
-import { motion, useAnimation } from "framer-motion";
 import {useNavigate} from "react-router-dom";
 
 

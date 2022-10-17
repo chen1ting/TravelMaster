@@ -7,11 +7,9 @@ import {
   Table,
   Thead,
   Tbody,
-  Tfoot,
   Tr,
   Th,
   Td,
-  TableCaption,
   TableContainer,
   Textarea,
   Avatar,
@@ -119,7 +117,7 @@ const Activity = () => {
                 alignItems="center"
                 columnGap="2"
               >
-                {act.categories.map((cat) => (
+                {act.categories && act.categories.map((cat) => (
                   <Badge key={cat} variant="outline" colorScheme="green">
                     {cat}
                   </Badge>

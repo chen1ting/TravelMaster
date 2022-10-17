@@ -10,15 +10,11 @@ import {
   Button,
   Input,
   Box,
-  Flex,
-  Grid,
-  GridItem,
   Text,
   InputGroup,
   InputLeftAddon,
   Heading,
   Image,
-  useEditable,
   useDisclosure,
   Badge,
   Modal,
@@ -29,15 +25,12 @@ import {
   ModalBody,
   ModalFooter,
   Checkbox,
-  CheckboxGroup,
   Table,
   Thead,
   Tbody,
-  Tfoot,
   Tr,
   Th,
   Td,
-  TableCaption,
   TableContainer,
   Textarea,
 } from "@chakra-ui/react";
@@ -194,7 +187,7 @@ const Discover = () => {
             alignItems="center"
             mt="5"
           >
-            {activities.map((act) => (
+            {activities && activities.map((act) => (
               <ActivityCard act={act} navigate={navigate} />
             ))}
           </Box>
@@ -230,7 +223,7 @@ const ActivityCard = ({ act, navigate }) => {
         brightness="90%"
         _hover={{
           brightness: "120%",
-          backgroundColor: "#1A202C",
+          backgroundColor: "teal.300",
         }}
         border="1px solid white"
         borderRadius="15px"
@@ -268,7 +261,7 @@ const ActivityCard = ({ act, navigate }) => {
             flexWrap="wrap"
             rowGap="2"
           >
-            {act.categories.map((cat) => (
+            {act.categories && act.categories.map((cat) => (
               <Badge variant="outline" colorScheme="green">
                 {cat}
               </Badge>
@@ -350,7 +343,7 @@ const CreateForm = ({ onClose, setNotifMsg, setIsError, navigate }) => {
       setIsError(true);
       await new Promise((resolve) => setTimeout(resolve, 3000));
     } else {
-      setNotifMsg("Succesfully created activity");
+      setNotifMsg("Successfully created activity");
       setIsError(false);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate(`/activity/${data.activity_id}`);
