@@ -17,8 +17,8 @@ const ItineraryCard = ({ it }) => {
     >
       <Heading size="md">{it.name}</Heading>
       <Box mt="3" display="flex" justifyContent="space-evenly">
-        <Text>From: {new Date(it.start_time).toLocaleDateString()}</Text>
-        <Text>To: {new Date(it.end_time).toLocaleDateString()}</Text>
+        <Text>From: {new Date(it.start_time * 1000).toLocaleDateString()}</Text>
+        <Text>To: {new Date(it.end_time * 1000).toLocaleDateString()}</Text>
       </Box>
     </Box>
   );
