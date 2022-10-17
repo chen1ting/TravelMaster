@@ -126,7 +126,7 @@ const EditItinerary = () => {
             <Box
               px="5"
               py="3"
-              color={'white'}
+              color={"white"}
               bgColor={isError ? "orange.500" : "green.400"}
               borderRadius="15px"
             >
@@ -239,7 +239,9 @@ const EditItinerary = () => {
               }
               _hover={{
                 color:
-                  curDate.getTime() === endDate.getTime() ? "gray.600" : "blue.300",
+                  curDate.getTime() === endDate.getTime()
+                    ? "gray.600"
+                    : "blue.300",
               }}
               onClick={() => {
                 if (curDate.getTime() === endDate.getTime()) {
@@ -254,7 +256,9 @@ const EditItinerary = () => {
                     )
                 );
               }}
-              color={curDate.getTime() === endDate.getTime() ? "gray.300" : "black"}
+              color={
+                curDate.getTime() === endDate.getTime() ? "gray.300" : "black"
+              }
             />
           </Box>
 
@@ -424,11 +428,12 @@ const PopoverWrapper = ({
                   flexWrap="wrap"
                   rowGap="2"
                 >
-                  {activity.categories && activity.categories.map((cat) => (
-                    <Badge key={cat} variant="outline" colorScheme="green">
-                      {cat}
-                    </Badge>
-                  ))}
+                  {activity.categories &&
+                    activity.categories.map((cat) => (
+                      <Badge key={cat} variant="outline" colorScheme="green">
+                        {cat}
+                      </Badge>
+                    ))}
                 </Box>
 
                 <Box display="flex" alignItems="center" columnGap="3">
@@ -440,7 +445,7 @@ const PopoverWrapper = ({
                     name="rating"
                     starSpacing="2px"
                   />
-                  <Text mt="1px">({activity.average_rating})</Text>
+                  <Text mt="1px">({activity.review_counts})</Text>
                 </Box>
 
                 <Text noOfLines="3" mt="3">
@@ -553,67 +558,69 @@ const SmallSearchActivity = ({ label, times, navigate, replaceSelf }) => {
         </Box>
       )}
       <Box mb="6">
-        {activities && activities.map((act) => (
-          <Box my="3" borderBottom="1px solid white">
-            <Image
-              mt="4"
-              h="150px"
-              w="full"
-              src={`${ENDPOINT}/activity-images` + act.image_names[0]}
-              alt={act.name}
-            />
-
-            <Heading mt="2" size="sm">
-              {act.name}
-            </Heading>
-            <Box my="2" display="flex" alignItems="center" columnGap="2">
-              {act.categories && act.categories.map((cat) => (
-                <Badge variant="outline" colorScheme="green">
-                  {cat}
-                </Badge>
-              ))}
-            </Box>
-
-            <Box display="flex" alignItems="center" columnGap="3">
-              <StarRatings
-                rating={act.average_rating}
-                starRatedColor="#F6E05E"
-                starDimension="14px"
-                numberOfStars={5}
-                name="rating"
-                starSpacing="2px"
+        {activities &&
+          activities.map((act) => (
+            <Box my="3" borderBottom="1px solid white">
+              <Image
+                mt="4"
+                h="150px"
+                w="full"
+                src={`${ENDPOINT}/activity-images` + act.image_names[0]}
+                alt={act.name}
               />
-              <Text mt="1px">({act.average_rating})</Text>
-            </Box>
-            <Text noOfLines="3" my="2">
-              {act.description}
-            </Text>
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              columnGap="5"
-              mt="5"
-              mb="6"
-            >
-              <Button
-                colorScheme="teal"
-                leftIcon={<InfoIcon />}
-                onClick={() => navigate(`/activity/${act.id}`)}
+
+              <Heading mt="2" size="sm">
+                {act.name}
+              </Heading>
+              <Box my="2" display="flex" alignItems="center" columnGap="2">
+                {act.categories &&
+                  act.categories.map((cat) => (
+                    <Badge variant="outline" colorScheme="green">
+                      {cat}
+                    </Badge>
+                  ))}
+              </Box>
+
+              <Box display="flex" alignItems="center" columnGap="3">
+                <StarRatings
+                  rating={act.average_rating}
+                  starRatedColor="#F6E05E"
+                  starDimension="14px"
+                  numberOfStars={5}
+                  name="rating"
+                  starSpacing="2px"
+                />
+                <Text mt="1px">({act.review_counts})</Text>
+              </Box>
+              <Text noOfLines="3" my="2">
+                {act.description}
+              </Text>
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                columnGap="5"
+                mt="5"
+                mb="6"
               >
-                More Info
-              </Button>
-              <Button
-                colorScheme="green"
-                variant="outline"
-                leftIcon={<AddIcon />}
-                onClick={() => replaceSelf(act)}
-              >
-                Add
-              </Button>
+                <Button
+                  colorScheme="teal"
+                  leftIcon={<InfoIcon />}
+                  onClick={() => navigate(`/activity/${act.id}`)}
+                >
+                  More Info
+                </Button>
+                <Button
+                  colorScheme="green"
+                  variant="outline"
+                  leftIcon={<AddIcon />}
+                  onClick={() => replaceSelf(act)}
+                >
+                  Add
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        ))}
+          ))}
       </Box>
     </Box>
   );
