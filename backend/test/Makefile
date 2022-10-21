@@ -1,13 +1,13 @@
-INTEGRATION_TEST_SUITE_PATH ?= ./backend/test
+test:
+	docker-compose up -d --build
+	timeout 3
+	docker inspect --format '{{.State.Running}}' test_testingSessionRedis_1
+	docker inspect --format '{{.State.Running}}' test_testingPostgres_1
+	go test -tags=integration
+	docker-compose down
 
-docker.start.components:
-	docker-compose up -d --build;
+docker.start:
+	docker-compose up -d --build
 
 docker.stop:
-	docker-compose down;
-
-test.integration:
-	go test -tags=integration $(INTEGRATION_TEST_PATH) -count=1 -run=$(INTEGRATION_TEST_SUITE_PATH)
-
-test.integration.debug:
-	go test -tags=integration $(INTEGRATION_TEST_PATH) -count=1 -v -run=$(INTEGRATION_TEST_SUITE_PATH)
+	docker-compose down
