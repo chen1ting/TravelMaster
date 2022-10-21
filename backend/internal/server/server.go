@@ -28,8 +28,8 @@ type ServerInf interface {
 
 var _ ServerInf = (*Server)(nil)
 
-func NewServer() *Server {
-	conf := config.NewConfig()
+func NewServer(env string) *Server {
+	conf := config.NewConfig(env)
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai", conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

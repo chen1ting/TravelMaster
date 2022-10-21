@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.1 // indirect
 	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
+	github.com/stretchr/testify v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 	gorm.io/datatypes v1.0.7

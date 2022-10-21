@@ -21,9 +21,9 @@ type Service struct {
 
 var _ ServiceInf = (*Service)(nil)
 
-func NewService() *Service {
+func NewService(env string) *Service {
 	return &Service{
-		server: server.NewServer(),
+		server: server.NewServer(env),
 	}
 }
 
