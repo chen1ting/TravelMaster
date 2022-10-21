@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -28,13 +29,12 @@ func TestPing(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, w.Code)
 
-	got, _ := strconv.Atoi(w.Body.String())
-
-	fmt.Println(got)
-}
-
-func TestSignUp(t *testing.T) {
-	
+	// got, _ := strconv.Atoi(w.Body.String())
+	var result models.PingResp
+	if err := json.NewDecoder(w.Body).Decode(&result); err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(result)
 }
 
 func TestLogin(t *testing.T) {
