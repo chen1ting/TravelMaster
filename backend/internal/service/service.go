@@ -101,6 +101,10 @@ func (s *Service) GenerateItinerary(c *gin.Context) {
 	}
 	generateItineraryResp, err := s.server.GenerateItinerary(c, generateItineraryReq)
 	if err != nil {
+		if err == server.ErrBadRequest {
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}

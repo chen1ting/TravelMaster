@@ -361,6 +361,7 @@ type SaveItineraryRequest struct {
 
 type SaveItineraryResponse struct {
 	Id int64 `json:"id"`
+	Name string `json:"name"`
 }
 
 type GetItinerariesRequest struct {

@@ -204,6 +204,9 @@ func (s *Server) ValidateToken(ctx context.Context, req *models.ValidateTokenReq
 }
 
 func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItineraryRequest) (*models.GenerateItineraryResponse, error) {
+	if req.StartTime > req.EndTime {
+		return nil, ErrBadRequest
+	}
 	userId, err := s.SessionRedis.Get(ctx, req.SessionToken).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -388,7 +391,7 @@ func (s *Server) SaveItinerary(ctx context.Context, req *models.SaveItineraryReq
 		return nil, ErrDatabase
 	}
 
-	return &models.SaveItineraryResponse{Id: iti.ID}, nil
+	return &models.SaveItineraryResponse{Id: iti.ID, Name: iti.Name}, nil
 }
 
 // returns the activity summary and the time allocated for the activity: 1 or 2 hr

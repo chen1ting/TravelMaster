@@ -5,10 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/chen1ting/TravelMaster/internal/models"
-	"github.com/chen1ting/TravelMaster/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"mime/multipart"
@@ -18,6 +14,11 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/chen1ting/TravelMaster/internal/models"
+	"github.com/chen1ting/TravelMaster/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 type errorMessage struct {
@@ -375,6 +376,187 @@ func TestLogin(t *testing.T) {
 
 func TestCreateActivity(t *testing.T) {
 
+}
+
+var generateItiId int64
+
+func TestGenerateItinerary(t *testing.T) {
+	// we are not concerned with the quality of the actual itinerary generated
+	t.Run("successfully generate itinerary", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := models.GenerateItineraryRequest{
+			SessionToken: sampleSessionToken,
+			PreferredCategories: []string{},
+			StartTime: 100,
+			EndTime: 1000,
+		}
+		MockJsonPost(ctx, req)
+		s.GenerateItinerary(ctx)
+		assert.EqualValues(t, http.StatusOK, w.Code)
+
+		var got models.GenerateItineraryResponse
+		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+			log.Fatalln(err)
+		}
+		generateItiId = got.GeneratedItinerary.Id
+	})
+
+	t.Run("bad itinerary start and end times", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := models.GenerateItineraryRequest{
+			SessionToken: sampleSessionToken,
+			PreferredCategories: []string{},
+			StartTime: 10000,
+			EndTime: 1000,
+		}
+		MockJsonPost(ctx, req)
+		s.GenerateItinerary(ctx)
+		assert.EqualValues(t, http.StatusBadRequest, w.Code)
+	})
+
+	// we are not concerned with the quality of the actual itinerary generated
+	t.Run("unrecognised session token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := models.GenerateItineraryRequest{
+			SessionToken: "bad token",
+			PreferredCategories: []string{},
+			StartTime: 100,
+			EndTime: 1000,
+		}
+		MockJsonPost(ctx, req)
+		s.GenerateItinerary(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+const updatedName = "new name"
+
+func TestUpdateItinerary(t *testing.T) {
+	// we are not concerned with the quality of the actual itinerary generated
+	t.Run("successfully update existing itinerary", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.SaveItineraryRequest{
+			SessionToken: sampleSessionToken,
+			Id: generateItiId,
+			Name: updatedName,
+		}
+		MockJsonPost(ctx, req)
+		s.UpdateItinerary(ctx)
+		assert.EqualValues(t, http.StatusOK, w.Code)
+		var got models.SaveItineraryResponse
+		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+			log.Fatalln(err)
+		}
+		assert.EqualValues(t, got.Id, generateItiId)
+		assert.EqualValues(t, got.Name, req.Name)
+	})
+
+	t.Run("fail update non existing itinerary", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.SaveItineraryRequest{
+			SessionToken: sampleSessionToken,
+			Id: 1000,
+			Name: "new name",
+		}
+		MockJsonPost(ctx, req)
+		s.UpdateItinerary(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("fail bad token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.SaveItineraryRequest{
+			SessionToken: "bad token",
+			Id: generateItiId,
+			Name: "new name",
+		}
+		MockJsonPost(ctx, req)
+		s.UpdateItinerary(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestGetItinerary(t *testing.T) {
+	// we are not concerned with the quality of the actual itinerary generated
+	t.Run("successfully get existing itinerary", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.GetItineraryRequest{
+			SessionToken: sampleSessionToken,
+			Id: generateItiId,
+		}
+		MockJsonPost(ctx, req)
+		s.GetItinerary(ctx)
+		assert.EqualValues(t, http.StatusOK, w.Code)
+		var got models.GetItineraryResponse
+		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+			log.Fatalln(err)
+		}
+		assert.EqualValues(t, generateItiId, got.Itinerary.Id)
+		assert.EqualValues(t, updatedName, got.Itinerary.Name)
+	})
+
+	t.Run("fail get non existing itinerary", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.GetItineraryRequest{
+			SessionToken: sampleSessionToken,
+			Id: 1000,
+		}
+		MockJsonPost(ctx, req)
+		s.GetItinerary(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("fail bad token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.GetItineraryRequest{
+			SessionToken: "bad token",
+			Id: generateItiId,
+		}
+		MockJsonPost(ctx, req)
+		s.GetItinerary(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestGetItineraries(t *testing.T) {
+	// we are not concerned with the quality of the actual itinerary generated
+	t.Run("successfully get existing itineraries", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.GetItinerariesRequest{
+			SessionToken: sampleSessionToken,
+		}
+		MockJsonPost(ctx, req)
+		s.GetItineraries(ctx)
+		assert.EqualValues(t, http.StatusOK, w.Code)
+		var got models.GetItinerariesResponse
+		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+			log.Fatalln(err)
+		}
+		assert.EqualValues(t, 1, len(got.Itineraries))
+		assert.EqualValues(t, generateItiId, got.Itineraries[0].Id)
+		assert.EqualValues(t, updatedName, got.Itineraries[0].Name)
+	})
+
+	t.Run("fail bad token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		ctx := GetTestGinContext(w)
+		req := &models.GetItinerariesRequest{
+			SessionToken: "bad token",
+		}
+		MockJsonPost(ctx, req)
+		s.GetItineraries(ctx)
+		assert.EqualValues(t, http.StatusInternalServerError, w.Code)
+	})
 }
 
 // Below are utility functions
