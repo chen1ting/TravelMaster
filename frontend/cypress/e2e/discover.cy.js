@@ -74,7 +74,7 @@ describe('opendiscoverpage', () => {
 })
 
 
-describe('create new activity2', () => {
+describe('create new activity', () => {
   it('passes', () => {
     cy.get('button').contains("Create an activity").click()
     cy.wait(2000)
@@ -85,7 +85,7 @@ describe('create new activity2', () => {
     cy.get('button').eq(19).click()
     cy.get('button').eq(20).click()
     cy.get('button').eq(21).click()
-    //cy.get('input').eq(3).click().type("Sentosa, Singapore{enter}").should('have.value', 'Sentosa, Singapore')
-    cy.get('button').contains("Save")
+    cy.get('input').eq(3).click().type("Sentosa, Singapore{enter}").should('have.value', 'Sentosa, Singapore')
+    cy.get('button').contains("Save").click()
   })
 })
