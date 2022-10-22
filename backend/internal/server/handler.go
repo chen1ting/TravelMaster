@@ -773,6 +773,13 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 		return nil, err
 	}
 
+	// fetch activity
+	var activity gormModel.Activity
+	result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity) //s.Database.First(&activity, req.ActivityId)
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, ErrActivityNotFound
+	}
+
 	// assert that user has not made a review before for this activity
 	review := gormModel.Review{
 		Title:       req.Title,
@@ -784,13 +791,6 @@ func (s *Server) AddReview(ctx context.Context, req *models.AddReviewReq) (*mode
 	if res := s.Database.Create(&review); res.Error != nil {
 		// i'll just assume its a violation error here, but its not necessarily the case
 		return nil, ErrUserAlreadyCreatedReview
-	}
-
-	// fetch activity
-	var activity gormModel.Activity
-	result := s.Database.Where("id=?", req.ActivityId).Preload("Reviews").Find(&activity) //s.Database.First(&activity, req.ActivityId)
-	if result.Error != nil || result.RowsAffected == 0 {
-		return nil, ErrActivityNotFound
 	}
 
 	newAvg := (float32(activity.ReviewCounts)*activity.AverageRating + req.Rating) / float32(activity.ReviewCounts+1)
@@ -893,10 +893,14 @@ func (s *Server) IncrementInactiveCount(req *models.IncrementInactiveCountReq) (
 
 	// find the activity in database
 	var activity gormModel.Activity
+	var user gormModel.User
 
 	// if activity cannot be found by given ID, return error
 	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
 		return nil, ErrActivityNotFound
+	}
+	if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
 	}
 
 	reportHistory := &gormModel.ReportHistory{
@@ -933,10 +937,14 @@ func (s *Server) DecrementInactiveCount(req *models.DecrementInactiveCountReq) (
 
 	// find the activity in database
 	var activity gormModel.Activity
+	var user gormModel.User
 
 	// if activity cannot be found by given ID, return error
 	if result := s.Database.First(&activity, req.ActivityId); result.Error != nil {
 		return nil, ErrActivityNotFound
+	}
+	if result := s.Database.First(&user, req.UserId); result.Error != nil {
+		return nil, ErrUserNotFound
 	}
 	// delete history
 	var reportHistory gormModel.ReportHistory
