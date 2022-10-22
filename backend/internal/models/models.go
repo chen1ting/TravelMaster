@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type PingResp struct {
+	Message string `json:"message"`
+}
+
 type LoginReq struct {
 	//assumptions: use username to login
 	Username       string `json:"username"`
@@ -117,15 +121,15 @@ type Segment struct {
 }
 
 type ActivitySummary struct {
-	Id            int64    `json:"id"`
-	Name          string   `json:"name"`
-	Description   string   `json:"description"`
-	AverageRating float64  `json:"average_rating"` // to nearest .5 out of 5
-	
-	Categories    []string `json:"categories"`
-	ImageNames      []string   `json:"image_names"`
+	Id            int64   `json:"id"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	AverageRating float64 `json:"average_rating"` // to nearest .5 out of 5
 
-	ReviewCounts    int       `json:"review_counts"`
+	Categories []string `json:"categories"`
+	ImageNames []string `json:"image_names"`
+
+	ReviewCounts int `json:"review_counts"`
 }
 
 type GetItineraryRequest struct {
@@ -153,10 +157,10 @@ type TimeFilter struct {
 
 type CreateActivityForm struct {
 	// Assumption: user token is already validated
-	UserId   int64    `form:"user_id"`
-	Title    string   `form:"title"`
-	Rating   float32  `form:"rating_score"`
-	Paid     bool     `form:"paid"`
+	UserId     int64    `form:"user_id"`
+	Title      string   `form:"title"`
+	Rating     float32  `form:"rating_score"`
+	Paid       bool     `form:"paid"`
 	Categories []string `form:"categories"` // issue: form binding for string not working as expected
 	// please send in a json style list of string
 	Description string  `form:"description"`
@@ -197,7 +201,7 @@ type GetActivityResp struct {
 	Title       string   `json:"title"`
 	Rating      float32  `json:"rating_score"`
 	Paid        bool     `json:"paid"`
-	Categories    []string `json:"categories"`
+	Categories  []string `json:"categories"`
 	Description string   `json:"description"`
 	Longitude   float32  `json:"longitude"`
 	Latitude    float32  `json:"latitude"`
@@ -253,7 +257,7 @@ type UpdateActivityForm struct {
 	Title       string   `form:"title"`
 	Rating      float32  `form:"rating_score"`
 	Paid        bool     `form:"paid"`
-	Categories    []string `form:"categories"`
+	Categories  []string `form:"categories"`
 	Description string   `form:"description"`
 	Longitude   float32  `form:"longitude"`
 	Latitude    float32  `form:"latitude"`

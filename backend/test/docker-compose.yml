@@ -1,0 +1,19 @@
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+  testingPostgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: travelmaster_testing
+    ports:
+      - "5433:5432"
+
+  testingSessionRedis:
+     image: redis
+     restart: always
+     ports:
+       - '6380:6379'

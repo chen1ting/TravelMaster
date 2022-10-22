@@ -21,9 +21,9 @@ type Service struct {
 
 var _ ServiceInf = (*Service)(nil)
 
-func NewService() *Service {
+func NewService(env string) *Service {
 	return &Service{
-		server: server.NewServer(),
+		server: server.NewServer(env),
 	}
 }
 
@@ -49,21 +49,6 @@ func (s *Service) SignupView(c *gin.Context) {
 	c.JSON(http.StatusCreated, signupResp)
 }
 
-func (s *Service) LogoutView(c *gin.Context) {
-	logoutReq := &models.LogoutReq{}
-	if err := c.ShouldBindJSON(logoutReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	err := s.server.Logout(c, logoutReq)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
-}
-
 func (s *Service) LoginView(c *gin.Context) {
 	loginReq := &models.LoginReq{}
 	if err := c.ShouldBindJSON(loginReq); err != nil {
@@ -79,6 +64,20 @@ func (s *Service) LoginView(c *gin.Context) {
 	c.JSON(http.StatusOK, loginResp)
 }
 
+func (s *Service) LogoutView(c *gin.Context) {
+	logoutReq := &models.LogoutReq{}
+	if err := c.ShouldBindJSON(logoutReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := s.server.Logout(c, logoutReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
 func (s *Service) ValidateToken(c *gin.Context) {
 	validateTokenReq := &models.ValidateTokenReq{}
 	if err := c.ShouldBindJSON(validateTokenReq); err != nil {

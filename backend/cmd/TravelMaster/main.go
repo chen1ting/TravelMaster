@@ -9,11 +9,11 @@ import (
 )
 
 func main() {
-	s := service.NewService()
 	r := gin.Default()
+	s := service.NewService(os.Getenv("APP_ENV"))
 	router.InitRouting(r, s)
 
-	if os.Getenv("APP_ENV") == "development" {
+	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "testing" {
 		r.Run("0.0.0.0:8080")
 	} else {
 		r.RunTLS("0.0.0.0:8080", "server.pem", "key.unencrypted.pem")

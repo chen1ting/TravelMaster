@@ -32,14 +32,13 @@ var (
 	ErrGenericServerError       = errors.New("generic server error")
 	ErrDatabase                 = errors.New("database error")
 	ErrBadRequest               = errors.New("bad request")
-	ErrMissingUserInfo          = errors.New("eight email, username, or hashed password missing")
+	ErrMissingUserInfo          = errors.New("either email, username, or hashed password missing")
 	ErrUserAlreadyExists        = errors.New("user already exists")
 	ErrInvalidLogin             = errors.New("invalid login")
 	ErrActivityAlreadyExists    = errors.New("an activity with the same title already exists")
 	ErrActivityNotFound         = errors.New("activity not found")
 	ErrNullTitle                = errors.New("title cannot be empty")
 	ErrUserNotFound             = errors.New("user id doesn't exists")
-	ErrNullReview               = errors.New("review content cannot be empty")
 	ErrReviewNotFound           = errors.New("review not found")
 	ErrReportNotFound           = errors.New("report not found")
 	ErrInvalidUpdateUser        = errors.New("user id doesn't match the activity's user id")
@@ -74,12 +73,12 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 	//check  if there is file first
 	var uniqueImgName, fpath string
 	if form.Avatar != nil {
-		imgName, filepath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
+		imgName, filePath, saveErr := SaveFile(form.Avatar, c, AvatarFolder)
 		if saveErr != nil {
 			fmt.Println(saveErr) //TODO: log instead
 		}
 		uniqueImgName = imgName
-		fpath = filepath
+		fpath = filePath
 	}
 
 	// attempt to save user to DB
@@ -106,8 +105,6 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 	if err := s.addNewUserSession(c, strconv.Itoa(int(user.ID)), sessionToken, 24*time.Hour); err != nil {
 		return nil, err
 	}
-	fmt.Println("reached here")
-
 	return &models.SignupResp{
 		UserId:       user.ID,
 		Username:     user.Username,
@@ -237,7 +234,7 @@ func (s *Server) GenerateItinerary(ctx context.Context, req *models.GenerateItin
 				Title:         act.Title,
 				AverageRating: act.AverageRating,
 				Paid:          act.Paid,
-				Categories:      act.Categories,
+				Categories:    act.Categories,
 				Description:   act.Description,
 				Longitude:     act.Longitude,
 				Latitude:      act.Latitude,
@@ -418,8 +415,8 @@ func randomAndIsOpen(choices []*gormModel.Activity, day int, hr int, used map[in
 			Description:   act.Description,
 			AverageRating: Round(float64(act.AverageRating), 0.05),
 			Categories:    act.Categories,
-			ImageNames:      []string{imageUrl},
-			ReviewCounts: act.ReviewCounts,
+			ImageNames:    []string{imageUrl},
+			ReviewCounts:  act.ReviewCounts,
 		}, actTime
 	}
 
@@ -655,7 +652,7 @@ func (s *Server) CreateActivity(form *models.CreateActivityForm, c *gin.Context)
 		Title:        form.Title,
 		Paid:         form.Paid,
 		AuthorRating: form.Rating,
-		Categories:     form.Categories,
+		Categories:   form.Categories,
 		Description:  form.Description,
 		Longitude:    form.Longitude,
 		Latitude:     form.Latitude,
@@ -853,8 +850,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 					Description:   act.Description,
 					AverageRating: Round(float64(act.AverageRating), 0.05),
 					Categories:    act.Categories,
-					ImageNames:      []string{imageUrl},
-					ReviewCounts: act.ReviewCounts,
+					ImageNames:    []string{imageUrl},
+					ReviewCounts:  act.ReviewCounts,
 				})
 			}
 		}
@@ -870,8 +867,8 @@ func (s *Server) SearchActivity(req *models.SearchActivityReq) (*models.SearchAc
 				Description:   act.Description,
 				AverageRating: Round(float64(act.AverageRating), 0.05),
 				Categories:    act.Categories,
-				ImageNames:      []string{imageUrl},
-				ReviewCounts: act.ReviewCounts,
+				ImageNames:    []string{imageUrl},
+				ReviewCounts:  act.ReviewCounts,
 			})
 		}
 	}
@@ -1122,7 +1119,6 @@ func ValidateFile(fileHeader *multipart.FileHeader) (bool, error) {
 		fmt.Println("received image of type: " + filetype)
 		return true, nil
 	default:
-		fmt.Println("unknown file type uploaded")
 		return false, ErrUnknownFileType
 	}
 }
@@ -1245,7 +1241,7 @@ func ParseActivity(activity gormModel.Activity) *models.GetActivityResp {
 		Title:       activity.Title,
 		Rating:      float32(Round(float64(activity.AverageRating), 0.05)),
 		Paid:        activity.Paid,
-		Categories:    activity.Categories,
+		Categories:  activity.Categories,
 		Description: activity.Description,
 		Longitude:   activity.Longitude,
 		Latitude:    activity.Latitude,
@@ -1258,7 +1254,7 @@ func ParseActivity(activity gormModel.Activity) *models.GetActivityResp {
 		ThurOpeningTime: int(activity.OpeningTimes[4]),
 		FriOpeningTime:  int(activity.OpeningTimes[5]),
 		SatOpeningTime:  int(activity.OpeningTimes[6]),
-		
+
 		SunClosingTime:  int(activity.OpeningTimes[7]),
 		MonClosingTime:  int(activity.OpeningTimes[8]),
 		TueClosingTime:  int(activity.OpeningTimes[9]),

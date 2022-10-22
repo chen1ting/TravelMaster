@@ -2,8 +2,6 @@ package config
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/spf13/viper"
 )
 
@@ -18,10 +16,12 @@ type Config struct {
 	SessionRedisPort string `mapstructure:"session_redis_port"`
 }
 
-func NewConfig() Config { // hardcoded to read from same dir :(, probably can read in from env if we have time to refactor
+func NewConfig(env string) Config { // hardcoded to read from same dir :(, probably can read in from env if we have time to refactor
 	configName := "config_prod"
-	if os.Getenv("APP_ENV") == "development" {
+	if env == "development" {
 		configName = "config_dev.yml"
+	} else if env == "testing" {
+		configName = "config_test.yml"
 	}
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yml")
