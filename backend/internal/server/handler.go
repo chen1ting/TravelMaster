@@ -32,7 +32,7 @@ var (
 	ErrGenericServerError       = errors.New("generic server error")
 	ErrDatabase                 = errors.New("database error")
 	ErrBadRequest               = errors.New("bad request")
-	ErrMissingUserInfo          = errors.New("eight email, username, or hashed password missing")
+	ErrMissingUserInfo          = errors.New("either email, username, or hashed password missing")
 	ErrUserAlreadyExists        = errors.New("user already exists")
 	ErrInvalidLogin             = errors.New("invalid login")
 	ErrActivityAlreadyExists    = errors.New("an activity with the same title already exists")
@@ -105,8 +105,6 @@ func (s *Server) Signup(c *gin.Context, form *models.SignupForm) (*models.Signup
 	if err := s.addNewUserSession(c, strconv.Itoa(int(user.ID)), sessionToken, 24*time.Hour); err != nil {
 		return nil, err
 	}
-	fmt.Println("reached here")
-
 	return &models.SignupResp{
 		UserId:       user.ID,
 		Username:     user.Username,
@@ -1121,7 +1119,6 @@ func ValidateFile(fileHeader *multipart.FileHeader) (bool, error) {
 		fmt.Println("received image of type: " + filetype)
 		return true, nil
 	default:
-		fmt.Println("unknown file type uploaded")
 		return false, ErrUnknownFileType
 	}
 }
