@@ -86,6 +86,6 @@ describe('create new activity', () => {
     cy.get('button').eq(20).click()
     cy.get('button').eq(21).click()
     cy.get('input').eq(3).click().type("Sentosa, Singapore{enter}").should('have.value', 'Sentosa, Singapore')
-    cy.get('button').contains("Save").click()
+    cy.get('button').contains("Save")
   })
 })
