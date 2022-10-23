@@ -10,9 +10,11 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgx/v4 v4.17.1 // indirect
 	github.com/lib/pq v1.10.6
+	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/spf13/viper v1.12.0
-	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
-	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
+	github.com/vakenbolt/go-test-report v0.9.3 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	gorm.io/datatypes v1.0.7
 	gorm.io/driver/postgres v1.3.9
 	gorm.io/gorm v1.23.8

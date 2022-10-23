@@ -1,0 +1,8 @@
+db_host: "localhost"
+db_user: "postgres"
+db_pass: "mysecretpassword"
+db_name: "travelmaster_testing"
+db_port: 5433
+
+session_redis_host: "localhost"
+session_redis_port: 6380
