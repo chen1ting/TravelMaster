@@ -28,11 +28,11 @@ type errorMessage struct {
 var (
 	s = service.NewService("testing")
 	// sample user credentials
-	sampleSessionToken = "64ed7eb3-826e-4f20-86dd-7a6bb4f85026" //string //
+	sampleSessionToken = "3e79941c-2fd6-46b0-a91a-f0bc65a21b5f" //string //
 	sampleUserID       = int64(2)                               //int64  //
 	sampleUserName     = "yiting"
 	sampleUserEmail    = "yiting@travelmaster.com"
-	dummySessionToken  = "84db0f70-b3c6-4e18-be80-e68a073f0a49" //string
+	dummySessionToken  = "ee132fd7-7fca-45ff-9589-59d2e2eb8070" //string
 
 	// sample activity
 	sampleActivityID = int64(1) //int64
@@ -68,7 +68,6 @@ var (
 
 	// error response for undo report
 	ErrReportNotFound = errors.New("report not found")
-	ErrNoSearchFail   = errors.New("search Name failed")
 )
 
 func TestSignup(t *testing.T) {
@@ -593,7 +592,7 @@ func TestCreateReview(t *testing.T) {
 			SessionToken: "",
 			ActivityId:   sampleActivityID,
 			Title:        "I like it here!",
-			Description:  "Just has great time with m y family and friends!",
+			Description:  "Just had great times with my family and friends!",
 			Rating:       5.0,
 		}
 
@@ -617,7 +616,7 @@ func TestCreateReview(t *testing.T) {
 			SessionToken: sampleSessionToken,
 			ActivityId:   -1,
 			Title:        "I like it here!",
-			Description:  "Just has great time with m y family and friends!",
+			Description:  "Just had great times with my family and friends!",
 			Rating:       5.0,
 		}
 
